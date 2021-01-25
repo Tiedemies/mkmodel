@@ -1,0 +1,292 @@
+#include "graphmodel.hpp"
+#include "mkmodel.hpp"
+#include "ioroutines.hpp"
+#include "optimizer.hpp"
+#include "mcsim.hpp"
+#include <map>
+#include "defs.hpp"
+#include <random>
+#include "h_random.hpp"
+#include "mcsim.hpp"
+#include <chrono>
+#include <math.h>
+#define FIXED_FLOAT(x) std::fixed <<std::setprecision(2)<<(x)
+
+
+Optimizer::Optimizer(Simulator* sim, IoR* zed)
+{
+  zed_ = zed; 
+  zed->ReadCompanyDictionary();
+  zed->ReadNodeDictionary();
+  frac_ = zed->ReadFractions(); 
+  andi_ = zed->ReadAnnouncements();
+  andat_ = zed->GetDates(); 
+  sim_ = sim;
+  sim_->Simplify();
+  n_companies_ = zed->max_com_;
+  n_nodes_ = zed->max_tra_;
+  years_ = zed->years_; 
+}
+
+Optimizer::~Optimizer()
+{
+  //void
+}
+
+
+double Optimizer::EvaluateDeviation(const int ns)
+{
+  int k = 0;
+  int date = c_year_first_.at(k).at(2006);
+  const auto& inside = sim_->GetInside(date,k);
+  // Calculate vectors:
+  std::vector<std::vector<double>> ps;
+  for(int i = 0; i < 30; ++i)
+  {
+    ps.push_back(sim_->Simulate(inside, date, ns).first);
+  } 
+  // Calculare averages
+  std::vector<double> average;
+  for(int i = 0; i < ps[0].size(); ++i)
+  {
+    average.push_back(0.0);
+    for(int j = 0; j < 30; ++j)
+    {
+      average.at(i) += ps[j][i] / 30.0;
+    }
+  }
+  // Calculate variance
+  std::vector<double> var;
+  for(int i = 0; i < ps[0].size(); ++i)
+  {
+    var.push_back(0.0);
+    for(int j = 0; j < 30; ++j)
+    {
+      var.at(i) += pow(average[i] - ps[j][i], 2) / 29.0;
+    }
+  }
+  return avg(var); 
+}
+
+std::tuple<double,double,double> 
+Optimizer::CalculateError(const DatePmap& dm, double p, double q, const DatePmap& deriv)
+{
+  double e = 0;
+  double dq = 0;
+  double dp = 0;
+  std::cerr << "calculating error from dm with " << dm.size() << " entries\n";
+  for (int k = 0; k<= n_companies_;++k)
+  {
+    if (dm.find(k) == dm.end() || up_.find(k) == up_.end())
+    {
+      continue;
+    }
+    auto D = deriv.at(k);
+    for (auto& P:  dm.at(k)) 
+    {
+      for (int i = 0; i < P.second.size(); ++i)
+      {
+	const double& pp = P.second.at(i); 
+	const double& dip = D.at(P.first).at(i); 
+	e = e + pow((up_.at(k)).at(i) - (q*pp + 0.5*(1-pp)), 2);
+	dp += 2*(up_.at(k).at(i) - (q*pp + 0.5*(1-pp)))*dip;
+	dq += 2*(up_.at(k).at(i) - (q*pp + 0.5*(1-pp)))*pp;
+      } 
+    }
+  }
+  return std::make_tuple(e,dp,dq);
+}
+
+double Optimizer::norm(const std::vector<double>& x) 
+{
+  double res = 0;
+  for (double a: x)
+  {  
+    res += a*a;
+  }
+  return res; 
+}
+
+double Optimizer::avg(const std::vector<double>& x)
+{
+  double res = 0.0;
+  const double n = (double) x.size();
+  for(int i = 0; i < n; ++i)
+  {
+    res += x[i];
+  }
+  return res/n;
+}
+
+double Optimizer::qexp(const std::vector<double>& u, const std::vector<double>& p)
+{
+  const int n = u.size();
+  double up = 0;
+  double down = 0;
+  for(int i = 0 ; i<n ; ++i)
+  {
+    up += (u.at(i) - 0.5*(1 - p.at(i)))*p.at(i);
+    down += p.at(i)*p.at(i);
+  }
+  return up/down; 
+}
+
+void Optimizer::InitializeCY()
+{
+  for (int comp = 0; comp <= n_companies_; ++comp)
+    {
+      std::unordered_map<int,int> first;
+      if (andi_.find(comp) == andi_.end())
+      {
+	continue;
+      }
+      bool c_d = false;
+      for (int date: andi_.at(comp))
+      {
+	int year = date/10000;
+	c_years_[comp].insert(year);
+	if (first.find(year) == first.end())
+	{
+	  first[year] = date;
+	}
+      }
+      c_year_first_[comp] = first;
+    }
+}
+
+
+void Optimizer::InitializeDM(DatePmap& dm)
+{
+  for (int y: years_)
+  {
+    CompanyPmap cmap;
+    for( int k = 0; k <= n_companies_; ++k )
+    {
+      Pmap foo(n_nodes_+1,0.0);
+      cmap[k] = foo;
+    }
+    dm[y] = cmap;
+  }
+}
+
+void Optimizer::InitializeUp()
+{
+  for (int i = 0; i <= n_nodes_; ++i)
+  {
+    auto X = frac_.find(i);
+    if (X == frac_.end())
+    {
+      continue;
+    }
+    auto C = frac_.at(i); 
+    for (int k = 0; k <= n_companies_; ++k)
+    {
+      auto Y = C.find(k);
+      if (Y == C.end())
+      {
+	continue;
+      }	
+      if (up_.find(k) == up_.end())
+      {
+	std::vector<double> Kv(n_nodes_+1, 0.0);
+	up_[k] = Kv;
+      }
+      if(std::get<0>(C.at(k)) != 0)
+      {
+	(up_.at(k)).at(i) = ( (double) std::get<1>(C.at(k))) / (double) std::get<2>(C.at(k));
+      }
+    }
+  }
+}
+
+void Optimizer::CalculateDM(DatePmap& dm, double p, int n, DatePmap& deriv)
+{
+  sim_->SetTransProp(p); 
+#pragma omp parallel for
+  for (int k = 0;k <= n_companies_; ++k)
+  {
+    if (zed_->cids_.find(k) == zed_->cids_.end())
+    {
+      continue;
+    } 
+    //std::cerr << "simulating company " << k << ": " << zed_->cids_.at(k) << "\n";
+    CompanyPmap bar1;
+    CompanyPmap bar2;
+    auto c_iter = c_year_first_.find(k);
+    if (c_iter == c_year_first_.end())
+    {
+      //std::cerr << "no announcements, skipping\n";
+      continue;
+    }
+    auto& first = c_year_first_.at(k); 
+    for (int y: c_years_.at(k))
+    {
+      int date = first.at(y);
+      //std::cerr << "date: " << date << "\n";
+      const auto& inside = sim_->GetInside(date,k);
+      //std::cerr << "simulating..\n";
+      std::pair<Pmap,Pmap> foo = sim_->Simulate(inside, date, n);  
+      bar1[y] = foo.first;
+      bar2[y] = foo.second; 
+      //std::cerr << "simulated.\n";
+    }
+    dm[k] = bar1;
+    deriv[k] = bar2; 
+  }
+  //std::cerr << "done.\n";
+}
+
+void Optimizer::CalculateDM(DatePmap& dm, double p, int n, DatePmap& deriv, int k)
+{
+  sim_->SetTransProp(p); 
+  CompanyPmap bar1;
+  CompanyPmap bar2;
+  auto c_iter = c_year_first_.find(k);
+  if (c_iter == c_year_first_.end())
+  {
+    //std::cerr << "no announcements, skipping\n";
+    return;
+  }
+  auto& first = c_year_first_.at(k);
+  #pragma omp parallel for
+  for (auto mm = first.begin(); mm != first.end(); ++mm)
+  {
+    int y = mm->first; 
+    int date = mm->second;
+    const auto& inside = sim_->GetInside(date,k);
+    std::pair<Pmap,Pmap> foo = sim_->Simulate(inside, date, n);  
+    bar1[y] = foo.first;
+    bar2[y] = foo.second; 
+  }
+  dm[k] = bar1;
+  deriv[k] = bar2; 
+}
+
+
+std::pair<double,double> 
+Optimizer::Optimize(double p, double q)
+{
+  int n = 500; // Number of iterations per year
+  // Initialize up_ by iterating over nodes (i) and company (k)
+  std::cerr << "Initializing UP...\n";
+  InitializeUp();
+  std::cerr << "Initializing C_years.. \n";
+  InitializeCY();
+  // Initialize dm. This is the P's that we will have for different dates. 
+  DatePmap dm;
+  DatePmap deriv;
+  int l = 0;
+  double st = EvaluateDeviation(n);
+  std::cerr << "average deviation " << st << "\n";
+  while (l < 10)
+    {
+      std::cerr << "Calculating DM for point [" << p << "," << q << "]\n";
+      CalculateDM(dm,p,n,deriv,2);
+      auto r = CalculateError(dm, p,q,deriv);
+      std::cerr << "Error: " << std::get<0>(r) << "\n";
+      p = p-0.01;
+      q = q-0.01;
+      ++l;
+    }
+  return std::make_pair(p,q); 
+}

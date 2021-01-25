@@ -233,6 +233,7 @@ IoR::ReadFractions()
 	    node_id = nodeinvdict_.at(owner_id); 
 	    find.insert(owner_id);
     }
+    // std::cerr << "read owner nr: " << owner_id << " ... ";
     std::string cname; 
     in.get();
     char next = in.get();
@@ -241,11 +242,13 @@ IoR::ReadFractions()
       cname.push_back(next);
       next = in.get(); 
     } 
+    //std::cerr << " got company " << cname << " ... ";
     int n_trade;
     in >> n_trade;
     in.get();
     double n_profit;
     in >> n_profit;
+    //std::cerr << " got " << n_profit << " inside profit days ... ";
     in.get();
     int n_an;
     in >> n_an;
@@ -261,6 +264,7 @@ IoR::ReadFractions()
     }
     int n_market_days;
     in >> n_market_days;
+    //std::cerr << " got " << n_market_days << " market days ... ";
     char x = in.get();
     while(x!=';' && !in.eof() && in.good())
     {
@@ -268,6 +272,7 @@ IoR::ReadFractions()
     }
     double n_trade_outside;
     in >> n_trade_outside;
+    //std::cerr << " got " << n_trade_outside << " outside days ... ";
     x = in.get();
     while(x!=';' && !in.eof() && in.good())
     {
@@ -275,6 +280,7 @@ IoR::ReadFractions()
     }
     double n_profit_outside;
     in >> n_trade_outside;
+    // std::cerr << " of which " << n_trade_outside << " days are profitable. \n ";
     if (cnames_.find(cname) == cnames_.end())
     {
 	    std::cerr << "Warning, company " << cname << " is missing.\n"; 
@@ -286,11 +292,12 @@ IoR::ReadFractions()
       CompanyFractions newfrac;
       togo[node_id] = newfrac;
     }
-    FractionEntry foo = std::make_tuple(n_trade,n_profit,n_an,n_market_days,n_profit_outside/n_trade_outside);
+    FractionEntry foo = std::make_tuple(n_trade,n_profit,n_an,n_market_days,n_trade_outside, n_profit_outside);
     
     (togo[node_id])[cnum] = foo;
+    //throw std::logic_error("test");
   }
-  std::cerr << "fractions done. " << nfind.size() << " unidentified nodes " << find.size() << " identified.\n"; 
+  //std::cerr << "fractions done. " << nfind.size() << " unidentified nodes " << find.size() << " identified.\n"; 
   return togo; 
 }
 

@@ -20,7 +20,8 @@
 #define CDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/comp_dict_unified_INTERNAL.txt"
 #define NDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"
 
-#define FFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/fraction of trades/fraction of trades before announcement period/fraction_of_trades_before_announcement_period_5d.txt"
+#define FFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/fraction of trades/fraction of trades before announcement period/mean/fraction_of_trades_before_and_outside_announcement_period_5d.txt"
+
 
 
 int main()
@@ -55,7 +56,7 @@ int main()
   auto stop2 = std::chrono::high_resolution_clock::now();   
   auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(stop2-start);
   std::cout << "I/O took " << duration2.count()/1000 << "ms total\n";
-  
+  /*
   for (auto entry: zed.cids_)
   {
     stop2 = std::chrono::high_resolution_clock::now();
@@ -71,12 +72,16 @@ int main()
     auto duration3 = std::chrono::duration_cast<std::chrono::microseconds>(stop3-stop2);
     std::cout << "Optimize took " << duration3.count()/1000 << "ms for company " << entry.second << "\n";
   }
-  /*
-  opt.CompanyOptimize(zed.cnames_.at("Etteplan"), 0.5,0.5);
+  */
+  opt.CompanyOptimize(zed.cnames_.at("Kone"), 0.5,0.5);
   auto stop3 = std::chrono::high_resolution_clock::now();     
   auto duration3 = std::chrono::duration_cast<std::chrono::microseconds>(stop3-stop2);
   std::cout << "Optimize took " << duration3.count()/1000 << "ms for company \n";
-  */
+  opt.CompanyOptimizeQ(zed.cnames_.at("Kone"), 0.5,0.5);
+  auto stop4 = std::chrono::high_resolution_clock::now();     
+  auto duration4 = std::chrono::duration_cast<std::chrono::microseconds>(stop4-stop3);
+  std::cout << "Optimize Q took " << duration4.count()/1000 << "ms for company \n";
+
   return 0;
 
 }

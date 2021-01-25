@@ -136,6 +136,70 @@ Optimizer::CalculateCompanyError(const DatePmap& dm, double p, double q, int k,
   return std::make_tuple(e,dp,dq);
 }
 
+
+std::tuple<double,double,double> 
+Optimizer::CalculateCompanyErrorQ(const DatePmap& dm, double p, std::vector<int>& qv, double q, int k, 
+                          const DatePmap& deriv)
+{
+  double e = 0;
+  double dq = 0;
+  double dp = 0;
+  double low_q = q/2; 
+  if (dm.find(k) == dm.end() || up_.find(k) == up_.end())
+  {
+    throw std::domain_error("company has no data.\n");
+  }
+  auto D = deriv.at(k);
+  for (auto& P:  dm.at(k)) 
+  {
+    for (int i = 0; i < n_nodes_; ++i)
+    {
+      // Default rate is the rate over *all other* companies
+      double def_rate = 0.5;
+      try
+      {
+        def_rate = investorR_.at(i);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << " at " << i << '\n';
+      }      
+      const double& pp = P.second.at(i); 
+      const double& dip = D.at(P.first).at(i);
+      // When they don't take advantage, the error contribution is: 
+      double noq_e = pow((up_.at(k)).at(i) - def_rate*(1-pp), 2);
+      // When they do take with low probability, the error is
+      double loq_e = pow((up_.at(k)).at(i) - low_q*pp + def_rate*(1-pp), 2);
+      // When they take the high probability, the error is:
+      double hiq_e = pow((up_.at(k)).at(i) - q*pp + def_rate*(1-pp), 2);
+
+      // Choose the one with the lowest error 
+      if (noq_e <= loq_e && noq_e <= hiq_e)
+      {
+        e = e + noq_e;
+        qv[i] = 0;
+        dp += 2*(up_.at(k).at(i) - def_rate*(1-pp))*dip;
+        dq += 2*(up_.at(k).at(i) - def_rate*(1-pp))*pp;
+      } 
+      else if (loq_e <= noq_e && loq_e <= hiq_e)
+      {
+        e = e + loq_e;
+        qv[i] = 1;
+        dp += 2*(up_.at(k).at(i) - (low_q*pp + def_rate*(1-pp)))*dip;
+        dq += 2*(up_.at(k).at(i) - (low_q*pp + def_rate*(1-pp)))*pp;
+      }
+      else
+      {
+        e = e + hiq_e;
+        qv[i] = 2;
+        dp += 2*(up_.at(k).at(i) - (q*pp + def_rate*(1-pp)))*dip;
+        dq += 2*(up_.at(k).at(i) - (q*pp + def_rate*(1-pp)))*pp;
+      }     
+    } 
+  }
+  return std::make_tuple(e,dp,dq);
+}
+
 double Optimizer::norm(const std::vector<double>& x) 
 {
   double res = 0;
@@ -211,16 +275,18 @@ void Optimizer::InitializeDM(DatePmap& dm)
 void Optimizer::InitializeUp()
 {
   investorR_.clear();
-  double avg = 0.0; 
-  double diver = 0.0; 
+  double avg_in = 0.0;
+  double avg_out = 0.0; 
+  double diver_in = 0.0; 
+  double diver_out = 0.0; 
   for (int i = 0; i <= n_nodes_; ++i)
   {
+    investorR_.push_back(0.0);
     auto X = frac_.find(i);
     double sum = 0.0;
     double div = 0.0;
     if (X == frac_.end())
     {
-      investorR_.push_back(0.0);
       continue;
     }
     auto C = frac_.at(i); 
@@ -239,20 +305,24 @@ void Optimizer::InitializeUp()
       if(std::get<0>(C.at(k)) != 0)
       {
 	      (up_.at(k)).at(i) = ( (double) std::get<1>(C.at(k))) / (double) std::get<2>(C.at(k));
-        sum += up_.at(k).at(i);
-        div += 1.0;
+        avg_in += up_.at(k).at(i);
+        diver_in += 1; 
       }
-      else
+      if(std::get<3>(C.at(k)) > 0)
       {
-        div += 1.0;
-      }
-      
+        div += std::get<3>(C.at(k));
+        sum += std::get<4>(C.at(k));
+      }      
     }
-    investorR_.push_back(sum/div);
-    avg += (sum/div);
-    diver += 1.0; 
+    if (div > 0)
+    {
+      investorR_[i] = (sum/div);
+      avg_out += (sum/div);
+      diver_out += 1.0; 
+    }
   }
-  std::cerr << "avg profitability: " << avg/diver << "\n";
+  std::cerr << "avg outside profitability: " << avg_out/diver_out << "\n";
+  std::cerr << "avg inside profitability: " << avg_in/diver_in << "\n";
 }
 
 void Optimizer::CalculateDM(DatePmap& dm, double p, int n, DatePmap& deriv)
@@ -428,4 +498,113 @@ Optimizer::CompanyOptimize(int k, double p, double q)
   }
   std::cerr << "best point found was: \n[" << best_p << " , " << best_q << "]\n";
   std::cerr << "error at the point was " << best_error << "\n";
+}
+
+// Optimizer function for three-tier q- individuals. 
+std::pair<double,double> 
+Optimizer::CompanyOptimizeQ(int k, double p, double q)
+{
+  int n = 500; // Number of iterations per year
+  int max_iter = 100; // Maximum number of iterations. 
+  // Initialize up_ by iterating over nodes (i) and company (k)
+  std::cerr << "Initializing UP...\n";
+  InitializeUp();
+  std::cerr << "Initializing C_years.. \n";
+  InitializeCY();
+  // Initialize dm. This is the P's that we will have for different dates. 
+  DatePmap dm;
+  DatePmap deriv;
+
+  //number
+  
+
+  // l is our iteration counter
+  int l = 0;
+
+  std::cerr << "Optimizing for company " << zed_->cids_.at(k) << "\n";
+
+  // these keep track of the values
+  double best_p = p;
+  double best_q = q;
+  std::vector<int> qv(n_nodes_, 0);  
+  double best_error = -1;
+  double current_p = p;
+  double current_q = q;
+  double current_error = -1;
+  double T = 1000;
+  double scale = 0.1;
+ 
+  double top_p = 1.0;
+  double bottom_p = 0.0;
+  double top_q = 1.0;
+  double bottom_q = 0.0;  
+  bool flip = false;
+
+  // We initialize a new random variable for all runs, so that the seed is initialized fresh
+  Random hrnd; 
+
+  while (l < 3000)
+  {
+    ++l;
+    CalculateDM(dm,p,n,deriv,k);
+    auto r = CalculateCompanyErrorQ(dm, p, qv, q, k, deriv);
+    double err = std::get<0>(r);
+    double dp = std::get<1>(r);
+    double dq = std::get<2>(r);
+    if (best_error < 0 || best_error > err)
+    {
+      best_error = err; 
+      current_error = err;
+      best_p = p;
+      current_p = p;
+      best_q = q;
+      current_q = q;
+      // std::cerr << "found better point at " << p << "," << q << "\n";
+    } 
+    p += (0.1-0.2*hrnd.get());
+    q += (0.1-0.2*hrnd.get());
+    if (p > 1.0)
+    {
+      p = 1.0;
+    }
+    if (q > 1.0)
+    {
+      q = 1.0;
+    }
+    if (p < 0.0)
+    {
+      p = 0.0;
+    }
+    if (q < 0.0)
+    {
+      q = 0.0;
+    }
+  }
+  std::cerr << "best point found was: \n[" << best_p << " , " << best_q << "]\n";
+  std::cerr << "error at the point was " << best_error << "\n";
+  int n_high = 0;
+  int n_low = 0;
+  int n_zero = 0;
+  CalculateDM(dm,best_p,n,deriv,k);
+  auto r = CalculateCompanyErrorQ(dm, best_p, qv, best_q, k, deriv);
+
+  std::cerr << "Re-calculated error at the point was " << std::get<0>(r) << "\n";
+
+  
+  for (int a: qv)
+  {
+    if (a == 0)
+    {
+      ++n_zero;
+    }
+    if (a == 1)
+    {
+      ++n_low;
+    }
+    if (a == 2)
+    {
+      ++n_high;
+    }
+  }
+  std::cerr << "Non_exploiters: " << n_zero << ", low_exploiters: " << n_low << ", and high exploiters: " << n_high; 
 }
