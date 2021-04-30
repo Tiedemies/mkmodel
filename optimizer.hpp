@@ -16,6 +16,7 @@
 class Optimizer
 {
 public: 
+  
   Optimizer(Simulator* sim, IoR* zed);
   ~Optimizer();
   std::pair<double,double> Optimize(double p = 0.5, double q = 0.5);
@@ -37,6 +38,7 @@ public:
   // Calculate the Q given a dm and p and company k and q vector
   std::tuple<double,double,double> CalculateCompanyErrorQ(const DatePmap& dm, double p, std::vector<int>& qv, double q, int k, const DatePmap& deriv);
   
+  void FisherTest();
     
   
 private:
@@ -67,6 +69,11 @@ private:
   std::vector<double> investorR_; 
   std::unordered_map<int,std::set<int>> c_years_; 
   std::unordered_map<int,std::unordered_map<int,int>> c_year_first_;
+  // This will contain the profitability p-value inside, according to fisher test
+  std::unordered_map<int,std::vector<double>> fisher_p_;
+  // This will contain the p-value of trading rate being uniform. We assume it is poisson. 
+  std::unordered_map<int,std::vector<double>> rate_p_; 
+ 
 };
 
 

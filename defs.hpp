@@ -8,9 +8,12 @@
 #include<string>
 #include<set>
 
+// Number of days
+#define NDAYS 5
+
 
 // Dictionaries 
-// Fraction entry: <#possible inside, #profit pi, #market days, #outside trades, #outside profit trades>
+// Fraction entry: <#possible inside, #profit pi, #announcements, #market days, #outside trades, #outside profit trades>
 typedef std::tuple<int,double,int,int,double, double> FractionEntry;
 typedef std::unordered_map<int,int> NodeDict;
 typedef std::unordered_map<int,std::vector<int>> NumTimeDict;

@@ -73,11 +73,11 @@ int main()
     std::cout << "Optimize took " << duration3.count()/1000 << "ms for company " << entry.second << "\n";
   }
   */
-  opt.CompanyOptimize(zed.cnames_.at("Kone"), 0.5,0.5);
+  opt.CompanyOptimize(zed.cnames_.at("Nokia"), 0.5,0.5);
   auto stop3 = std::chrono::high_resolution_clock::now();     
   auto duration3 = std::chrono::duration_cast<std::chrono::microseconds>(stop3-stop2);
   std::cout << "Optimize took " << duration3.count()/1000 << "ms for company \n";
-  opt.CompanyOptimizeQ(zed.cnames_.at("Kone"), 0.5,0.5);
+  opt.CompanyOptimizeQ(zed.cnames_.at("Nokia"), 0.5,0.5);
   auto stop4 = std::chrono::high_resolution_clock::now();     
   auto duration4 = std::chrono::duration_cast<std::chrono::microseconds>(stop4-stop3);
   std::cout << "Optimize Q took " << duration4.count()/1000 << "ms for company \n";

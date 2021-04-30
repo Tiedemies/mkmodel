@@ -279,8 +279,8 @@ IoR::ReadFractions()
       x = in.get();
     }
     double n_profit_outside;
-    in >> n_trade_outside;
-    // std::cerr << " of which " << n_trade_outside << " days are profitable. \n ";
+    in >> n_profit_outside;
+    //std::cerr << " of which " << n_trade_outside << " days are profitable. \n ";
     if (cnames_.find(cname) == cnames_.end())
     {
 	    std::cerr << "Warning, company " << cname << " is missing.\n"; 
@@ -291,6 +291,11 @@ IoR::ReadFractions()
     {
       CompanyFractions newfrac;
       togo[node_id] = newfrac;
+    }
+    if (n_trade_outside < n_profit_outside)
+    {
+      std::cerr << "Warning: Company " << cname <<  " has trader " << owner_id << " do " << n_trade_outside << " trades and " << n_profit_outside << " profit ??\n";
+      throw std::logic_error("foobar");
     }
     FractionEntry foo = std::make_tuple(n_trade,n_profit,n_an,n_market_days,n_trade_outside, n_profit_outside);
     

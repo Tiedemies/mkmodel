@@ -117,7 +117,7 @@ Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
   const MonoGraph* graph = mgraph_->GetGraph(date);
   int nodes = graph->GetNumber();
   std::vector<double> result(nodes+1,0); 
-  std::vector<double> margin(nodes+1,0); 
+  std::vector<double> margin(nodes+1,1);
   #pragma omp parallel for 
   for (int i = 0; i < n; ++i)
   {
@@ -125,6 +125,7 @@ Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
     std::list<int> infected;
     for (auto j: inside)
     {
+      //deriv[j] = 0;
       infected.push_back(j); 
       is_infected.at(j) = true;
     }
@@ -143,5 +144,14 @@ Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
       } 
     }
   }
+
+  // The last iteration calculates the derivatives. 
+  for (auto j: inside)
+  {
+    margin.at(j) = 0; // The derivative is 0 because these are at 0. 
+  }
+  bool changed = true;
+  int iter = 0;
+
   return std::make_pair(result,margin); 
 }
