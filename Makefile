@@ -1,6 +1,6 @@
 CC=g++ 
-CFLAGS= -std=gnu++11 -O3 -Wall -openmp
-CXXFLAGS= -std=gnu++11 -O3 -Wall -openmp
+CFLAGS= -std=gnu++11 -O3 -Wall -fopenmp
+CXXFLAGS= -std=gnu++11 -O3 -Wall -fopenmp
 CFILES=RunEmpirical.cpp mkmodel.cpp h_random.cpp graphmodel.cpp mcsim.cpp ioroutines.cpp optimizer.cpp
 OBJ=RunEmpirical.o mkmodel.o h_random.o graphmodel.o mcsim.o ioroutines.o optimizer.o
 DEPS=defs.hpp graphmodel.hpp h_random.hpp ioroutines.hpp mcsim.hpp mkmodel.hpp optimizer.hpp stat_tester.hpp
