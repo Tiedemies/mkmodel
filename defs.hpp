@@ -23,6 +23,7 @@ typedef std::unordered_map<std::string,int> CompanyNameDict;
 typedef std::unordered_map<int, std::string> CompanyNameInvDict; 
 typedef std::unordered_map<int, std::vector<int>> AnnouncementDict; 
 typedef std::set<int> AnnouncementDates; 
+typedef std::vector<int> AnnouncementVector; 
 typedef std::vector<double> Pmap;
 typedef std::unordered_map<int,Pmap> CompanyPmap; 
 typedef std::unordered_map<int,CompanyPmap> DatePmap; 

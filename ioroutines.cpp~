@@ -7,9 +7,6 @@
 #include <ctype.h>
 #include <set>
 
-#define ANFILE "/announcement_periods_with_insiders.txt"
-#define ANDFILE "/table_announcements.txt"
-
 IoR::IoR()
 {
   //void, default
@@ -20,23 +17,19 @@ IoR::~IoR()
   //void default
 }
 
-void IoR::SetAnnouncementDirectory(const std::string& andir)
+void IoR::SetAnnouncementDirectory(std::string andir)
 {
   andir_ = andir;
 }
-void IoR::SetTablesDirectory(const std::string& tbldir)
-{
-  tablesdir_ = tbldir;
-}
-void IoR::SetCompanyDictionaryFile(const std::string& cdictfile)
+void IoR::SetCompanyDictionaryFile(std::string cdictfile)
 {
   cdictfile_ = cdictfile;
 }
-void IoR::SetNodeDictionaryFile(const std::string& ndictfile)
+void IoR::SetNodeDictionaryFile(std::string ndictfile)
 {
   ndictfile_ = ndictfile;
 }
-void IoR::SetFractionsFile(const std::string& fractionsfile)
+void IoR::SetFractionsFile(std::string fractionsfile)
 {
   fractionsfile_ = fractionsfile;
 }
@@ -169,7 +162,7 @@ AnnouncementDict IoR::ReadAnnouncements()
     return togo;
   }
   std::ifstream in;
-  in.open(andir_ + ANFILE);
+  in.open(andir_ + "/announcement_periods.txt");
   if (!in.is_open())
   {
     std::cerr << "Warning, announcement file not found, null announcements\n";
@@ -229,16 +222,15 @@ IoR::ReadFractions()
     in >> owner_id;
     int node_id;
     if (nodeinvdict_.find(owner_id) == nodeinvdict_.end())
-    {
-	    node_id = owner_id;
-	    nfind.insert(owner_id);
-    }
+      {
+	node_id = owner_id;
+	nfind.insert(owner_id);
+      }
     else
-    {
-	    node_id = nodeinvdict_.at(owner_id); 
-	    find.insert(owner_id);
-    }
-    // std::cerr << "read owner nr: " << owner_id << " ... ";
+      {
+	node_id = nodeinvdict_.at(owner_id); 
+	find.insert(owner_id);
+      }
     std::string cname; 
     in.get();
     char next = in.get();
@@ -247,13 +239,11 @@ IoR::ReadFractions()
       cname.push_back(next);
       next = in.get(); 
     } 
-    //std::cerr << " got company " << cname << " ... ";
     int n_trade;
     in >> n_trade;
     in.get();
     double n_profit;
     in >> n_profit;
-    //std::cerr << " got " << n_profit << " inside profit days ... ";
     in.get();
     int n_an;
     in >> n_an;
@@ -262,52 +252,29 @@ IoR::ReadFractions()
     {
       char x = in.get();
       while(x != ';' &&  !in.eof() && in.good())
-	    {
-	      x = in.get(); 
-	    }
+	{
+	  x = in.get(); 
+	}
       ++count_del;
     }
     int n_market_days;
     in >> n_market_days;
-    //std::cerr << " got " << n_market_days << " market days ... ";
-    char x = in.get();
-    while(x!=';' && !in.eof() && in.good())
-    {
-      x = in.get();
-    }
-    double n_trade_outside;
-    in >> n_trade_outside;
-    //std::cerr << " got " << n_trade_outside << " outside days ... ";
-    x = in.get();
-    while(x!=';' && !in.eof() && in.good())
-    {
-      x = in.get();
-    }
-    double n_profit_outside;
-    in >> n_profit_outside;
-    //std::cerr << " of which " << n_trade_outside << " days are profitable. \n ";
     if (cnames_.find(cname) == cnames_.end())
-    {
-	    std::cerr << "Warning, company " << cname << " is missing.\n"; 
-	    continue;
-    }
+      {
+	std::cerr << "Warning, company " << cname << " is missing.\n"; 
+	continue;
+      }
     int cnum = cnames_.at(cname);
     if (togo.find(node_id) == togo.end())
     {
       CompanyFractions newfrac;
       togo[node_id] = newfrac;
     }
-    if (n_trade_outside < n_profit_outside)
-    {
-      std::cerr << "Warning: Company " << cname <<  " has trader " << owner_id << " do " << n_trade_outside << " trades and " << n_profit_outside << " profit ??\n";
-      throw std::logic_error("foobar");
-    }
-    FractionEntry foo = std::make_tuple(n_trade,n_profit,n_an,n_market_days,n_trade_outside, n_profit_outside);
+    FractionEntry foo = std::make_tuple(n_trade,n_profit,n_an,n_market_days);
     
     (togo[node_id])[cnum] = foo;
-    //throw std::logic_error("test");
   }
-  //std::cerr << "fractions done. " << nfind.size() << " unidentified nodes " << find.size() << " identified.\n"; 
+  std::cerr << "fractions done. " << nfind.size() << " unidentified nodes " << find.size() << " identified.\n"; 
   return togo; 
 }
 
