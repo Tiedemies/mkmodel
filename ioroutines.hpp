@@ -13,7 +13,19 @@ public:
   IoR();
   ~IoR();
   void SetAnnouncementDirectory(const std::string& andir);
-  void SetTablesDirectory(const std::string& andir);
+  // Tables
+  void SetTablesDirectory(const std::string& tdir);
+  void SetAnnounceTableFile(const std::string& atfile);
+  void SetInsiderTableFile(const std::string& itfile);
+  void SetPriceTableFile(const std::string& ptfile);
+  void SetTransactionTableFile(const std::string& ttfile);
+  void ReadTables();
+  AnnouncementDict ReadAnnounceTable();
+  void ReadInsiderTable();
+  void ReadPriceTable();
+  void ReadTransactionTable();
+
+  // Dictionaries
   void SetCompanyDictionaryFile(const std::string& cdictfile);
   void SetNodeDictionaryFile(const std::string& ndictfile);
   void SetFractionsFile(const std::string& fractionsfile);
@@ -29,10 +41,18 @@ public:
   CompanyNameDict cnames_;
   CompanyNameInvDict cids_;
 private:
+  std::string ReadNext(std::istream& in);
+  void SkipLine(std::istream& in);
   std::vector<int> ReadTimes(std::istream& in);
   std::string ndictfile_;
   std::string andir_;
-  std::string tablesdir_; 
+  std::string tablesdir_;
+  std::string itfile_;
+  std::string atfile_;
+  std::string ttfile_;
+  std::string ptfile_; 
+
+
   std::string cdictfile_;
   std::string fractionsfile_;
   NodeDict nodedict_;

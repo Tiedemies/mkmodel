@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <set>
+#include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/date_time/gregorian/gregorian.hpp"
 
 #define ANFILE "/announcement_periods_with_insiders.txt"
 #define ANDFILE "/table_announcements.txt"
@@ -23,10 +25,6 @@ IoR::~IoR()
 void IoR::SetAnnouncementDirectory(const std::string& andir)
 {
   andir_ = andir;
-}
-void IoR::SetTablesDirectory(const std::string& tbldir)
-{
-  tablesdir_ = tbldir;
 }
 void IoR::SetCompanyDictionaryFile(const std::string& cdictfile)
 {
@@ -310,4 +308,133 @@ IoR::ReadFractions()
   //std::cerr << "fractions done. " << nfind.size() << " unidentified nodes " << find.size() << " identified.\n"; 
   return togo; 
 }
+// Tables:
+void 
+IoR::SetTablesDirectory(const std::string& tdir)
+{
+  tablesdir_ = tdir;
+}
 
+void 
+IoR::SetAnnounceTableFile(const std::string& atfile)
+{
+  atfile_ = atfile;
+}
+
+void 
+IoR::SetInsiderTableFile(const std::string& itfile)
+{
+  itfile_ = itfile;
+}
+
+void 
+IoR::SetPriceTableFile(const std::string& ptfile)
+{
+  ptfile_ = ptfile;
+}
+
+void 
+IoR::SetTransactionTableFile(const std::string& ttfile)
+{
+  ttfile_ = ttfile; 
+}
+
+// Now read everything: 
+void 
+IoR::ReadTables()
+{
+  ReadAnnounceTable();
+  // ReadInsiderTable();
+  // ReadPriceTable();
+  // ReadTransactionTable();
+}
+
+// Read table from tablesfile. 
+AnnouncementDict
+IoR::ReadAnnounceTable()
+{
+  // This is for the announcment dates.   
+  AnnouncementDict togo;
+
+  // Company Dictionary needs to be read. 
+  if (cids_.empty())
+  {
+    //std::cerr << "Warning, no company dictionary, reading now";
+    //void ReadCompanyDictionary();
+  }
+
+  /// Read the tables now 
+  using namespace boost::gregorian; 
+  std::ifstream in;
+  in.open(tablesdir_ +  atfile_);
+  if (!in.is_open())
+  {
+    std::cerr << "Warning, announcement table file not found, null table set\n";
+    return togo; 
+  }
+  // Read one line  which is the header and throw away. 
+  std::string line;
+  std::getline(in, line);
+  date ref_time(from_simple_string(REFDAY));
+  // Loop reads the line. 
+  while (!in.eof() && in.good())
+  {
+    // First read the date. 
+    std::string datestr = ReadNext(in);  
+    std::cerr << "read date: " << datestr; 
+    date tt;
+    try
+    {
+       tt = from_simple_string(datestr);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      break;
+    }
+    int days = (tt-ref_time).days();
+    std::cerr << "read day: " << days; 
+   
+    // Skip NetDays;
+    ReadNext(in);
+    // Skip nextDay
+    ReadNext(in);
+    // Skip Company Name
+    ReadNext(in);
+    // Read ISIN
+    std::string isin = ReadNext(in);
+    // Skip id; relatedto:
+    ReadNext(in);
+    ReadNext(in);
+    std::string sched = ReadNext(in);
+    if (sched == "Non-scheduled")
+    {
+      std::cerr << "isin: " << isin << ", scheduled: " << sched << "\n";
+    }
+    SkipLine(in);
+  }
+  return togo; 
+}
+
+std::string
+IoR::ReadNext(std::istream& in)
+{
+  std::string togo;
+  char next = in.get();
+  while(next != ';' && in.good())
+  {
+    togo.push_back(next);
+    next = in.get();
+  }
+  return togo;
+}
+
+void 
+IoR::SkipLine(std::istream& in)
+{
+  char x = in.get();;
+  while ((x !='\n') && in.good())
+  {
+    x = in.get();
+  }
+}

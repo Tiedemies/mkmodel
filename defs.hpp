@@ -10,6 +10,7 @@
 
 // Number of days
 #define NDAYS 5
+#define REFDAY "2001-01-01 12:00:00"
 
 
 // Dictionaries 
@@ -36,5 +37,8 @@ typedef std::unordered_map<int,Alist> AdjLists;
 typedef std::pair<int,int> MkTrans;
 typedef std::vector<MkTrans> MkAlist;
 typedef std::vector<MkAlist> MkLists;
+
+//tables 
+
 
 #endif
