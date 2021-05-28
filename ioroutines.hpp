@@ -20,10 +20,10 @@ public:
   void SetPriceTableFile(const std::string& ptfile);
   void SetTransactionTableFile(const std::string& ttfile);
   void ReadTables();
-  AnnouncementDict ReadAnnounceTable();
+  AnnouncementTable ReadAnnounceTable();
   void ReadInsiderTable();
-  void ReadPriceTable();
-  void ReadTransactionTable();
+  PriceTable ReadPriceTable();
+  NodeTransactionTable ReadTransactionTable();
 
   // Dictionaries
   void SetCompanyDictionaryFile(const std::string& cdictfile);
@@ -60,9 +60,12 @@ private:
   AnnouncementDates an_dates_; 
   AnnouncementDict announcements_;
 
+  // Tables:
+  AnnouncementTable an_table_;
+  PriceTable pr_table_; 
+  NodeTransactionTable tr_table_; 
 
-
-
+  friend class StatTester; 
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include "ioroutines.hpp"
+#include "stat_tester.hpp"
 
 #define TABLEDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/raw_tables/" 
 #define ANFILE "table_announcements.txt"
@@ -8,12 +9,6 @@
 
 int main()
 {
-    IoR X;
-    X.SetTablesDirectory(TABLEDIR);
-    X.SetAnnounceTableFile(ANFILE);
-    X.SetInsiderTableFile(INSFILE);
-    X.SetPriceTableFile(PRICEFILE);
-    X.SetTransactionTableFile(TRANSACTFILE);
-    X.ReadTables();
-
+    StatTester foo;
+    foo.CreateProfitWindows();
 }
