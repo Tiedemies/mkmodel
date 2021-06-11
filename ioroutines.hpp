@@ -1,6 +1,7 @@
 #ifndef IO_R
 #define IO_R
 #include "defs.hpp"
+#include "graphmodel.hpp"
 #include<fstream>
 #include<iostream>
 #include<string>
@@ -20,10 +21,10 @@ public:
   void SetPriceTableFile(const std::string& ptfile);
   void SetTransactionTableFile(const std::string& ttfile);
   void ReadTables();
-  AnnouncementTable ReadAnnounceTable();
+  void ReadAnnounceTable();
   void ReadInsiderTable();
-  PriceTable ReadPriceTable();
-  NodeTransactionTable ReadTransactionTable();
+  void ReadPriceTable();
+  void ReadTransactionTable();
 
   // Dictionaries
   void SetCompanyDictionaryFile(const std::string& cdictfile);
@@ -38,12 +39,15 @@ public:
   int max_com_; 
   int max_tra_;
   std::set<int> years_;
+  std::set<int> trade_days_; 
+  std::set<std::string> isin_set_; 
   CompanyNameDict cnames_;
   CompanyNameInvDict cids_;
 private:
   std::string ReadNext(std::istream& in);
   void SkipLine(std::istream& in);
   std::vector<int> ReadTimes(std::istream& in);
+  std::string graphdir_; 
   std::string ndictfile_;
   std::string andir_;
   std::string tablesdir_;
@@ -52,6 +56,7 @@ private:
   std::string ttfile_;
   std::string ptfile_; 
 
+  MetaGraph* metag_; 
 
   std::string cdictfile_;
   std::string fractionsfile_;
@@ -64,6 +69,9 @@ private:
   AnnouncementTable an_table_;
   PriceTable pr_table_; 
   NodeTransactionTable tr_table_; 
+
+  // Transformations:
+  IsinCompanyMap isin_company_; 
 
   friend class StatTester; 
 };

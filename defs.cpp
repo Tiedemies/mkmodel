@@ -60,3 +60,44 @@ PriceTable::size()
     return (int) pt_.size(); 
 }
 
+
+// Transaction table
+
+TransactionTable::TransactionTable()
+{
+    // Default
+    sorted_ = false;
+    return;
+}
+TransactionTable::~TransactionTable()
+{
+    // void
+}
+
+// Add a company day price
+void 
+TransactionTable::AddPCompanyDayPriceTransaction(const std::string& cname, int day, double price, double volume)
+{
+    pt_[cname].push_back(std::make_tuple(day,price, volume));
+}
+
+void 
+TransactionTable::Sort()
+{
+    if(sorted_)
+    {
+        return;
+    }
+    for (auto Z: pt_)
+    {
+        std::sort(Z.second.begin(),Z.second.end(),std::less<std::tuple<int,double,double>>()); 
+    }
+    sorted_ = true; 
+}
+
+int 
+TransactionTable::size()
+{
+    return (int) pt_.size(); 
+}
+

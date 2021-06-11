@@ -12,12 +12,26 @@
 #define NDAYS 5
 #define REFDAY "2001-01-01 12:00:00"
 
+// Define significance levels:
+#define SIGNIFICANT 0.05
+#define VERY_SIGNIFICANT 0.01
+#define EXTRA_SIGNIFICANT 0.001
+
+// What return is considered profit:
+#define PROFIT_THRESHOLD 0.0
+
 // The default directories and files. 
 #define TABLEDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/raw_tables/" 
 #define ANFILE "table_announcements.txt"
 #define INSFILE "table_insiderships.txt"
 #define PRICEFILE "table_prices.txt"
 #define TRANSACTFILE "table_transacitions.txt"
+// Here define the network directory
+#define NWDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"
+// Dictionaries 
+#define CDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/comp_dict_unified_INTERNAL.txt"
+#define NDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"
+
 
 
 // Dictionaries 
@@ -36,6 +50,8 @@ typedef std::vector<double> Pmap;
 typedef std::unordered_map<int,Pmap> CompanyPmap; 
 typedef std::unordered_map<int,CompanyPmap> DatePmap; 
 
+typedef std::unordered_map<std::string, std::string> IsinCompanyMap;
+
 // Graph
 typedef std::vector<int> Alist; 
 typedef std::unordered_map<int,Alist> AdjLists;
@@ -47,8 +63,10 @@ typedef std::vector<MkAlist> MkLists;
 
 //tables 
 typedef std::unordered_map<std::string, std::vector<int>> AnnouncementTable;
-typedef std::vector<std::pair<int,double>> DatePriceVector; 
-typedef std::unordered_map<std::string,DatePriceVector> InternalPriceTable; 
+typedef std::vector<std::pair<int,double>> DatePriceVector;
+typedef std::vector<std::tuple<int,double,double>> DatePriceVolumeVector; 
+typedef std::unordered_map<std::string,DatePriceVector> InternalPriceTable;
+typedef std::unordered_map<std::string,DatePriceVolumeVector> InternalTransactionTable; 
 // Pricetable and functionality
 class PriceTable
 {
@@ -65,7 +83,29 @@ class PriceTable
         friend class StatTester; 
 };
 
-typedef std::unordered_map<int,PriceTable*> NodeTransactionTable;  
+class TransactionTable
+{
+    private:
+        InternalTransactionTable pt_;
+        bool sorted_;
+    public:
+        TransactionTable();
+        ~TransactionTable();
+        void AddPCompanyDayPriceTransaction(const std::string& cname, int day, double price, double volume);
+        void Sort();
+        int size();
+        friend class StatTester; 
+};
+
+
+typedef std::unordered_map<int,TransactionTable> NodeTransactionTable;  
+
+typedef std::unordered_map<std::string, std::vector<double>> CompanyProfitTable; 
+typedef std::unordered_map<int, CompanyProfitTable> NodeProfitMap;
+typedef std::unordered_map<std::string, int> IsinCountMap; 
+typedef std::unordered_map<int, IsinCountMap> NodeIsinCountMap; 
+typedef std::unordered_map<int, double> CompanyPValueMap;
+typedef std::unordered_map<int, CompanyPValueMap> NodeCompanyPValueMap;
 
 
 #endif

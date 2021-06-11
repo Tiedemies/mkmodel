@@ -5,6 +5,7 @@
 #include<dirent.h>
 #include<new>
 #include<algorithm>
+#include<list>
 
 #define FHANDLE "/egde_list.txt"
 #define CHANDLE "/company_dict_insiders.txt"
@@ -104,6 +105,61 @@ int MonoGraph::GetNumber() const
   return number_;
 }
 
+int 
+MonoGraph::GetDistance(int comp, int node)
+{
+  const auto d = GetDistances(comp);
+
+  if (d.find(node) == d.end())
+  {
+    return 0;
+  }
+  return d.at(node); 
+}
+
+// Breadth first:
+const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
+{
+  if (dists_.find(c) != dists_.end())
+  {
+    return dists_[c];
+  }
+  std::unordered_map<int,int>& d = dists_[c];
+  if (insiderdict_.find(c) == insiderdict_.end())
+  {
+    return d; 
+  }
+  std::list<int> q;
+  // first initialize:
+  for (int j: insiderdict_.at(c))
+  {
+    d[j] = 0;
+    q.push_back(j);
+  }
+  while (!q.empty())
+  {
+    int node = q.front();
+    int dist = d[node];
+    q.pop_front();
+    auto adj_list_it = adj_.find(node);
+    if (adj_list_it == adj_.end())
+    {
+      continue;
+    }
+    for (int next: adj_list_it->second)
+    {
+      auto dist_it = d.find(next);
+      if(dist_it != d.end())
+      {
+        continue;
+      }
+      d[next] = dist + 1;
+      q.push_back(next);
+    }
+  }
+  return d;
+}
+
 
 MetaGraph::MetaGraph(std::string dir)
 {
@@ -184,9 +240,9 @@ MetaGraph::~MetaGraph()
   // void
 }
 
-const MonoGraph* MetaGraph::GetGraph(int date) const
+MonoGraph* MetaGraph::GetGraph(int date) const
 {
-  auto it = graphs_.find(date);
+  auto it = graphs_.lower_bound(date);
   if (it == graphs_.end())
   {
     return 0;

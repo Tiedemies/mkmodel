@@ -10,5 +10,13 @@
 int main()
 {
     StatTester foo;
+    std::cerr << "init.\n";
+    foo.CreateInsideDayWindows();
+    std::cerr << "inside windows calculated\n";
     foo.CreateProfitWindows();
+    std::cerr << " profit windows done\n";
+    foo.TestHyperG();
+    std::cerr << " hypergeometric tests done\n";
+    foo.GenerateDataMatrix();
+    std::cerr << " Datamatrix generated \n";
 }

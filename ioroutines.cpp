@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <set>
+#include <new>
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/date_time/gregorian/gregorian.hpp"
 
@@ -16,6 +17,8 @@ IoR::IoR()
   atfile_ = ANFILE;
   ptfile_ = PRICEFILE;
   ttfile_ = TRANSACTFILE;
+  graphdir_ = NWDIR;
+  metag_ = new MetaGraph(graphdir_);
 }
 
 IoR::~IoR()
@@ -61,15 +64,15 @@ void IoR::ReadCompanyDictionary()
       char x = in.get();
       while(x != '\n')
       {
-	if (!iscntrl(x)) 
-	  {
-	    namestr.push_back(x);
-	  }
-	x = in.get(); 
+	      if (!iscntrl(x)) 
+        {
+          namestr.push_back(x);
+        }
+	      x = in.get(); 
       }
       if (c > max_com_)
       {
-	max_com_ = c; 
+	      max_com_ = c; 
       }
       cids_[c] = namestr;
       cnames_[namestr] = c;
@@ -344,18 +347,17 @@ IoR::SetTransactionTableFile(const std::string& ttfile)
 void 
 IoR::ReadTables()
 {
-  an_table_ = ReadAnnounceTable();
+  ReadAnnounceTable();
   // ReadInsiderTable();
-  pr_table_ = ReadPriceTable();
-  tr_table_ = ReadTransactionTable();
+  ReadPriceTable();
+  ReadTransactionTable();
 }
 
 // Read table from tablesfile. 
-AnnouncementTable
+void
 IoR::ReadAnnounceTable()
 {
   // This is for the announcment dates.   
-  AnnouncementTable togo;
 
   // Company Dictionary needs to be read. 
   if (cids_.empty())
@@ -371,7 +373,7 @@ IoR::ReadAnnounceTable()
   if (!in.is_open())
   {
     std::cerr << "Warning, announcement table file not found, null table set\n";
-    return togo; 
+    return; 
   }
   // Read one line  which is the header and throw away. 
   std::string line;
@@ -399,10 +401,24 @@ IoR::ReadAnnounceTable()
     ReadNext(in);
     // Skip nextDay
     ReadNext(in);
-    // Skip Company Name
+    // Read Company Name
     std::string cname = ReadNext(in);
     // Read ISIN
     std::string isin = ReadNext(in);
+
+    auto isin_it = isin_company_.find(isin);
+    if (isin_it != isin_company_.end())
+    {
+        if (isin_it->second != cname)
+        {
+          std::cerr << "WARNING: duplicate name " << cname << " for isin " << isin << ", old name " << isin_it->second << "\n";
+        }
+    }
+    else
+    {
+      isin_company_[isin] = cname; 
+    }
+    
     // Skip id; relatedto:
     ReadNext(in);
     ReadNext(in);
@@ -410,33 +426,30 @@ IoR::ReadAnnounceTable()
     if (sched == "Non-scheduled")
     {
       ++count;
-      togo[isin].push_back(days);
+      an_table_[isin].push_back(days);
     }
     SkipLine(in);
   }
   //Debug output:
-  std::cerr << "Read " << count <<  " announcements for " << togo.size() << " isin codes \n";
-  for (auto XY: togo)
+  std::cerr << "Read " << count <<  " announcements for " << an_table_.size() << " isin codes \n";
+  for (auto XY: an_table_)
   {
     std::sort(XY.second.begin(), XY.second.end());
-  }
-  return togo; 
+  } 
 }
 
-PriceTable
+void
 IoR::ReadPriceTable()
 {
-  // This is for the announcment dates.   
-  PriceTable togo;
-
+ 
   /// Read the tables now 
   using namespace boost::gregorian; 
   std::ifstream in;
+  trade_days_.clear(); 
   in.open(tablesdir_ +  ptfile_);
   if (!in.is_open())
   {
     std::cerr << "Warning, price table file not found, null table set\n";
-    return togo; 
   }
   // Read one line  which is the header and throw away. 
   std::string line;
@@ -460,26 +473,25 @@ IoR::ReadPriceTable()
       break;
     }
     int days = (tt-ref_time).days();
-   
+    trade_days_.insert(days);
     // ReadIsin;
     std::string isin = ReadNext(in);
+    isin_set_.insert(isin);
     std::string pricestr = ReadNext(in);
     double price = std::stod(pricestr);
-    togo.AddPCompanyDayPrice(isin, days, price);
+    pr_table_.AddPCompanyDayPrice(isin, days, price);
     ++count; 
     SkipLine(in);
   }
   //Debug output:
-  std::cerr << "Read " << count <<  " prices for " << togo.size() << " isin codes.\n";
-  togo.Sort(); 
-  return togo; 
+  std::cerr << "Read " << count <<  " prices for " << pr_table_.size() << " isin codes.\n";
+  pr_table_.Sort();  
 }
 
-NodeTransactionTable
+void
 IoR::ReadTransactionTable()
 {
   // This is for the announcment dates.   
-  NodeTransactionTable togo;
 
   /// Read the tables now 
   using namespace boost::gregorian; 
@@ -488,7 +500,7 @@ IoR::ReadTransactionTable()
   if (!in.is_open())
   {
     std::cerr << "Warning, transaction table file not found, null table set\n";
-    return togo; 
+    return;
   }
   // Read one line  which is the header and throw away. 
   std::string line;
@@ -519,8 +531,8 @@ IoR::ReadTransactionTable()
     ReadNext(in); 
     std::string isin = ReadNext(in);
     double price = std::stod(ReadNext(in));
-    // double volume = std::stod(ReadNext(in));
-    ReadNext(in);
+    double volume = std::stod(ReadNext(in));
+    // ReadNext(in);
     //skip vol_price
     ReadNext(in);
     std::string temp = ReadNext(in);
@@ -536,16 +548,16 @@ IoR::ReadTransactionTable()
       continue; 
     }
     
-    if (togo.find(nodeid) == togo.end())
+    if (tr_table_.find(nodeid) == tr_table_.end())
     {
-      togo[nodeid] = new PriceTable();
+      TransactionTable novel;
+      tr_table_[nodeid] = novel;
     }
-    togo[nodeid]->AddPCompanyDayPrice(isin, days, price);
+    tr_table_[nodeid].AddPCompanyDayPriceTransaction(isin, days, price, volume);
     ++count; 
   }
   //Debug output:
-  std::cerr << "Read " << count <<  " transactions for " << togo.size() << " traders. " << foo << " bad.\n";
-  return togo; 
+  std::cerr << "Read " << count <<  " transactions for " << tr_table_.size() << " traders. " << foo << " bad.\n"; 
 }
 
 std::string

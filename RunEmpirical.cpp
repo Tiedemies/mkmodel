@@ -14,11 +14,8 @@
 #include <chrono>
 
 
-// Here define the network directory, announcement directory, company dictionary file. 
-#define NWDIR "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"
+
 #define ADIR "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/announcements"
-#define CDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/comp_dict_unified_INTERNAL.txt"
-#define NDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"
 
 #define FFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/fraction of trades/fraction of trades before announcement period/mean/fraction_of_trades_before_and_outside_announcement_period_5d.txt"
 
