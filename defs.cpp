@@ -40,6 +40,34 @@ PriceTable::GetCompanyDayPrice(const std::string& cname, int day, int offset) co
     return lower->second; 
 }
 
+double 
+PriceTable::GetFirstChangePrice(const std::string& cname, int day, int offset) const
+{
+    if (!sorted_)
+    {
+        throw std::runtime_error("unsorted pricetables"); 
+    }
+    auto pt_it = pt_.find(cname);
+    if(pt_it == pt_.end())
+    {
+        return nan("notfound");
+    }
+    auto lower = std::upper_bound(pt_it->second.begin(), pt_it->second.end(), std::make_pair(day, 0.0),std::less_equal<std::pair<int,double>>());
+    double ref = lower->second; 
+    bool changed = false; 
+    while (lower != pt_it->second.end() && (*lower).first < day+offset && !changed)
+    {
+        ++lower;
+        if (lower != pt_it->second.end())
+        {
+            changed = (fabs(lower->second - ref) > 0.00001);
+        }
+        else return(ref);
+    }
+    return lower->second; 
+}
+
+
 void 
 PriceTable::Sort()
 {

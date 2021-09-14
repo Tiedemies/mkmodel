@@ -29,7 +29,17 @@ class StatTester
     // Do the hypergeometric tests of inside vs outside. 
     void TestHyperG(); 
 
+    // Generate the major data matrix for regression
     void GenerateDataMatrix(); 
+
+    // Generate a smaller, simpler data matrix. 
+    void GenerateSmallDataMatrix();
+
+    void GenerateCSV();
+
+    void PrintHGTest();
+
+    void DoGraphTests();
 
     private:
     // Days in the window
@@ -62,5 +72,11 @@ class StatTester
     // The data matrix for regression 
     boost::numeric::ublas::matrix<double> X_; 
     boost::numeric::ublas::matrix<double> y_;
+
+    // Sets that entail the elements in the major cluster:
+    std::unordered_map<int,int> major_companies_;
+    std::unordered_map<int,int> major_players_; 
+
+
 };
 #endif

@@ -18,6 +18,7 @@ MonoGraph::MonoGraph(std::ifstream& in)
   int i = 0;
   adj_[0] = {};
   number_ = 0;
+  num_edges_ = 0;
   if (in.is_open())
   {
     in >> c;
@@ -33,10 +34,12 @@ MonoGraph::MonoGraph(std::ifstream& in)
       if (a_it == adj_.end())
       {
 	      adj_[s_node] = Alist{t_node};
+        ++num_edges_;
       }
       else
       {
-	      adj_[s_node].push_back(t_node); 
+	      adj_[s_node].push_back(t_node);
+        ++num_edges_; 
       }
       if (s_node > number_) number_ = s_node;
       if (t_node > number_) number_ = t_node; 
@@ -49,6 +52,7 @@ MonoGraph::MonoGraph(std::ifstream& in)
   {
     std::cerr << "Failed to open file.\n";
   }
+  max_distance_ = 0;
 }
 MonoGraph::~MonoGraph()
 {
@@ -112,10 +116,117 @@ MonoGraph::GetDistance(int comp, int node)
 
   if (d.find(node) == d.end())
   {
-    return 0;
+    return -1; //2*max_distance_;
   }
   return d.at(node); 
 }
+
+/* Betweenness cntrality*/
+double
+MonoGraph::GetCentrality(int node)
+{
+  // This gives the betweenness-centrality
+  //std::cerr << "cen. called\n";
+  if (node < 0)
+  {
+    throw std::runtime_error("Negative node index");
+  }
+  if (centrality_.size() > 0 && centrality_.size() > node)
+  {
+    //std::cerr << centrality_.size() << " and " << node << "\n"; 
+    return centrality_.at(node);
+  }
+  //std::cerr << "cen. executing\n";
+  if (centrality_.size() > 0)
+  {
+    throw std::runtime_error("node value too large");
+  }
+  // We calculate betweenness-centrality using Brandes- Algorithm
+  // Journal of Math. Sociology 25(2001), 2, pp 163-177
+  const int n = number_ + 1;
+  //std::cerr << "n " << n << "\n";
+  centrality_.resize(n,0.0);
+  std::vector<std::list<int>> P(n);
+  for (int s = 0; s < n; ++s)
+  {
+    std::list<int> S;
+    std::vector<std::list<int>> P(n);
+    std::list<int> Q; 
+    std::vector<double> sigma(n,0);
+    std::vector<int> d(n, -1);
+    d[s] = 0;
+    sigma[s] = 1.0; 
+    Q.push_back(s);
+    while (!Q.empty())
+    {
+      int u = Q.front();
+      Q.pop_front();
+      S.push_back(u);
+      auto adj_it = adj_.find(u);
+      if (adj_it == adj_.end())
+      {
+        // no neighbours
+        continue;
+      }
+      for (int v: adj_it->second)
+      {
+        if (d[v] < 0)
+        {
+          d[v] = d[u] + 1;
+          Q.push_back(v);
+        }
+        if (d[v] == d[u] + 1)
+        { 
+          sigma[v] = sigma[v] + sigma[u];
+          P[v].push_back(u);
+        } 
+      }
+    }
+    std::vector<double> delta(n,0.0);
+    while(!S.empty())
+    {
+      // How many from s to w 
+      int w = S.back();
+      S.pop_back();
+      for (int v: P[w])
+      {
+        delta[v] = delta[v] + (sigma[v]/sigma[w])*(1 + delta[w]);
+      }
+      if(w != s)
+      {
+        centrality_[w] = centrality_[w] + delta[w];
+      }
+    }
+  }  
+  NormalizeCentrality();
+  // std::cerr << " centrality calculated at least once\n";
+  return centrality_[node];
+}
+
+void 
+MonoGraph::NormalizeCentrality()
+{
+  double min = centrality_[0];
+  double max = -1;
+  for (int i = 0; i < number_ + 1; ++i)
+  {
+    if (centrality_[i] > max)
+    {
+      max = centrality_[i];
+    }
+    if (min > centrality_[i])
+    {
+      min = centrality_[i];
+    }
+  }
+  for (int i = 0; i < number_ +1; ++i)
+  {
+    double c = centrality_[i];
+    c = (c - min)/(max - min);
+    centrality_[i] = c; 
+  }
+}
+
 
 // Breadth first:
 const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
@@ -156,8 +267,46 @@ const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
       d[next] = dist + 1;
       q.push_back(next);
     }
+    if (dist >= max_distance_)
+    {
+      max_distance_ = dist + 1;
+    }
   }
   return d;
+}
+
+
+/*
+ * PageRank algorithm for undirected graphs (DEFUNCT) TODO: Implement properly, now it is *not* page-rank. 
+ */
+double 
+MonoGraph::PageRank(int node, int comp)
+{
+
+  if (P_.size() > node && node >= 0)
+  {
+    return P_.at(node);
+  }
+  double epsilon = 0.001; 
+  double damp = 0.8; 
+  // Initialize first. 
+  P_.resize(number_+1, 0.0);
+  double max = 0.0;
+  for (auto adj_p: adj_)
+  {
+    int src = adj_p.first;
+    double c = static_cast<double>(adj_p.second.size())/static_cast<double>(num_edges_);
+    P_[src] = c;
+    if (c > max)
+    {
+      max = c;
+    }
+  }
+  for (int i = 0; i < number_ + 1; ++i)
+  {
+    P_[i] /= max;
+  }
+  return P_[node];
 }
 
 

@@ -17,6 +17,9 @@ int main()
     std::cerr << " profit windows done\n";
     foo.TestHyperG();
     std::cerr << " hypergeometric tests done\n";
-    foo.GenerateDataMatrix();
+    foo.PrintHGTest();
+    foo.GenerateSmallDataMatrix();
     std::cerr << " Datamatrix generated \n";
+    foo.GenerateCSV();
+    std::cerr << " Datamatrix sent to files\n";
 }

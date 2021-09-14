@@ -29,8 +29,13 @@
 // Here define the network directory
 #define NWDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"
 // Dictionaries 
-#define CDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/comp_dict_unified_INTERNAL.txt"
-#define NDFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"
+#define CDFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/comp_dict_unified_INTERNAL.txt"
+#define NDFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"
+
+//Outputfiles
+#define XCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/X.csv"
+#define YCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/Y.csv"
+
 
 
 
@@ -78,6 +83,7 @@ class PriceTable
         ~PriceTable();
         void AddPCompanyDayPrice(const std::string& cname, int day, double price);
         double GetCompanyDayPrice(const std::string& cname, int day, int offset) const;
+        double GetFirstChangePrice(const std::string& cname, int day, int offset) const;
         void Sort();
         int size();
         friend class StatTester; 
