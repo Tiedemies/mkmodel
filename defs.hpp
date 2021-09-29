@@ -3,6 +3,7 @@
 #ifndef DEFS
 #define DEFS 
 
+#include<map>
 #include<unordered_map>
 #include<vector>
 #include<string>
@@ -10,7 +11,8 @@
 
 // Number of days
 #define NDAYS 5
-#define REFDAY "2001-01-01 12:00:00"
+// Reference day is 5 days before the first announcement
+#define REFDAY "2005-05-21 12:00:00"
 
 // Define significance levels:
 #define SIGNIFICANT 0.05
@@ -24,7 +26,8 @@
 #define TABLEDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/raw_tables/" 
 #define ANFILE "table_announcements.txt"
 #define INSFILE "table_insiderships.txt"
-#define PRICEFILE "table_prices.txt"
+//#define PRICEFILE "table_prices.txt"
+#define PRICEFILE "table_prices_nan.txt"
 #define TRANSACTFILE "table_transacitions.txt"
 // Here define the network directory
 #define NWDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"

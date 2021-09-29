@@ -4,7 +4,7 @@
 #define TABLEDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/raw_tables/" 
 #define ANFILE "table_announcements.txt"
 #define INSFILE "table_insiderships.txt"
-#define PRICEFILE "table_prices.txt"
+#define PRICEFILE "table_prices_nan.txt"
 #define TRANSACTFILE "table_transacitions.txt"
 
 int main()
@@ -18,6 +18,8 @@ int main()
     foo.TestHyperG();
     std::cerr << " hypergeometric tests done\n";
     foo.PrintHGTest();
+    foo.DoGraphTests();
+    //std::cerr << " graph tests done \n";
     foo.GenerateSmallDataMatrix();
     std::cerr << " Datamatrix generated \n";
     foo.GenerateCSV();

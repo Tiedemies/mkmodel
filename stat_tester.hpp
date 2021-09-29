@@ -43,25 +43,32 @@ class StatTester
 
     private:
     // Days in the window
-    int window_size_; 
+    int profit_window_size_;
+    int profit_window_size_2_;
+    int inside_window_size_; 
 
     // Io-class handle
     IoR ior_;
     // How much profit is inside
     NodeProfitMap profit_inside_;
+    NodeProfitMap profit_inside_2_;
     // How many days are inside for each ISIN
     IsinCountMap days_inside_; 
     // How much profit is outside
     NodeProfitMap profit_outside_;
+    NodeProfitMap profit_outside_2_;
     // How many days are outside for each ISIN  
     IsinCountMap days_outside_;
 
     //Nodewise count of how many transactions done out/in:
     NodeIsinCountMap n_profit_inside_;
+    NodeIsinCountMap n_profit_inside_2_;
     NodeIsinCountMap n_profit_outside_;
+    NodeIsinCountMap n_profit_outside_2_;
 
     // P-values for the node-company test
     NodeCompanyPValueMap hg_pvalues_; 
+    NodeCompanyPValueMap hg_pvalues_2_; 
     int num_hg_tests_; 
 
     //Numbers:

@@ -157,7 +157,9 @@ std::vector<int> IoR::ReadTimes(std::istream& in)
     }
   return togo; 
 }
-AnnouncementDict IoR::ReadAnnouncements()
+
+AnnouncementDict 
+IoR::ReadAnnouncements()
 {
   AnnouncementDict togo;
   if (andir_.empty())
@@ -473,14 +475,28 @@ IoR::ReadPriceTable()
       break;
     }
     int days = (tt-ref_time).days();
-    trade_days_.insert(days);
+    if (days >= 0)
+    {
+      trade_days_.insert(days);
+    }
     // ReadIsin;
     std::string isin = ReadNext(in);
     isin_set_.insert(isin);
     std::string pricestr = ReadNext(in);
-    double price = std::stod(pricestr);
-    pr_table_.AddPCompanyDayPrice(isin, days, price);
-    ++count; 
+    double price = std::nan("missing");
+    if (days >= 0)
+    {
+      try
+      {
+        price = std::stod(pricestr);/* code */
+      }
+      catch(const std::exception& e)
+      {
+        price = std::nan("missing");
+      }
+      pr_table_.AddPCompanyDayPrice(isin, days, price);
+      ++count; 
+    }
     SkipLine(in);
   }
   //Debug output:
@@ -547,14 +563,16 @@ IoR::ReadTransactionTable()
       // std::cerr << e.what() << " from " << temp << '\n';
       continue; 
     }
-    
     if (tr_table_.find(nodeid) == tr_table_.end())
     {
       TransactionTable novel;
       tr_table_[nodeid] = novel;
     }
-    tr_table_[nodeid].AddPCompanyDayPriceTransaction(isin, days, price, volume);
-    ++count; 
+    if (days >= 0)
+    {
+      tr_table_[nodeid].AddPCompanyDayPriceTransaction(isin, days, price, volume);
+      ++count;
+    } 
   }
   //Debug output:
   std::cerr << "Read " << count <<  " transactions for " << tr_table_.size() << " traders. " << foo << " bad.\n"; 

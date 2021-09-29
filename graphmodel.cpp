@@ -93,6 +93,7 @@ std::vector<int> MonoGraph::GetInsider(int k) const
 
 const Alist& MonoGraph::GetNeighbours(int i) const
 {
+  //std::cerr << "n\n";
   auto togo = adj_.find(i);
   if (togo == adj_.end())
   {
@@ -414,4 +415,62 @@ MetaGraph::GetDates() const
   }
   std::sort(togo.begin(),togo.end());
   return togo; 
+}
+
+std::set<int> 
+MonoGraph::GetMaxComp(std::vector<int> set) const
+{
+  //std::cerr << "foo\n";
+  std::vector<std::set<int>> comps;
+  std::set<int> foo(set.begin(),set.end());
+  for (int i: set)
+  {
+    //std::cerr << "i:" << i << "\n";
+    bool ff = false;
+    for (std::set<int> found: comps)
+    {
+      if (found.find(i) != found.end())
+      {
+        ff = true;
+        break;
+      }
+    }
+    if (ff)
+    {
+      continue; 
+    }
+    std::list<int> S;
+    std::set<int> F;
+    S.push_back(i);
+    F.insert(i);
+    //std::cerr << "starting...";
+    while (!S.empty())
+    {
+      int u = S.back();
+      S.pop_back();
+      for (int v: GetNeighbours(u))
+      {
+        if (foo.find(v) == foo.end() || F.find(v) != F.end())
+        {
+          continue;
+        }
+        S.push_back(v);
+        F.insert(v);
+      }
+    }
+    comps.push_back(F);
+  }
+  int i = 0;
+  int j = 0;
+  int k = 0;
+  for (auto ss: comps)
+  {
+    if (ss.size() > i)
+    {
+      j = k;
+      i = ss.size();
+    }
+    ++k;
+  }
+  return comps[j];
 }

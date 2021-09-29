@@ -18,7 +18,10 @@ StatTester::StatTester()
     ior_.SetNodeDictionaryFile(NDFILE);
     ior_.ReadCompanyDictionary();
     ior_.ReadNodeDictionary();
-    window_size_ = 5; 
+    profit_window_size_ = 4;
+    profit_window_size_2_ = 28;
+    inside_window_size_ = 4;
+
 }
 
 // Default destructor. 
@@ -34,7 +37,7 @@ StatTester::SetWindowSize(int size)
     {
         throw std::runtime_error("illegal window size");
     }
-    window_size_ = size;
+    profit_window_size_ = size;
 }
 void 
 StatTester::CreateInsideDayWindows()
@@ -59,7 +62,7 @@ StatTester::CreateInsideDayWindows()
         {
             auto ans_v_it = std::lower_bound(ans_vector.begin(), ans_vector.end(), day);
             // inside:
-            if (*ans_v_it > day && *ans_v_it < day + window_size_)
+            if (*ans_v_it > day && *ans_v_it < day + inside_window_size_)
             {
                 ++days_inside_[comp];
             }
@@ -84,6 +87,8 @@ StatTester::CreateProfitWindows()
     num_traders_ = ior_.nodedict_.size();
     num_companies_ = ior_.cnames_.size();
     num_transactions_ = 0;
+    int n_inside_p = 0;
+    int n_outside_p = 0; 
     for (auto nodepair: transacts)
     {
         const int node = nodepair.first;
@@ -94,10 +99,18 @@ StatTester::CreateProfitWindows()
             CompanyProfitTable novel2;
             profit_inside_[node] = novel1;
             profit_outside_[node] = novel2;
+            CompanyProfitTable novelA;
+            CompanyProfitTable novelB;
+            profit_inside_2_[node] = novelA;
+            profit_outside_2_[node] = novelB;
             IsinCountMap novel3;
             IsinCountMap novel4;
+            IsinCountMap novel5;
+            IsinCountMap novel6;
             n_profit_inside_[node] = novel3;
             n_profit_outside_[node] = novel4;
+            n_profit_inside_2_[node] = novel5;
+            n_profit_outside_2_[node] = novel6;
         }
         for (auto isin_vector_pair: c_trans.pt_)
         {
@@ -117,8 +130,12 @@ StatTester::CreateProfitWindows()
             {
                 std::vector<double> novel1;
                 std::vector<double> novel2;
-                (profit_outside_[node])[comp] = novel1;
-                (profit_inside_[node])[comp] = novel2;
+                std::vector<double> novel3;
+                std::vector<double> novel4;
+                profit_outside_[node][comp] = novel1;
+                profit_inside_[node][comp] = novel2;
+                profit_outside_2_[node][comp] = novel3;
+                profit_inside_2_[node][comp] = novel4;
                 n_profit_inside_[node][comp] = 0;
                 n_profit_outside_[node][comp] = 0;
             }    
@@ -128,44 +145,44 @@ StatTester::CreateProfitWindows()
                 const int date = std::get<0>(trans[i]);
                 const double price = std::get<1>(trans[i]);
                 const double volume = std::get<2>(trans[i]); 
-                double refprice = pricetable.GetCompanyDayPrice(isin,date,window_size_);
-                double refprice2 = pricetable.GetFirstChangePrice(isin,date,window_size_);
+                double refprice = pricetable.GetFirstChangePrice(isin,date,profit_window_size_);
+                double refprice2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_);
                 // The next announcement. 
 
-                double profit = volume*(refprice-price);
-                
-                if (refprice < 0.000001)
-                {
-                    refprice = price;
-                }
-                if (refprice2 < 0.000001)
-                {
-                    refprice2 = price;
-                }
-                // The next announcement. 
-                auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
-                double ret = refprice/price;
-                if( fabs(refprice2/price - 1) > fabs(ret -1))
-                {
-                    ret = refprice2/price;
-                }
-
+                double ret = price/refprice;
+                double ret2 = price/refprice2;
                 int sgn = volume > 0.0?1:-1;
                 double lret = sgn*log(ret);
+                double lret2 = sgn*log(ret2);
 
                 ++num_transactions_;
                 // std::cerr << "Return: " << ret;
+                auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
+                // if(std::isnan(lret) || std::isnan(lret2))
                 // Is is inside?
-                if (ans_v_it != ansvector.end() && *ans_v_it > date && *ans_v_it <= date + window_size_)
+                if (ans_v_it != ansvector.end() && *ans_v_it > date && *ans_v_it <= date + inside_window_size_)
                 {
                     //std::cerr << "inside;";
                     // Its inside
-                    profit_inside_[node][comp].push_back(ret);
+                    if(!std::isnan(lret))
+                    {
+                        profit_inside_[node][comp].push_back(lret);
+                    }
+                    if(!std::isnan(lret2))
+                    {
+                        profit_inside_2_[node][comp].push_back(lret2);
+                    }
                     if (lret > PROFIT_THRESHOLD)
                     {
                         //std::cerr << "profit;";
                         ++n_profit_inside_[node][comp];
                     }
+                    if (lret2 > PROFIT_THRESHOLD)
+                    {
+                        //std::cerr << "profit;";
+                        ++n_profit_inside_2_[node][comp];
+                    }
+                    ++n_inside_p;
                 }
                 else
                 {
@@ -175,12 +192,26 @@ StatTester::CreateProfitWindows()
                         //std::cerr << "profit;";
                         ++n_profit_outside_[node][comp];
                     }
-                    profit_outside_[node][comp].push_back(ret);
+                    if (lret2 > PROFIT_THRESHOLD)
+                    {
+                        //std::cerr << "profit;";
+                        ++n_profit_outside_2_[node][comp];
+                    }
+                    if(!std::isnan(lret))
+                    {
+                        profit_outside_[node][comp].push_back(lret);
+                    }
+                    if(!std::isnan(lret2))
+                    {
+                        profit_outside_2_[node][comp].push_back(lret2);
+                    }
+                    ++n_outside_p;
                 }
                 //std::cerr << "\n";
             }
         }
     }
+    std::cerr << "Inside transactions: " << n_inside_p << ", Outside transactions: " << n_outside_p << "\n"; 
 }
 
 void
@@ -225,129 +256,47 @@ StatTester::TestHyperG()
             ++num_hg_tests_;
         }
     }
-}
 
-void 
-StatTester::GenerateDataMatrix()
-{
-       // These are the node transaction and price tables that we use to create the  delayed version. 
-    const NodeTransactionTable& transacts = ior_.tr_table_;
-    const PriceTable& pricetable = ior_.pr_table_;
-    const AnnouncementTable& ans = ior_.an_table_;
-   
-    int offset = num_companies_ + num_traders_ + 2;
-    int p_length = 2*offset;  
-    X_.resize(num_transactions_,p_length, 0);
-    y_.resize(num_transactions_,1);
-    std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
-    int row = 0;
-    for (auto nodepair: transacts)
+    for (auto i_p: profit_inside_2_)
     {
-        const int node = nodepair.first;
-        /*
-        auto node_it = ior_.nodeinvdict_.find(node); 
-        // Find the index of the node:
-        if (node_it == ior_.nodeinvdict_.end())
+        // Investor i
+        int i = i_p.first;
+        CompanyPValueMap imap;
+        hg_pvalues_2_[i] = imap;  
+        for (auto k_p: i_p.second)
         {
-            std::cerr << "node " << node << " not in dictionary\n"; 
-            throw std::runtime_error("Illegal node");
-        }
-        */
-        int i = node;
-        const TransactionTable& c_trans = nodepair.second;
-        for (auto isin_vector_pair: c_trans.pt_)
-        {
-            const std::string& isin = isin_vector_pair.first;
-            const std::string& comp = ior_.isin_company_[isin];
-            // K is for company. 
-            auto comp_it = ior_.cnames_.find(comp);
-            if (comp_it == ior_.cnames_.end())
+            std::string cname = k_p.first;
+            //std::cerr << "cname: "  << cname; 
+            int k = ior_.cnames_[cname];
+            //std::cerr << "  k: " << k << "\n";
+            int n_in = k_p.second.size();
+            int n_out = profit_outside_2_[i][cname].size();
+            // If there are no inside or outside transactions, then nothing should be done. 
+            if (n_in == 0 || n_out == 0)
             {
-                std::cerr << "company " << node << " not in dictionary\n"; 
-                throw std::runtime_error("Illegal company");
+                continue; 
             }
-            int k = ior_.cnames_[comp];
-            const DatePriceVolumeVector& trans = isin_vector_pair.second;
-            auto ans_it = ans.find(isin);
+            int n_pin = n_profit_inside_2_[i][cname];
+            int n_pout = n_profit_outside_2_[i][cname];
+            double p = 1.0;
+            // std::cerr << n_in << "," << n_pin << " --- " << n_out + n_in << "," << n_pout + n_pin << "\n";
+            try
             {
-                if(ans_it == ans.end())
-                {
-                    continue;
-                }
-            } 
-            const auto& ansvector = ans_it->second; 
-            for (unsigned int j = 0; j < trans.size(); ++j)
-            {
-                const int date = std::get<0>(trans[j]);
-                const double price = std::get<1>(trans[j]);
-                const double volume = std::get<2>(trans[j]); 
-                double refprice = pricetable.GetCompanyDayPrice(isin,date,window_size_);
-                double refprice2 = pricetable.GetFirstChangePrice(isin,date,window_size_);
-                if (refprice < 0.000001)
-                {
-                    refprice = price;
-                }
-                if (refprice2 < 0.000001)
-                {
-                    refprice2 = price;
-                }
-                // The next announcement. 
-                auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
-                double ret = refprice/price;
-                if( fabs(refprice2/price - 1) > fabs(ret -1))
-                {
-                    ret = refprice2/price;
-                }
-                // The next announcement. 
-                int sgn = volume > 0.0?1:-1;
-                //std::cerr << "adding: " << ret << " to row " << row << "\n";
-                y_(row,0) = log(ret)*sgn;
-
-                // We need a fixed stat.
-                
-                boost::gregorian::date ref_time(boost::gregorian::from_simple_string(REFDAY));
-                boost::gregorian::date truetime = ref_time + boost::gregorian::days(date);
-                // Only take the beginning of the year network. 
-                int fixed_time = 10000*truetime.year(); // + 100*truetime.month() + truetime.day();
-                
-                auto gg = ior_.metag_->GetGraph(fixed_time);
-                //std::cerr << "got graph. \n";
-                int d = gg->GetDistance(k,i);   
-                double c = gg->GetCentrality(i);
-                // std::cerr << "Centrality " << c << "\n";
-
-                //std::cerr << "row " << row << " node " << i << " company number " << k << " offset " << offset << " distance " << d << "\n";
-                if (ans_v_it != ansvector.end() && *ans_v_it >= date && *ans_v_it <= date + window_size_)
-                {
-                    // Its inside
-                    //std::cerr << "inside.\n";
-                    X_(row, offset + i) = 1;
-                    //std::cerr << "first ok.";
-                    //std::cerr << offset + num_traders_ + k << " vs " << p_length << "\n"; 
-                    //std::cerr << k << " vs " << num_companies_ << " and "  << i << " vs " << num_traders_ << "\n";
-                    X_(row, offset + num_traders_ + k) = 1;
-                    //std::cerr << "seconf ok.";
-                    X_(row, offset + num_traders_ + num_companies_) = d;
-                    //std::cerr << "third ok\n";
-                    X_(row, offset + num_traders_ + num_companies_ + 1) = c;
-                }
-                else
-                {
-                    //std::cerr << "outside;\n";
-                    X_(row, i) = 1;
-                    //std::cerr << "first ok.";
-                    X_(row, num_traders_ + k) = 1;
-                    //std::cerr << "seconf ok.";
-                    X_(row, num_traders_ + num_companies_) = d;
-                    //std::cerr << "third ok\n";
-                    X_(row, num_traders_ + num_companies_+ 1) = c;
-                }
-                //std::cerr << "\n";
-                ++row;
+                boost::math::hypergeometric_distribution<double> hg_dist(n_pin + n_pout, n_in, n_in+n_out);
+                p =  (1.0 - boost::math::cdf<double>(hg_dist, n_pin)) + boost::math::pdf<double>(hg_dist, n_pin); 
             }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+                std::cerr << n_in << "," << n_pin << " --- " << n_out + n_in << "," << n_pout + n_pin << "\n";
+                throw e;
+            }
+            hg_pvalues_2_[i][k] = p;
+            ++num_hg_tests_;
         }
     }
 }
+
 
 void
 StatTester::GenerateCSV()
@@ -361,7 +310,14 @@ StatTester::GenerateCSV()
         {
             if (j != 7)
             {
-                out1 << X_(i,j) << ",";
+                if (std::isnan(X_(i,j)))
+                {
+                    out1 << "NaN" << ",";
+                }
+                else
+                {
+                    out1 << X_(i,j) << ",";
+                }
             }
             else
             {
@@ -395,6 +351,7 @@ void StatTester::PrintHGTest()
     int nsig = 0;
     int nvsig = 0;
     int nesig = 0;
+    int nn = 0;
     for (auto x: hg_pvalues_)
     {
         int node = x.first;
@@ -414,8 +371,37 @@ void StatTester::PrintHGTest()
                 ++nesig;
             }
         }
+        ++nn;
     }
-    std::cerr << "Hypergeometric test results, cumulative, Bonferoni corrected values: \n";
+    std::cerr << "Total number of HG tests " << nn << "\n";
+    std::cerr << "Hypergeometric test results, cumulative, profit window size " << profit_window_size_ <<  " days \n";
+    std::cerr << "p < " << SIGNIFICANT << ": " << nsig << "\n";
+    std::cerr << "p < " << VERY_SIGNIFICANT << ": " << nvsig << "\n";
+    std::cerr << "p < " << EXTRA_SIGNIFICANT << ": " << nesig << "\n";
+    nsig = 0;
+    nvsig = 0;
+    nesig = 0;
+    for (auto x: hg_pvalues_2_)
+    {
+        int node = x.first;
+        for (auto y: x.second)
+        {
+            double p = y.second;
+            if (p < bsig)
+            {
+                ++nsig;
+            }
+            if (p < bvsig)
+            {
+                ++nvsig;
+            }
+            if (p < besig)
+            {
+                ++nesig;
+            }
+        }
+    }
+    std::cerr << "Hypergeometric test results, cumulative, profit window size " << profit_window_size_2_ << " days \n";
     std::cerr << "p < " << SIGNIFICANT << ": " << nsig << "\n";
     std::cerr << "p < " << VERY_SIGNIFICANT << ": " << nvsig << "\n";
     std::cerr << "p < " << EXTRA_SIGNIFICANT << ": " << nesig << "\n";
@@ -432,7 +418,7 @@ StatTester::GenerateSmallDataMatrix()
     // Investor ID, Company ID, Distance, Centrality, Normalized Degree, IsInside, hg p-value, date
     int p_length = 9;  
     X_.resize(num_transactions_,p_length, 0.0);
-    y_.resize(num_transactions_,1);
+    y_.resize(num_transactions_,2);
     std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
     int row = 0;
     for (auto nodepair: transacts)
@@ -473,10 +459,13 @@ StatTester::GenerateSmallDataMatrix()
             for (unsigned int j = 0; j < trans.size(); ++j)
             {
                 const int date = std::get<0>(trans[j]);
+                // std::cerr << date << "\n";
                 const double price = std::get<1>(trans[j]);
                 const double volume = std::get<2>(trans[j]); 
-                double refprice = pricetable.GetFirstChangePrice(isin,date,window_size_);
-                double refprice2 = pricetable.GetCompanyDayPrice(isin,date,window_size_);
+                // double refprice = pricetable.GetFirstChangePrice(isin,date,profit_window_size_);
+                double refprice = pricetable.GetFirstChangePrice(isin,date,profit_window_size_);
+                double refprice2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_);
+                /*
                 if (refprice < 0.000001)
                 {
                     refprice = price;
@@ -485,22 +474,22 @@ StatTester::GenerateSmallDataMatrix()
                 {
                     refprice2 = price;
                 }
+                */
                 // The next announcement. 
                 auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
                 double ret = refprice/price;
-                if( fabs(refprice2/price - 1) > fabs(ret -1))
-                {
-                    ret = refprice2/price;
-                }
+                double ret2 = refprice2/price;
+               
                 int sgn = volume > 0.0?1:-1;
                 //std::cerr << "adding: " << ret << " to row " << row << "\n";
-                // We need a fixed stat.
+                // We need a fixed stat. 
+            
                 
                 boost::gregorian::date ref_time(boost::gregorian::from_simple_string(REFDAY));
                 boost::gregorian::date truetime = ref_time + boost::gregorian::days(date);
                 // Only take the beginning of the year network. 
                 int fixed_time = 10000*truetime.year(); // + 100*truetime.month() + truetime.day();
-                
+                // std::cerr << truetime << "\n";
                 auto gg = ior_.metag_->GetGraph(fixed_time);
                 //std::cerr << "got graph. \n";
                 double d = (double) gg->GetDistance(k,i);  
@@ -512,6 +501,7 @@ StatTester::GenerateSmallDataMatrix()
                 double p = gg->PageRank(i);
                 // std::cerr << "Centrality " << c << "\n";
                 y_(row,0) = log(ret)*sgn;
+                y_(row,1) = log(ret2)*sgn;
                 //std::cerr << "row " << row << " node " << i << " company number " << k << " offset " << offset << " distance " << d << "\n";
                 X_(row, 0) = i;
                 X_(row, 1) = k;
@@ -519,7 +509,7 @@ StatTester::GenerateSmallDataMatrix()
                 X_(row, 3) = c;
                 X_(row, 4) = p;
 
-                if (ans_v_it != ansvector.end() && *ans_v_it >= date && *ans_v_it <= date + window_size_)
+                if (ans_v_it != ansvector.end() && *ans_v_it >= date && *ans_v_it <= date + inside_window_size_)
                 {
                     X_(row, 5) = 1;
                 }
@@ -535,6 +525,7 @@ StatTester::GenerateSmallDataMatrix()
                 }
                 X_(row, 6) = hp;
                 X_(row, 7) = 10000*truetime.year() + 100*truetime.month() + truetime.day();
+                // std::cerr << 10000*truetime.year() + 100*truetime.month() + truetime.day() << "\n";
                 X_(row, 8) = sgn;
 
                 //else
@@ -555,24 +546,37 @@ StatTester::DoGraphTests()
     const PriceTable& pricetable = ior_.pr_table_;
     const AnnouncementTable& ans = ior_.an_table_;
             
-    auto gg = ior_.metag_->GetGraph(20050101);
+    auto gg = ior_.metag_->GetGraph(0);
+    std::cerr << "graph read.\n";
+    if (!gg)
+    {
+        throw std::runtime_error("null graph");
+    }
     for (auto cpair: ior_.cids_)
     {
         int c = cpair.first;
         std::vector<int> corrupted;
-        for (auto ncpair: hg_pvalues_)
+        for (auto foo: hg_pvalues_)
         {
-            auto p_it = ncpair.second.find(c);
-            if(p_it == ncpair.second.end())
+            double hp = nan("none");
+            int i = foo.first;    
+            auto aux_it = foo.second.find(c);
+            if (aux_it != foo.second.end())
             {
-                continue;
+                hp = aux_it->second;
             }
-            int in = ncpair.first;
-            if (hg_pvalues_[in][c] < VERY_SIGNIFICANT)
+            if (!std::isnan(hp) && hp < VERY_SIGNIFICANT)
             {
-                corrupted.push_back(in);
+                corrupted.push_back(i);
             }
         }
+        // std::cerr << "corrupted vector created, size " << corrupted.size() << "\n";
+        if (corrupted.empty())
+        {
+            continue;
+        }
+        auto max_neigbours = gg->GetMaxComp(corrupted);
+        std::cerr << "Company " << cpair.second << " corrupted " << corrupted.size() << " max component " << max_neigbours.size() << "\n";
     }
     
 }
