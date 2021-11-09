@@ -35,7 +35,7 @@ public:
   OwnerFractionDict ReadFractions();
   NumTimeDict ReadInsiders();
   AnnouncementDict ReadAnnouncements();
-  AnnouncementDates GetDates();
+  void ReadDates();
   int max_com_; 
   int max_tra_;
   std::set<int> years_;

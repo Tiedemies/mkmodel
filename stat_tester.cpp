@@ -12,15 +12,17 @@
 // 
 StatTester::StatTester()
 {
+    ior_.ReadDates();
     ior_.ReadTables();
-    ior_.pr_table_.Sort(); 
+    // ior_.pr_table_.Sort(); 
     ior_.SetCompanyDictionaryFile(CDFILE);
     ior_.SetNodeDictionaryFile(NDFILE);
     ior_.ReadCompanyDictionary();
     ior_.ReadNodeDictionary();
-    profit_window_size_ = 4;
-    profit_window_size_2_ = 28;
-    inside_window_size_ = 4;
+    std::cerr << ior_.trade_days_.size(); 
+    profit_window_size_ = 5;
+    profit_window_size_2_ = 21;
+    inside_window_size_ = 5;
 
 }
 
@@ -89,6 +91,7 @@ StatTester::CreateProfitWindows()
     num_transactions_ = 0;
     int n_inside_p = 0;
     int n_outside_p = 0; 
+    int n_reversed = 0;
     for (auto nodepair: transacts)
     {
         const int node = nodepair.first;
@@ -144,16 +147,49 @@ StatTester::CreateProfitWindows()
             {
                 const int date = std::get<0>(trans[i]);
                 const double price = std::get<1>(trans[i]);
-                const double volume = std::get<2>(trans[i]); 
-                double refprice = pricetable.GetFirstChangePrice(isin,date,profit_window_size_);
-                double refprice2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_);
+                const double volume = std::get<2>(trans[i]);
+                std::pair<int, double> refpair;
+                std::pair<int, double> refpair2;
+                double refprice;
+                double refprice2; 
+                try
+                {
+                    refpair = pricetable.GetFirstChangePrice(isin,date,profit_window_size_, ior_.trade_days_); 
+                    refprice = refpair.second; 
+                    refpair2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_, ior_.trade_days_);
+                    refprice2 = refpair2.second;
+                }
+                catch(const std::exception& e)
+                {
+                    boost::gregorian::date realday = boost::gregorian::from_simple_string(REFDAY) + boost::gregorian::days(date);
+                    std::cerr << "isin:" << isin << ", date:" << realday << ", price:" << price << "\n";
+                    std::cerr << e.what() << '\n';
+                    continue;
+                }
+                
                 // The next announcement. 
 
-                double ret = price/refprice;
-                double ret2 = price/refprice2;
+                double ret = refprice/price;
+                double ret2 = refprice2/price;
                 int sgn = volume > 0.0?1:-1;
                 double lret = sgn*log(ret);
                 double lret2 = sgn*log(ret2);
+            
+                //debug
+                if (refpair.first > refpair2.first && !std::isnan(refprice2))
+                {
+                    
+                    boost::gregorian::date realday = boost::gregorian::from_simple_string(REFDAY) + boost::gregorian::days(date);
+                    boost::gregorian::date realday1 = realday + boost::gregorian::days(refpair.first);
+                    boost::gregorian::date realday2 = realday + boost::gregorian::days(refpair2.first); 
+                    
+                    std::cerr << "isin:" << isin << ", date:" << realday << ", price:" << price << ", refday:" << realday1 << ", refprice:" << 
+                        refprice << ", refday 2:" << realday2 << ", refprice2:" << refprice2 << "\n"; 
+                    std::cerr << refpair.first << "," << refpair2.first << "\n";
+                    
+                    // throw std::logic_error("dates reveresed");
+                    ++n_reversed;
+                }
 
                 ++num_transactions_;
                 // std::cerr << "Return: " << ret;
@@ -172,12 +208,12 @@ StatTester::CreateProfitWindows()
                     {
                         profit_inside_2_[node][comp].push_back(lret2);
                     }
-                    if (lret > PROFIT_THRESHOLD)
+                    if (lret > PROFIT_THRESHOLD && !std::isnan(lret))
                     {
                         //std::cerr << "profit;";
                         ++n_profit_inside_[node][comp];
                     }
-                    if (lret2 > PROFIT_THRESHOLD)
+                    if (lret2 > PROFIT_THRESHOLD && !std::isnan(lret2))
                     {
                         //std::cerr << "profit;";
                         ++n_profit_inside_2_[node][comp];
@@ -211,7 +247,8 @@ StatTester::CreateProfitWindows()
             }
         }
     }
-    std::cerr << "Inside transactions: " << n_inside_p << ", Outside transactions: " << n_outside_p << "\n"; 
+    std::cerr << "Inside transactions: " << n_inside_p << ", Outside transactions: " << n_outside_p << "\n";
+    std::cerr << "reversed days: " << n_reversed << "\n"; 
 }
 
 void
@@ -253,6 +290,11 @@ StatTester::TestHyperG()
                 throw e;
             }
             hg_pvalues_[i][k] = p;
+            if (std::isnan(p))
+            {
+                std::cerr << "Company:" << ior_.cnames_[cname] << ", Investor:" << i << ", inside:" << n_in << ", outside: " << n_out
+                << ", profit in:" << n_pin << ", profit out:" << n_pout << ", p-value:" << p << "\n";
+            }
             ++num_hg_tests_;
         }
     }
@@ -345,9 +387,9 @@ StatTester::GenerateCSV()
 void StatTester::PrintHGTest()
 {
     // Bonferoni corrected values:
-    double bsig = SIGNIFICANT/num_hg_tests_;
-    double bvsig = VERY_SIGNIFICANT/num_hg_tests_;
-    double besig = EXTRA_SIGNIFICANT/num_hg_tests_;
+    double bsig = SIGNIFICANT;
+    double bvsig = VERY_SIGNIFICANT;
+    double besig = EXTRA_SIGNIFICANT;
     int nsig = 0;
     int nvsig = 0;
     int nesig = 0;
@@ -416,9 +458,9 @@ StatTester::GenerateSmallDataMatrix()
     const AnnouncementTable& ans = ior_.an_table_;
    
     // Investor ID, Company ID, Distance, Centrality, Normalized Degree, IsInside, hg p-value, date
-    int p_length = 9;  
+    int p_length = 10;  
     X_.resize(num_transactions_,p_length, 0.0);
-    y_.resize(num_transactions_,2);
+    y_.resize(num_transactions_,4,0.0);
     std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
     int row = 0;
     for (auto nodepair: transacts)
@@ -459,12 +501,19 @@ StatTester::GenerateSmallDataMatrix()
             for (unsigned int j = 0; j < trans.size(); ++j)
             {
                 const int date = std::get<0>(trans[j]);
+                int business_day = 1;
+                if (ior_.trade_days_.find(date) == ior_.trade_days_.end())
+                {
+                    business_day = 0;
+                }
                 // std::cerr << date << "\n";
                 const double price = std::get<1>(trans[j]);
                 const double volume = std::get<2>(trans[j]); 
                 // double refprice = pricetable.GetFirstChangePrice(isin,date,profit_window_size_);
-                double refprice = pricetable.GetFirstChangePrice(isin,date,profit_window_size_);
-                double refprice2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_);
+                auto refpair = pricetable.GetFirstChangePrice(isin,date,profit_window_size_, ior_.trade_days_);
+                double refprice = refpair.second;
+                auto refpair2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_, ior_.trade_days_);
+                double refprice2 = refpair2.second;
                 /*
                 if (refprice < 0.000001)
                 {
@@ -501,7 +550,10 @@ StatTester::GenerateSmallDataMatrix()
                 double p = gg->PageRank(i);
                 // std::cerr << "Centrality " << c << "\n";
                 y_(row,0) = log(ret)*sgn;
-                y_(row,1) = log(ret2)*sgn;
+                y_(row,1) = refpair.first;
+                y_(row,2) = log(ret2)*sgn;
+                y_(row,3) = refpair2.first;
+                
                 //std::cerr << "row " << row << " node " << i << " company number " << k << " offset " << offset << " distance " << d << "\n";
                 X_(row, 0) = i;
                 X_(row, 1) = k;
@@ -526,13 +578,20 @@ StatTester::GenerateSmallDataMatrix()
                 X_(row, 6) = hp;
                 X_(row, 7) = 10000*truetime.year() + 100*truetime.month() + truetime.day();
                 // std::cerr << 10000*truetime.year() + 100*truetime.month() + truetime.day() << "\n";
-                X_(row, 8) = sgn;
+                // buy/sell
+                X_(row, 8) = volume*price;
+                // on business day
+                X_(row, 9) = business_day;
 
                 //else
                 //{
                 //}
                 //std::cerr << "\n";
                 ++row;
+                if (i == 11 && k == 50)
+                {
+                   std::cerr << "row " << row << " node " << i << " company number " << k << " normdegree " << p << " distance " << d << "\n";
+                }
             }
         }
     }

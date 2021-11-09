@@ -18,12 +18,13 @@ public:
   ~MonoGraph();
   int GetNumber() const;
   // Get neighbours
-  const Alist& GetNeighbours(int i) const;
+  const Alist2& GetNeighbours(int i) const;
   void ReadInsiders(std::ifstream& in);
   std::vector<int> GetInsider(int k) const; 
   std::set<int> GetMaxComp(std::vector<int> input) const;
   // Calculate the distance of insiders to company. 
   const std::unordered_map<int,int>& GetDistances(int comp);
+  const Alist2 def_; 
   
   /* 
    * Distance between node and the inner circle of companyt comp. 
@@ -44,7 +45,7 @@ public:
 
 private:
   // Adjacency list
-  AdjLists adj_;
+  std::unordered_map<int,Alist2> adj_;
 
   /*normalize centrality*/
   void NormalizeCentrality(); 

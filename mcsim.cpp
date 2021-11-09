@@ -131,7 +131,7 @@ Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
     }
     while(!infected.empty())
     {
-      int j = infected.back(); 
+      int j = infected.front(); 
       infected.pop_front(); 
       for (int k: graph->GetNeighbours(j))
       {

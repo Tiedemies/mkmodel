@@ -26,6 +26,7 @@
 #define TABLEDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/raw_tables/" 
 #define ANFILE "table_announcements.txt"
 #define INSFILE "table_insiderships.txt"
+#define DATEFILE "tradingDates.csv"
 //#define PRICEFILE "table_prices.txt"
 #define PRICEFILE "table_prices_nan.txt"
 #define TRANSACTFILE "table_transacitions.txt"
@@ -63,6 +64,7 @@ typedef std::unordered_map<std::string, std::string> IsinCompanyMap;
 // Graph
 typedef std::vector<int> Alist; 
 typedef std::unordered_map<int,Alist> AdjLists;
+typedef std::set<int> Alist2;
 
 //Mkmod el 
 typedef std::pair<int,int> MkTrans;
@@ -71,23 +73,23 @@ typedef std::vector<MkAlist> MkLists;
 
 //tables 
 typedef std::unordered_map<std::string, std::vector<int>> AnnouncementTable;
-typedef std::vector<std::pair<int,double>> DatePriceVector;
+typedef std::map<int,double> DatePriceMap;
 typedef std::vector<std::tuple<int,double,double>> DatePriceVolumeVector; 
-typedef std::unordered_map<std::string,DatePriceVector> InternalPriceTable;
+typedef std::unordered_map<std::string,DatePriceMap> InternalPriceTable;
 typedef std::unordered_map<std::string,DatePriceVolumeVector> InternalTransactionTable; 
 // Pricetable and functionality
 class PriceTable
 {
     private:
         InternalPriceTable pt_;
-        bool sorted_;
+        // bool sorted_;
     public:
         PriceTable();
         ~PriceTable();
         void AddPCompanyDayPrice(const std::string& cname, int day, double price);
         double GetCompanyDayPrice(const std::string& cname, int day, int offset) const;
-        double GetFirstChangePrice(const std::string& cname, int day, int offset) const;
-        void Sort();
+        std::pair<int,double> GetFirstChangePrice(const std::string& cname, int day, int offset, const std::set<int>& dates) const;
+        // void Sort();
         int size();
         friend class StatTester; 
 };

@@ -6,8 +6,6 @@
 PriceTable::PriceTable()
 {
     // Default
-    sorted_ = false;
-    return;
 }
 PriceTable::~PriceTable()
 {
@@ -18,60 +16,56 @@ PriceTable::~PriceTable()
 void 
 PriceTable::AddPCompanyDayPrice(const std::string& cname, int day, double price)
 {
-    pt_[cname].push_back(std::make_pair(day,price));
+    pt_[cname][day] = price;
 }
 
-double 
-PriceTable::GetCompanyDayPrice(const std::string& cname, int day, int offset) const
+
+std::pair<int,double> 
+PriceTable::GetFirstChangePrice(const std::string& cname, int day, int offset, const std::set<int>& dates) const
 {
-    if (!sorted_)
-    {
-        throw std::runtime_error("unsorted pricetables"); 
-    }
     auto pt_it = pt_.find(cname);
     if(pt_it == pt_.end())
     {
-        return nan("notfound");
+        return std::make_pair(-1, std::nan("notfound"));
     }
-    auto lower = std::lower_bound(pt_it->second.begin(), pt_it->second.end(), std::make_pair(day + offset, 0.0),std::less_equal<std::pair<int,double>>());
-    while (lower != pt_it->second.end() && std::isnan(lower->second))
+    auto lower = pt_it->second.lower_bound(day);
+    if (lower == pt_it->second.end())
     {
-        ++lower;
+        std::make_pair(-1, std::nan("notfound"));
     }
-    return lower->second; 
-}
-
-double 
-PriceTable::GetFirstChangePrice(const std::string& cname, int day, int offset) const
-{
-    if (!sorted_)
-    {
-        throw std::runtime_error("unsorted pricetables"); 
-    }
-    auto pt_it = pt_.find(cname);
-    if(pt_it == pt_.end())
-    {
-        return nan("notfound");
-    }
-    auto lower = std::upper_bound(pt_it->second.begin(), pt_it->second.end(), std::make_pair(day, 0.0),std::less_equal<std::pair<int,double>>());
-    double ref = lower->second; 
-    bool changed = false; 
-    int num = lower->first;
-    while ((!changed || num-day < offset))
-    {
-        ++lower;
-        num = lower->first; 
-        if (lower != pt_it->second.end())
+    auto tradingday = dates.lower_bound(day);
+    for (int i=0; i < offset; ++i)
+    {   
+        if (tradingday != dates.end())
         {
-            changed = (fabs(lower->second - ref) > 0.00001) && !std::isnan(lower->second);
+            ++tradingday;
         }
-        else return(ref);
+    }
+    int offset2 = offset; 
+    if (tradingday != dates.end())
+    {
+        offset2 = (*tradingday - day); 
+    }
+    else
+    {
+        return std::make_pair(-1, std::nan("notfound"));
+    }
+    
+    int num = lower->first;
+    while ((lower->first-day < offset2) || std::isnan(lower->second))
+    {
+        ++lower;
+        if (lower == pt_it->second.end())
+        {
+            return std::make_pair(-1, std::nan("missing"));
+        }
     }
     // std::cerr << "Date: " << day << " refday " << lower->first << " price " << lower->second << " original " << ref << "\n";
-    return lower->second; 
+    return std::make_pair(lower->first-day ,lower->second); 
 }
 
 
+/*
 void 
 PriceTable::Sort()
 {
@@ -85,6 +79,7 @@ PriceTable::Sort()
     }
     sorted_ = true; 
 }
+*/
 
 int 
 PriceTable::size()

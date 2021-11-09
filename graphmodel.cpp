@@ -11,12 +11,11 @@
 #define CHANDLE "/company_dict_insiders.txt"
 
 
-MonoGraph::MonoGraph(std::ifstream& in)
+MonoGraph::MonoGraph(std::ifstream& in):def_({})
 {
   // Read the graph in
   std::string c;
   int i = 0;
-  adj_[0] = {};
   number_ = 0;
   num_edges_ = 0;
   if (in.is_open())
@@ -33,17 +32,31 @@ MonoGraph::MonoGraph(std::ifstream& in)
       auto a_it = adj_.find(s_node);
       if (a_it == adj_.end())
       {
-	      adj_[s_node] = Alist{t_node};
+	      adj_[s_node] = Alist2{t_node};
         ++num_edges_;
       }
       else
       {
-	      adj_[s_node].push_back(t_node);
+	      adj_[s_node].insert(t_node);
         ++num_edges_; 
       }
-      if (s_node > number_) number_ = s_node;
-      if (t_node > number_) number_ = t_node; 
-
+      if (adj_.find(t_node) == adj_.end())
+      {
+        adj_[t_node] = {s_node};
+      }
+      else
+      {
+        adj_[t_node].insert(s_node);
+      }
+      
+      if (s_node > number_) 
+      {
+        number_ = s_node;
+      }
+      if (t_node > number_) 
+      {
+        number_ = t_node; 
+      }
       in >> c;
     }
     //std::cerr << adj_.size() << " ";
@@ -91,13 +104,13 @@ std::vector<int> MonoGraph::GetInsider(int k) const
 }
 
 
-const Alist& MonoGraph::GetNeighbours(int i) const
+const Alist2& MonoGraph::GetNeighbours(int i) const
 {
   //std::cerr << "n\n";
   auto togo = adj_.find(i);
   if (togo == adj_.end())
   {
-    return adj_.at(0);
+    return def_;
   }
   else
   {
@@ -229,14 +242,16 @@ MonoGraph::NormalizeCentrality()
 }
 
 
-// Breadth first:
+// Breadth first distances from company c
 const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
 {
   if (dists_.find(c) != dists_.end())
   {
     return dists_[c];
   }
+  // Make new. 
   std::unordered_map<int,int>& d = dists_[c];
+  // No insiders, return the empty. 
   if (insiderdict_.find(c) == insiderdict_.end())
   {
     return d; 
@@ -254,8 +269,16 @@ const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
     int dist = d[node];
     q.pop_front();
     auto adj_list_it = adj_.find(node);
+    if (node == 11)
+    {
+      std::cerr << "distance is OK for node 11, for some reason\n";
+    }
     if (adj_list_it == adj_.end())
     {
+      if (node == 11)
+      {
+        std::cerr << "but 11 has no neighbours...\n";
+      }
       continue;
     }
     for (int next: adj_list_it->second)
@@ -278,7 +301,7 @@ const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
 
 
 /*
- * PageRank algorithm for undirected graphs (DEFUNCT) TODO: Implement properly, now it is *not* page-rank. 
+ * PageRank algorithm for undirected graphs (DEFUNCT) Currently just normalized degree
  */
 double 
 MonoGraph::PageRank(int node, int comp)
@@ -286,26 +309,36 @@ MonoGraph::PageRank(int node, int comp)
 
   if (P_.size() > node && node >= 0)
   {
-    return P_.at(node);
-  }
-  double epsilon = 0.001; 
-  double damp = 0.8; 
-  // Initialize first. 
+    double kk = P_.at(node);
+    if (node == 11)
+    {
+      std::cerr << "connections for node " << node << "\n" ; 
+      for (auto a: GetNeighbours(node))
+      {
+        std::cerr << "nbr: " << a << " ... ";
+      }
+      std::cerr << "\n";
+    } 
+    return kk;
+  } 
   P_.resize(number_+1, 0.0);
   double max = 0.0;
-  for (auto adj_p: adj_)
-  {
-    int src = adj_p.first;
-    double c = static_cast<double>(adj_p.second.size())/static_cast<double>(num_edges_);
-    P_[src] = c;
+  for(int i = 0; i < number_+1; ++i)
+  {    
+    double c = (double) GetNeighbours(i).size();
+    P_[i] = c;
     if (c > max)
     {
       max = c;
     }
   }
-  for (int i = 0; i < number_ + 1; ++i)
+  for (int i = 0; i < number_+1; ++i)
   {
     P_[i] /= max;
+  }
+  if (node == 11)
+  {
+    std::cerr << P_[node] << "Nm degree for node " << node << "\n" ; 
   }
   return P_[node];
 }

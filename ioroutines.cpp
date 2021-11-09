@@ -205,10 +205,41 @@ IoR::ReadAnnouncements()
 
 } 
 
-AnnouncementDates 
-IoR::GetDates()
+void 
+IoR::ReadDates()
 {
-  return an_dates_; 
+  trade_days_.clear(); 
+  std::cerr << "day read initializing \n";
+  std::ifstream in;
+  in.open(std::string(TABLEDIR) + std::string(DATEFILE));
+  if (!in.is_open())
+  {
+    std::cerr << "Warning, date table file not found, null table set\n";
+  }
+  using namespace boost::gregorian; 
+  // Reference date:
+  date ref_time(from_simple_string(REFDAY));
+  // Loop reads the line. 
+  int count = 0;
+  while (!in.eof() && in.good())
+  {
+    // First read the date. 
+    std::string datestr = ReadNext(in);   
+    date tt;
+    try
+    {
+      tt = from_simple_string(datestr);
+      int days = (tt-ref_time).days();
+      if (days >= 0)
+      {
+        trade_days_.insert(days);
+      }
+    }
+    catch(const std::exception& e)
+    {
+      continue;
+    }
+  }
 }
 
 
@@ -447,7 +478,7 @@ IoR::ReadPriceTable()
   /// Read the tables now 
   using namespace boost::gregorian; 
   std::ifstream in;
-  trade_days_.clear(); 
+  // trade_days_.clear(); 
   in.open(tablesdir_ +  ptfile_);
   if (!in.is_open())
   {
@@ -477,7 +508,7 @@ IoR::ReadPriceTable()
     int days = (tt-ref_time).days();
     if (days >= 0)
     {
-      trade_days_.insert(days);
+      // trade_days_.insert(days);
     }
     // ReadIsin;
     std::string isin = ReadNext(in);
@@ -501,7 +532,7 @@ IoR::ReadPriceTable()
   }
   //Debug output:
   std::cerr << "Read " << count <<  " prices for " << pr_table_.size() << " isin codes.\n";
-  pr_table_.Sort();  
+  // pr_table_.Sort();  
 }
 
 void
@@ -560,9 +591,17 @@ IoR::ReadTransactionTable()
     catch(const std::exception& e)
     {
       ++foo; 
-      // std::cerr << e.what() << " from " << temp << '\n';
+      std::cerr << e.what() << " from " << temp << '\n';
+      SkipLine(in);
       continue; 
     }
+    int x = (int) std::stod(ReadNext(in));
+    // Skip non-market trades
+    if (x != 1)
+    {
+      continue;
+    }
+    
     if (tr_table_.find(nodeid) == tr_table_.end())
     {
       TransactionTable novel;
