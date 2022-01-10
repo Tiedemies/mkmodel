@@ -20,7 +20,11 @@ public:
   // Get neighbours
   const Alist2& GetNeighbours(int i) const;
   void ReadInsiders(std::ifstream& in);
-  std::vector<int> GetInsider(int k) const; 
+  void ReadBoardMembers(std::ifstream& in);
+  std::set<int> GetInsider(int k); 
+  std::set<int> GetInsiderOf(int i);
+  std::set<int> GetBoard(int k); 
+  std::set<int> GetBoardOf(int i); 
   std::set<int> GetMaxComp(std::vector<int> input) const;
   // Calculate the distance of insiders to company. 
   const std::unordered_map<int,int>& GetDistances(int comp);
@@ -39,9 +43,14 @@ public:
   double GetCentrality(int node);
 
   /*
-   * PageRank- centrality
+   * Normalized Degree
    */
-  double PageRank(int node, int comp=0);
+  double NormalDegree(int node);
+
+    /*
+   * Normalized Degree
+   */
+  double Degree(int node);
 
 private:
   // Adjacency list
@@ -52,10 +61,16 @@ private:
 
   int number_;
   int num_edges_; 
-  std::unordered_map<int,std::vector<int>> insiderdict_;
+  // Company --> Insiders
+  std::unordered_map<int,std::set<int>> insiderdict_;
+  // Insider --> Companies
+  std::unordered_map<int,std::set<int>> insider_of_; 
+  std::unordered_map<int,std::set<int>> boarddict_;
+  std::unordered_map<int,std::set<int>> board_of_;
   CompanyDistanceMap dists_;  
   std::vector<double> centrality_;
   std::vector<double> P_;
+  bool p_calculated_; 
   int max_distance_;  
 };
 

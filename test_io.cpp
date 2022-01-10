@@ -11,17 +11,23 @@ int main()
 {
     StatTester foo;
     std::cerr << "init.\n";
+    
     foo.CreateInsideDayWindows();
     std::cerr << "inside windows calculated\n";
     foo.CreateProfitWindows();
     std::cerr << " profit windows done\n";
+    
+    /*
     foo.TestHyperG();
     std::cerr << " hypergeometric tests done\n";
     foo.PrintHGTest();
-    foo.DoGraphTests();
+     */
+    // foo.TestGraphIntegrity();
     //std::cerr << " graph tests done \n";
+
     foo.GenerateSmallDataMatrix();
     std::cerr << " Datamatrix generated \n";
     foo.GenerateCSV();
     std::cerr << " Datamatrix sent to files\n";
+    
 }

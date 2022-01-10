@@ -456,9 +456,12 @@ StatTester::GenerateSmallDataMatrix()
     const NodeTransactionTable& transacts = ior_.tr_table_;
     const PriceTable& pricetable = ior_.pr_table_;
     const AnnouncementTable& ans = ior_.an_table_;
-   
-    // Investor ID, Company ID, Distance, Centrality, Normalized Degree, IsInside, hg p-value, date
-    int p_length = 10;  
+
+
+    // LEGEND: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree #6:in_window #7:date 
+    //         #8:volume*price  #9:business_day #10:past_inside #11:future_inside #12:How many boards #13: how many inside
+    //         # 15: Insiders actually exist
+    int p_length = 15;  
     X_.resize(num_transactions_,p_length, 0.0);
     y_.resize(num_transactions_,4,0.0);
     std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
@@ -466,15 +469,6 @@ StatTester::GenerateSmallDataMatrix()
     for (auto nodepair: transacts)
     {
         const int node = nodepair.first;
-        /*
-        auto node_it = ior_.nodeinvdict_.find(node); 
-        // Find the index of the node:
-        if (node_it == ior_.nodeinvdict_.end())
-        {
-            std::cerr << "node " << node << " not in dictionary\n"; 
-            throw std::runtime_error("Illegal node");
-        }
-        */
         int i = node;
         const TransactionTable& c_trans = nodepair.second;
         for (auto isin_vector_pair: c_trans.pt_)
@@ -485,8 +479,8 @@ StatTester::GenerateSmallDataMatrix()
             auto comp_it = ior_.cnames_.find(comp);
             if (comp_it == ior_.cnames_.end())
             {
-                std::cerr << "company " << node << " not in dictionary\n"; 
-                throw std::runtime_error("Illegal company");
+                std::cerr << "Warning: company " << comp << " not in dictionary\n"; 
+                //throw std::runtime_error("Illegal company");
             }
             int k = ior_.cnames_[comp];
             const DatePriceVolumeVector& trans = isin_vector_pair.second;
@@ -494,6 +488,7 @@ StatTester::GenerateSmallDataMatrix()
         
             if(ans_it == ans.end())
             {
+                std::cerr << "Warning, no announcement for " << isin << " not found\n";
                 continue;
             }
              
@@ -514,84 +509,126 @@ StatTester::GenerateSmallDataMatrix()
                 double refprice = refpair.second;
                 auto refpair2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_, ior_.trade_days_);
                 double refprice2 = refpair2.second;
-                /*
-                if (refprice < 0.000001)
-                {
-                    refprice = price;
-                }
-                if (refprice2 < 0.000001)
-                {
-                    refprice2 = price;
-                }
-                */
+                
                 // The next announcement. 
                 auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
                 double ret = refprice/price;
                 double ret2 = refprice2/price;
                
                 int sgn = volume > 0.0?1:-1;
-                //std::cerr << "adding: " << ret << " to row " << row << "\n";
-                // We need a fixed stat. 
-            
                 
                 boost::gregorian::date ref_time(boost::gregorian::from_simple_string(REFDAY));
                 boost::gregorian::date truetime = ref_time + boost::gregorian::days(date);
-                // Only take the beginning of the year network. 
-                int fixed_time = 10000*truetime.year(); // + 100*truetime.month() + truetime.day();
+                // Only take the beginning of the month 
+                int fixed_time = 10000*truetime.year() + 100*truetime.month(); // + truetime.day();
                 // std::cerr << truetime << "\n";
                 auto gg = ior_.metag_->GetGraph(fixed_time);
+                double dist, centr, n_deg,deg;
                 //std::cerr << "got graph. \n";
-                double d = (double) gg->GetDistance(k,i);  
-                if (d < 0)
+                int insiders_exist = 1;
+                try
                 {
-                    d = std::nan("missing");
+                    dist = (double) gg->GetDistance(k,i);
                 }
-                double c = gg->GetCentrality(i);
-                double p = gg->PageRank(i);
-                // std::cerr << "Centrality " << c << "\n";
+                catch(const std::exception& e)
+                {
+                    std::cerr << "distance" << '\n';
+                    throw e;
+                }                
+                if (dist < 0)
+                {
+                    if (dist < -1.9)
+                    {
+                        insiders_exist = 0;
+                    }
+                    dist = std::nan("missing");
+                }
+                try
+                {
+                    centr = gg->GetCentrality(i);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << "Centrality" << '\n';
+                    throw e;
+                }
+                try
+                {
+                    n_deg = gg->NormalDegree(i);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << "normal degree" << '\n';
+                    throw e;
+                }
+                try
+                {
+                    deg = gg->Degree(i);
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << "raw degree" << '\n';
+                    throw e;
+                }
                 y_(row,0) = log(ret)*sgn;
                 y_(row,1) = refpair.first;
                 y_(row,2) = log(ret2)*sgn;
                 y_(row,3) = refpair2.first;
+
+                if (!std::isnan(dist) && deg == 0)
+                {
+                    throw std::logic_error("distance exists but zero degree");
+                }
                 
-                //std::cerr << "row " << row << " node " << i << " company number " << k << " offset " << offset << " distance " << d << "\n";
+                // LEGEND: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree #6:in_window #7:date 
+                //         #8:volume*price  #9:business_day #10:past_inside #11:future_inside
                 X_(row, 0) = i;
                 X_(row, 1) = k;
-                X_(row, 2) = d;
-                X_(row, 3) = c;
-                X_(row, 4) = p;
-
+                X_(row, 2) = dist;
+                X_(row, 3) = centr;
+                X_(row, 4) = n_deg;
+                X_(row, 5) = deg;
+            
                 if (ans_v_it != ansvector.end() && *ans_v_it >= date && *ans_v_it <= date + inside_window_size_)
                 {
-                    X_(row, 5) = 1;
+                    X_(row, 6) = 1;
                 }
-                double hp = std::nan("miss");
-                auto hg_it = hg_pvalues_.find(i);
-                if (hg_it != hg_pvalues_.end())
-                {
-                    auto aux_it = hg_it->second.find(k);
-                    if (aux_it != hg_it->second.end())
-                    {
-                        hp = aux_it->second;
-                    }
-                }
-                X_(row, 6) = hp;
                 X_(row, 7) = 10000*truetime.year() + 100*truetime.month() + truetime.day();
-                // std::cerr << 10000*truetime.year() + 100*truetime.month() + truetime.day() << "\n";
-                // buy/sell
                 X_(row, 8) = volume*price;
                 // on business day
                 X_(row, 9) = business_day;
-
-                //else
-                //{
-                //}
-                //std::cerr << "\n";
-                ++row;
-                if (i == 11 && k == 50)
+                
+                auto g_past = ior_.metag_->GetGraph(fixed_time - 10000);
+                auto g_fut = ior_.metag_->GetGraph(fixed_time + 10000);
+                if (!g_past)
                 {
-                   std::cerr << "row " << row << " node " << i << " company number " << k << " normdegree " << p << " distance " << d << "\n";
+                    X_(row, 10) = std::nan("past missing");
                 }
+                else
+                {
+                    auto inset = g_past->GetInsider(k);
+                    if (inset.find(i) != inset.end())
+                    {
+                        X_(row,10) = 1;
+                    } 
+                }
+
+                if (!g_fut)
+                {
+                    X_(row, 11) = std::nan("future missing");
+                }
+                else
+                {
+                    auto inset = g_fut->GetInsider(k);
+                    if (inset.find(i) != inset.end())
+                    {
+                        X_(row,11) = 1;
+                    } 
+                }
+                X_(row,12) = gg->GetBoardOf(i).size();
+                X_(row,13) = gg->GetInsiderOf(i).size();
+                X_(row,14) = insiders_exist;
+                ++row;
             }
         }
     }
@@ -638,4 +675,68 @@ StatTester::DoGraphTests()
         std::cerr << "Company " << cpair.second << " corrupted " << corrupted.size() << " max component " << max_neigbours.size() << "\n";
     }
     
+}
+
+
+void 
+StatTester::TestGraphIntegrity()
+{
+    const NodeTransactionTable& transacts = ior_.tr_table_;
+    const PriceTable& pricetable = ior_.pr_table_;
+    const AnnouncementTable& ans = ior_.an_table_;
+    for (auto nodepair: transacts)
+    {
+        const int node = nodepair.first;
+        int i = node;
+        const TransactionTable& c_trans = nodepair.second;
+        for (auto isin_vector_pair: c_trans.pt_)
+        {
+            const std::string& isin = isin_vector_pair.first;
+            const std::string& comp = ior_.isin_company_[isin];
+            auto comp_it = ior_.cnames_.find(comp);
+            if (comp_it == ior_.cnames_.end())
+            {
+                std::cerr << "company " << node << " not in dictionary\n"; 
+                continue;
+                // throw std::runtime_error("Illegal company");
+            }
+            int k = ior_.cnames_[comp];
+            const DatePriceVolumeVector& trans = isin_vector_pair.second;
+            auto ans_it = ans.find(isin);
+        
+            if(ans_it == ans.end())
+            {
+                continue;
+            }
+             
+            const auto& ansvector = ans_it->second; 
+            for (unsigned int j = 0; j < trans.size(); ++j)
+            {
+                const int date = std::get<0>(trans[j]);
+                int business_day = 1;
+                if (ior_.trade_days_.find(date) == ior_.trade_days_.end())
+                {
+                    business_day = 0;
+                }
+                boost::gregorian::date ref_time(boost::gregorian::from_simple_string(REFDAY));
+                boost::gregorian::date truetime = ref_time + boost::gregorian::days(date);
+                // Only take the beginning of the year network. 
+                int fixed_time = 10000*truetime.year() + 100*truetime.month();// + truetime.day();
+                // std::cerr << truetime << "\n";
+                auto gg = ior_.metag_->GetGraph(fixed_time);
+                //std::cerr << "got graph. \n";
+                double d = (double) gg->GetDistance(k,i);  
+                double c = gg->GetCentrality(i);
+                double p = gg->NormalDegree(i);
+                double dd = gg->Degree(i);
+                if (p == 0 && d > 0)
+                {
+                    std::cerr << "Distance :" << d << " but adjacent: " << p << "\n";
+                    std::cerr << "Time stamp for graph: " << fixed_time; 
+                    throw std::logic_error("Graph mismatch");
+                }
+                std::cerr << "Distance: " << d << " adjacent: " << dd << "\n";
+            }
+        }
+    }
 }

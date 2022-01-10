@@ -46,6 +46,7 @@ public:
 private:
   std::string ReadNext(std::istream& in);
   void SkipLine(std::istream& in);
+  void SkipLine(std::istream& in, std::ostream& out);
   std::vector<int> ReadTimes(std::istream& in);
   std::string graphdir_; 
   std::string ndictfile_;

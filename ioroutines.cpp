@@ -9,6 +9,7 @@
 #include <new>
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/date_time/gregorian/gregorian.hpp"
+#define TRANS_ERRFILEHANDLE "bad_transactions.txt"
 
 
 IoR::IoR()
@@ -543,7 +544,9 @@ IoR::ReadTransactionTable()
   /// Read the tables now 
   using namespace boost::gregorian; 
   std::ifstream in;
+  std::ofstream out;
   in.open(tablesdir_ +  ttfile_);
+  out.open(TRANS_ERRFILEHANDLE);
   if (!in.is_open())
   {
     std::cerr << "Warning, transaction table file not found, null table set\n";
@@ -557,6 +560,7 @@ IoR::ReadTransactionTable()
   // Loop reads the line. 
   int count = 0;
   int foo = 0;
+  int non_market = 0;
   while (!in.eof() && in.good())
   {
     // First read the date. 
@@ -575,31 +579,36 @@ IoR::ReadTransactionTable()
    
     // ReadIsin;
     // skip owner_id; we use node id;
-    ReadNext(in); 
+    std::string owner = ReadNext(in); 
     std::string isin = ReadNext(in);
-    double price = std::stod(ReadNext(in));
-    double volume = std::stod(ReadNext(in));
+    std::string price_str = ReadNext(in);
+    double price = std::stod(price_str);
+    std::string volume_str = ReadNext(in);
+    double volume = std::stod(volume_str);
     // ReadNext(in);
     //skip vol_price
-    ReadNext(in);
+    std::string vol_price = ReadNext(in);
     std::string temp = ReadNext(in);
     int nodeid = -1; 
     try
     {
-      nodeid = (int) std::round(std::stod(temp));
+      nodeid = std::stoi(temp);
     }
     catch(const std::exception& e)
     {
       ++foo; 
-      std::cerr << e.what() << " from " << temp << '\n';
-      SkipLine(in);
+      // std::cerr << e.what() << " from " << temp << '\n';
+      out << datestr << ";" << owner << ";" << isin << ";" << price_str << ";" << volume_str 
+          << ";" << vol_price << ";" << temp << ";";
+      SkipLine(in,out);
       continue; 
     }
-    int x = (int) std::stod(ReadNext(in));
+    int x = std::stoi(ReadNext(in));
     // Skip non-market trades
     if (x != 1)
     {
       continue;
+      ++non_market;
     }
     
     if (tr_table_.find(nodeid) == tr_table_.end())
@@ -614,7 +623,8 @@ IoR::ReadTransactionTable()
     } 
   }
   //Debug output:
-  std::cerr << "Read " << count <<  " transactions for " << tr_table_.size() << " traders. " << foo << " bad.\n"; 
+  std::cerr << "Read " << count <<  " transactions for " << tr_table_.size() << " traders. " << foo << " bad.\n";
+  std::cerr << non_market << " total non-market transactions\n"; 
 }
 
 std::string
@@ -639,3 +649,16 @@ IoR::SkipLine(std::istream& in)
     x = in.get();
   }
 }
+
+void 
+IoR::SkipLine(std::istream& in, std::ostream& out)
+{
+  char x = in.get();
+  out.put(x);
+  while ((x !='\n') && in.good())
+  {
+    x = in.get();
+    out.put(x);
+  }
+}
+

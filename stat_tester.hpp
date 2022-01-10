@@ -41,6 +41,8 @@ class StatTester
 
     void DoGraphTests();
 
+    void TestGraphIntegrity();
+
     private:
     // Days in the window
     int profit_window_size_;

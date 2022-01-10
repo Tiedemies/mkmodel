@@ -9,9 +9,10 @@
 
 #define FHANDLE "/egde_list.txt"
 #define CHANDLE "/company_dict_insiders.txt"
+#define BHANDLE "/company_dict_board_members.txt"
 
 
-MonoGraph::MonoGraph(std::ifstream& in):def_({})
+MonoGraph::MonoGraph(std::ifstream& in):def_({}),p_calculated_(false)
 {
   // Read the graph in
   std::string c;
@@ -87,7 +88,8 @@ void MonoGraph::ReadInsiders(std::ifstream& in)
   {
     while (in >> insider >> delimit2)
     {
-      insiderdict_[company].push_back(insider);
+      insiderdict_[company].insert(insider);
+      insider_of_[insider].insert(company);
       if (delimit2 == ']')
 	    {
 	      break;
@@ -97,10 +99,53 @@ void MonoGraph::ReadInsiders(std::ifstream& in)
   } 
 }
 
-std::vector<int> MonoGraph::GetInsider(int k) const
+void MonoGraph::ReadBoardMembers(std::ifstream& in)
+{
+  int company;
+  int insider;
+  char delimit1;
+  char delimit2;
+  if (!in.is_open())
+  {
+    std::cerr << "Board file not open!! \n";
+  }
+  in >> company >> delimit1 >> delimit2;
+  while (!in.eof() && in.is_open())
+  {
+    while (in >> insider >> delimit2)
+    {
+      boarddict_[company].insert(insider);
+      board_of_[insider].insert(company);
+      if (delimit2 == ']')
+	    {
+	      break;
+	    }
+    }
+    in >> company >> delimit1 >> delimit2;
+  } 
+}
+
+
+std::set<int> MonoGraph::GetInsider(int k)
+{
+  return insiderdict_[k];
+}
+
+std::set<int> MonoGraph::GetInsiderOf(int i) 
 {
   // std::cerr << "insider dictionary size: " << insiderdict_.size() << "\n";
-  return insiderdict_.at(k); 
+  return insider_of_[i]; 
+}
+
+std::set<int> MonoGraph::GetBoard(int k)
+{
+  return boarddict_[k];
+}
+
+std::set<int> MonoGraph::GetBoardOf(int i) 
+{
+  // std::cerr << "insider dictionary size: " << insiderdict_.size() << "\n";
+  return board_of_[i]; 
 }
 
 
@@ -126,12 +171,23 @@ int MonoGraph::GetNumber() const
 int 
 MonoGraph::GetDistance(int comp, int node)
 {
-  const auto d = GetDistances(comp);
+  NodeDict d;
+  try
+  {
+    d = GetDistances(comp);
+  }
+  catch(const std::exception& e)
+  {
+    return -2;
+  }
+  
 
   if (d.find(node) == d.end())
   {
+    //std::cerr << "distance for " << node << " in " << comp << "-1\n";
     return -1; //2*max_distance_;
   }
+  //std::cerr << "distance for " << node << " in " << comp << ": " << d.at(node) << "\n";
   return d.at(node); 
 }
 
@@ -249,12 +305,14 @@ const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
   {
     return dists_[c];
   }
+  // std::cerr << "calculating distances for " << c << "\n";
   // Make new. 
   std::unordered_map<int,int>& d = dists_[c];
   // No insiders, return the empty. 
   if (insiderdict_.find(c) == insiderdict_.end())
   {
-    return d; 
+    std::cerr << "no insiders for " << c << "\n";
+    throw std::runtime_error("no insiders");
   }
   std::list<int> q;
   // first initialize:
@@ -269,18 +327,6 @@ const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
     int dist = d[node];
     q.pop_front();
     auto adj_list_it = adj_.find(node);
-    if (node == 11)
-    {
-      std::cerr << "distance is OK for node 11, for some reason\n";
-    }
-    if (adj_list_it == adj_.end())
-    {
-      if (node == 11)
-      {
-        std::cerr << "but 11 has no neighbours...\n";
-      }
-      continue;
-    }
     for (int next: adj_list_it->second)
     {
       auto dist_it = d.find(next);
@@ -298,27 +344,26 @@ const std::unordered_map<int,int>& MonoGraph::GetDistances(int c)
   }
   return d;
 }
+/*
+ * Degree of node
+ */
+double 
+MonoGraph::Degree(int node)
+{
+  return (double) adj_[node].size();
+}
 
 
 /*
- * PageRank algorithm for undirected graphs (DEFUNCT) Currently just normalized degree
+ * Normalized Degree of node:
  */
 double 
-MonoGraph::PageRank(int node, int comp)
+MonoGraph::NormalDegree(int node)
 {
 
-  if (P_.size() > node && node >= 0)
+  if (p_calculated_)
   {
     double kk = P_.at(node);
-    if (node == 11)
-    {
-      std::cerr << "connections for node " << node << "\n" ; 
-      for (auto a: GetNeighbours(node))
-      {
-        std::cerr << "nbr: " << a << " ... ";
-      }
-      std::cerr << "\n";
-    } 
     return kk;
   } 
   P_.resize(number_+1, 0.0);
@@ -340,6 +385,7 @@ MonoGraph::PageRank(int node, int comp)
   {
     std::cerr << P_[node] << "Nm degree for node " << node << "\n" ; 
   }
+  p_calculated_ = true;
   return P_[node];
 }
 
@@ -355,6 +401,7 @@ MetaGraph::MetaGraph(std::string dir)
     std::string filename = dir+dp->d_name+fname;
     std::stringstream s(dp->d_name);
     std::string insiders = dir+dp->d_name+CHANDLE; 
+    std::string boards = dir+dp->d_name+BHANDLE; 
     int date;
     s >> date;
     std::ifstream in;
@@ -373,8 +420,15 @@ MetaGraph::MetaGraph(std::string dir)
     std::ifstream in2; 
     // std::cerr << "reading insiderfile: " << insiders << "\n"; 
     in2.open(insiders);
+    // std::cerr << "trying to read file: " << insiders << "\n";
     ss->ReadInsiders(in2);
     in2.close();
+    std::ifstream in3; 
+    // std::cerr << "reading insiderfile: " << insiders << "\n"; 
+    in3.open(boards);
+    // std::cerr << "trying to read file: " << insiders << "\n";
+    ss->ReadBoardMembers(in3);
+    in3.close();
   }  
 
 }
@@ -427,6 +481,11 @@ MonoGraph* MetaGraph::GetGraph(int date) const
 {
   auto it = graphs_.lower_bound(date);
   if (it == graphs_.end())
+  {
+    return 0;
+  }
+  auto it2 = graphs_.upper_bound(date);
+  if (it2 == graphs_.end())
   {
     return 0;
   }
