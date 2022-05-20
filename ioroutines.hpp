@@ -25,11 +25,14 @@ public:
   void ReadInsiderTable();
   void ReadPriceTable();
   void ReadTransactionTable();
+  void ReadHouseHoldTransactionTable();
+  void ReadIndex();
 
   // Dictionaries
   void SetCompanyDictionaryFile(const std::string& cdictfile);
   void SetNodeDictionaryFile(const std::string& ndictfile);
   void SetFractionsFile(const std::string& fractionsfile);
+  void SetIndexFile(const std::string& indexfile);
   void ReadCompanyDictionary(); 
   void ReadNodeDictionary();
   OwnerFractionDict ReadFractions();
@@ -56,6 +59,8 @@ private:
   std::string atfile_;
   std::string ttfile_;
   std::string ptfile_; 
+  std::string hhfile_;
+  std::string indexfile_;
 
   MetaGraph* metag_; 
 
@@ -63,6 +68,7 @@ private:
   std::string fractionsfile_;
   NodeDict nodedict_;
   NodeDict nodeinvdict_;
+  IndexMap dateindex_; 
   AnnouncementDates an_dates_; 
   AnnouncementDict announcements_;
 
@@ -70,6 +76,7 @@ private:
   AnnouncementTable an_table_;
   PriceTable pr_table_; 
   NodeTransactionTable tr_table_; 
+  NodeTransactionTable hh_table_;
 
   // Transformations:
   IsinCompanyMap isin_company_; 

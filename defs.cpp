@@ -19,6 +19,22 @@ PriceTable::AddPCompanyDayPrice(const std::string& cname, int day, double price)
     pt_[cname][day] = price;
 }
 
+double 
+PriceTable::GetCompanyDayPrice(const std::string& cname, int day, int offset) const
+{
+    auto pt_it = pt_.find(cname);
+    if(pt_it == pt_.end())
+    {
+        return std::nan("notfound");
+    }
+    auto d_pair = pt_it->second.find(day);
+    if (d_pair == pt_it->second.end())
+    {
+        return std::nan("notfound");
+    }
+    else return d_pair->second; 
+}
+
 
 std::pair<int,double> 
 PriceTable::GetFirstChangePrice(const std::string& cname, int day, int offset, const std::set<int>& dates) const

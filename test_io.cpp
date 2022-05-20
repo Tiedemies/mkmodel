@@ -7,6 +7,7 @@
 #define PRICEFILE "table_prices_nan.txt"
 #define TRANSACTFILE "table_transacitions.txt"
 
+
 int main()
 {
     StatTester foo;
@@ -29,5 +30,7 @@ int main()
     std::cerr << " Datamatrix generated \n";
     foo.GenerateCSV();
     std::cerr << " Datamatrix sent to files\n";
+    std::cerr << " Printhin isin-map to standard output\n";
+    foo.PrintIsinMap();
     
 }

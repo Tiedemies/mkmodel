@@ -92,6 +92,7 @@ StatTester::CreateProfitWindows()
     int n_inside_p = 0;
     int n_outside_p = 0; 
     int n_reversed = 0;
+    // Have to do this otherwise
     for (auto nodepair: transacts)
     {
         const int node = nodepair.first;
@@ -249,6 +250,10 @@ StatTester::CreateProfitWindows()
     }
     std::cerr << "Inside transactions: " << n_inside_p << ", Outside transactions: " << n_outside_p << "\n";
     std::cerr << "reversed days: " << n_reversed << "\n"; 
+    for (auto x: ior_.hh_table_)
+    {
+        ++num_transactions_;
+    }
 }
 
 void
@@ -343,13 +348,22 @@ StatTester::TestHyperG()
 void
 StatTester::GenerateCSV()
 {
-    std::ofstream out1;
-    out1.open(XCSV);
-    out1 << std::setprecision(std::numeric_limits<double>::digits10+2);
+    std::ofstream outI;
+    outI.open(XINCSV);
+    std::ofstream outH;
+    outH.open(XHHCSV);
+    outI << std::setprecision(std::numeric_limits<double>::digits10+2);
+    outH << std::setprecision(std::numeric_limits<double>::digits10+2);
     for (int i = 0; i < X_.size1(); ++i)
     {
+        bool is_hh = (X_(i,0) < 0);
+        std::ofstream& out1 = is_hh ? outH : outI;
         for (int j = 0; j < X_.size2(); ++j)
         {
+            if (is_hh && 2 <= j && j <= 5)
+            {
+                continue;
+            }
             if (j != 7)
             {
                 if (std::isnan(X_(i,j)))
@@ -369,19 +383,25 @@ StatTester::GenerateCSV()
         }
         out1 << "\n";
     }
-    out1.close();
+    outH.close();
+    outI.close();
 
-    std::ofstream out2;
-    out2.open(YCSV);
+    std::ofstream outYIN;
+    outYIN.open(YINCSV);
+    std::ofstream outYHH;
+    outYHH.open(YHHCSV);
     for (int i = 0; i < y_.size1(); ++i)
     {
+        bool is_hh = (X_(i,0) < 0);
+        std::ofstream & out2 = is_hh?outYHH:outYIN;
         for (int j = 0; j < y_.size2(); ++j)
         {
             out2 << y_(i,j) << ",";
         }
         out2 << "\n";
     }
-    out2.close();
+    outYIN.close();
+    outYHH.close();
 }
 
 void StatTester::PrintHGTest()
@@ -448,12 +468,12 @@ void StatTester::PrintHGTest()
     std::cerr << "p < " << VERY_SIGNIFICANT << ": " << nvsig << "\n";
     std::cerr << "p < " << EXTRA_SIGNIFICANT << ": " << nesig << "\n";
 }
-
-void 
+ 
+void
 StatTester::GenerateSmallDataMatrix()
 {
        // These are the node transaction and price tables that we use to create the  delayed version. 
-    const NodeTransactionTable& transacts = ior_.tr_table_;
+    const NodeTransactionTable& transacts = ior_.tr_table_;  
     const PriceTable& pricetable = ior_.pr_table_;
     const AnnouncementTable& ans = ior_.an_table_;
 
@@ -463,11 +483,13 @@ StatTester::GenerateSmallDataMatrix()
     //         # 15: Insiders actually exist
     int p_length = 15;  
     X_.resize(num_transactions_,p_length, 0.0);
-    y_.resize(num_transactions_,4,0.0);
+    y_.resize(num_transactions_,8,0.0);
     std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
     int row = 0;
+
+
     for (auto nodepair: transacts)
-    {
+    {    
         const int node = nodepair.first;
         int i = node;
         const TransactionTable& c_trans = nodepair.second;
@@ -509,75 +531,100 @@ StatTester::GenerateSmallDataMatrix()
                 double refprice = refpair.second;
                 auto refpair2 = pricetable.GetFirstChangePrice(isin,date,profit_window_size_2_, ior_.trade_days_);
                 double refprice2 = refpair2.second;
+
+                
+                
                 
                 // The next announcement. 
                 auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
                 double ret = refprice/price;
                 double ret2 = refprice2/price;
+
+                const double index_price = pricetable.GetCompanyDayPrice("index", date, 0);
+                double m_refprice = pricetable.GetCompanyDayPrice("index", date+refpair.first,0);
+                double m_refprice2 = pricetable.GetCompanyDayPrice("index", date+refpair2.first,0); 
+                // std::cerr << index_price << " index vs " << m_refprice << " reference \n";
+                double market_ret = m_refprice/index_price;
+                double market_ret2 = m_refprice2/index_price;
+        
                
                 int sgn = volume > 0.0?1:-1;
                 
+                y_(row,0) = log(ret)*sgn;
+                y_(row,1) = refpair.first;
+                y_(row,2) = log(ret2)*sgn;
+                y_(row,3) = refpair2.first;
+                y_(row,4) = log(market_ret)*sgn;
+                y_(row,5) = refpair.first;
+                y_(row,6) = log(market_ret2)*sgn;
+                y_(row,7) = refpair2.first;
+
+                double dist = std::nan("household");
+                double centr = std::nan("household");
+                double n_deg = std::nan("household");
+                double deg =  std::nan("household");
                 boost::gregorian::date ref_time(boost::gregorian::from_simple_string(REFDAY));
                 boost::gregorian::date truetime = ref_time + boost::gregorian::days(date);
                 // Only take the beginning of the month 
                 int fixed_time = 10000*truetime.year() + 100*truetime.month(); // + truetime.day();
                 // std::cerr << truetime << "\n";
                 auto gg = ior_.metag_->GetGraph(fixed_time);
-                double dist, centr, n_deg,deg;
-                //std::cerr << "got graph. \n";
-                int insiders_exist = 1;
-                try
-                {
-                    dist = (double) gg->GetDistance(k,i);
-                }
-                catch(const std::exception& e)
-                {
-                    std::cerr << "distance" << '\n';
-                    throw e;
-                }                
-                if (dist < 0)
-                {
-                    if (dist < -1.9)
-                    {
-                        insiders_exist = 0;
-                    }
-                    dist = std::nan("missing");
-                }
-                try
-                {
-                    centr = gg->GetCentrality(i);
-                }
-                catch(const std::exception& e)
-                {
-                    std::cerr << "Centrality" << '\n';
-                    throw e;
-                }
-                try
-                {
-                    n_deg = gg->NormalDegree(i);
-                }
-                catch(const std::exception& e)
-                {
-                    std::cerr << "normal degree" << '\n';
-                    throw e;
-                }
-                try
-                {
-                    deg = gg->Degree(i);
-                }
-                catch(const std::exception& e)
-                {
-                    std::cerr << "raw degree" << '\n';
-                    throw e;
-                }
-                y_(row,0) = log(ret)*sgn;
-                y_(row,1) = refpair.first;
-                y_(row,2) = log(ret2)*sgn;
-                y_(row,3) = refpair2.first;
 
-                if (!std::isnan(dist) && deg == 0)
-                {
-                    throw std::logic_error("distance exists but zero degree");
+                int insiders_exist = 1;
+
+                // The following code is only done for insiders.    
+                if (i >= 0)
+                { 
+                    //std::cerr << "got graph. \n";
+                    try
+                    {
+                        dist = (double) gg->GetDistance(k,i);
+                    }
+                    catch(const std::exception& e)
+                    {
+                        std::cerr << "distance" << '\n';
+                        throw e;
+                    }                
+                    if (dist < 0)
+                    {
+                        if (dist < -1.9)
+                        {
+                            insiders_exist = 0;
+                        }
+                        dist = std::nan("missing");
+                    }
+                    try
+                    {
+                        centr = gg->GetCentrality(i);
+                    }
+                    catch(const std::exception& e)
+                    {
+                        std::cerr << "Centrality" << '\n';
+                        throw e;
+                    }
+                    try
+                    {
+                        n_deg = gg->NormalDegree(i);
+                    }
+                    catch(const std::exception& e)
+                    {
+                        std::cerr << "normal degree" << '\n';
+                        throw e;
+                    }
+                    try
+                    {
+                        deg = gg->Degree(i);
+                    }
+                    catch(const std::exception& e)
+                    {
+                        std::cerr << "raw degree" << '\n';
+                        throw e;
+                    }
+
+                    if (!std::isnan(dist) && deg == 0)
+                    {
+                        throw std::logic_error("distance exists but zero degree");
+                    }
                 }
                 
                 // LEGEND: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree #6:in_window #7:date 
@@ -677,6 +724,17 @@ StatTester::DoGraphTests()
     
 }
 
+void StatTester::PrintIsinMap()
+{
+    for (auto isin_it: ior_.isin_company_)
+    {
+        auto isin = isin_it.first;
+        auto cname = isin_it.second;
+        auto id = ior_.cnames_[cname];
+        std::cout << isin << ", " << cname << ", " << id << std::endl;
+    }
+}
+
 
 void 
 StatTester::TestGraphIntegrity()
@@ -740,3 +798,4 @@ StatTester::TestGraphIntegrity()
         }
     }
 }
+

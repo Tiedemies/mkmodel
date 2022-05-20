@@ -11,6 +11,32 @@
 #include "boost/date_time/gregorian/gregorian.hpp"
 #define TRANS_ERRFILEHANDLE "bad_transactions.txt"
 
+double 
+PilkkuPisteeksi(const std::string&  luku)
+{
+  double cumulative = 0;
+  double aftercom = 0.1;
+  bool comma = false;
+  for (auto sit = luku.begin(); sit != luku.end(); ++sit)
+  {
+    if (!comma && std::isdigit(*sit))
+    {
+      int i = (*sit - '0');
+      cumulative = 10*cumulative + i;
+    }
+    else if (comma && std::isdigit(*sit))
+    {
+      int i = (*sit - '0');
+      cumulative += aftercom*i;
+      aftercom = aftercom * 0.1; 
+    }
+    else
+    {
+      comma = true;
+    }
+  }
+  return cumulative;
+}
 
 IoR::IoR()
 {
@@ -18,8 +44,12 @@ IoR::IoR()
   atfile_ = ANFILE;
   ptfile_ = PRICEFILE;
   ttfile_ = TRANSACTFILE;
+  hhfile_ = HHTFILE;
   graphdir_ = NWDIR;
+  indexfile_ = INDEXFILE;
+  std::cerr << "Creating metagraph\n";
   metag_ = new MetaGraph(graphdir_);
+  std::cerr << "metagraph created\n";
 }
 
 IoR::~IoR()
@@ -31,6 +61,12 @@ void IoR::SetAnnouncementDirectory(const std::string& andir)
 {
   andir_ = andir;
 }
+
+void IoR::SetIndexFile(const std::string& indexfile)
+{
+  indexfile_ = indexfile;
+}
+
 void IoR::SetCompanyDictionaryFile(const std::string& cdictfile)
 {
   cdictfile_ = cdictfile;
@@ -241,6 +277,7 @@ IoR::ReadDates()
       continue;
     }
   }
+  std::cerr << "days read\n";
 }
 
 
@@ -382,17 +419,92 @@ void
 IoR::ReadTables()
 {
   ReadAnnounceTable();
-  // ReadInsiderTable();
+  //ReadInsiderTable();
   ReadPriceTable();
   ReadTransactionTable();
+  ReadHouseHoldTransactionTable();
+  ReadIndex();
 }
+
+void
+IoR::ReadIndex()
+{
+  /// Read the tables now 
+  using namespace boost::gregorian; 
+  std::ifstream in;
+  // trade_days_.clear(); 
+  std::cerr << "Reading index values\n";
+  in.open(indexfile_);
+  if (!in.is_open())
+  {
+    std::cerr << "Warning, price table file not found, null table set\n";
+  }
+  // Read one line  which is the header and throw away. 
+  std::string line;
+  std::getline(in, line);
+  // Reference date:
+  date ref_time(from_simple_string(REFDAY));
+  // Loop reads the line. 
+  int count = 0;
+  while (!in.eof() && in.good())
+  {
+    // First read the date. 
+    std::string datestr = ReadNext(in);   
+    date tt;
+    try
+    {
+       tt = from_simple_string(datestr);
+    }
+    catch(const std::exception& e)
+    {
+      // std::cerr << e.what() << '\n';
+      break;
+    }
+    int days = (tt-ref_time).days();
+    if (days >= 0)
+    {
+      // trade_days_.insert(days);
+    }
+    // skip high
+    ReadNext(in);
+    //skip low
+    ReadNext(in);
+    // Median
+    std::string pricestr = ReadNext(in);
+    double price = std::nan("missing");
+    if (days >= 0)
+    {
+      try
+      {
+        price = PilkkuPisteeksi(pricestr);/* code */
+      }
+      catch(const std::exception& e)
+      {
+        price = std::nan("missing");
+      }
+      pr_table_.AddPCompanyDayPrice("index", days, price);
+      ++count; 
+    }
+    SkipLine(in);
+  }
+  //Debug output:
+  std::cerr << "Read " << count <<  "index values \n"; 
+  /*
+  for (auto xx: dateindex_)
+  {
+    std::cerr << "day: " << xx.first << ", index value: " << xx.second << "\n";
+  }
+  */
+}
+  
+
 
 // Read table from tablesfile. 
 void
 IoR::ReadAnnounceTable()
 {
   // This is for the announcment dates.   
-
+  std::cerr << "Reading announcements\n";
   // Company Dictionary needs to be read. 
   if (cids_.empty())
   {
@@ -418,7 +530,8 @@ IoR::ReadAnnounceTable()
   while (!in.eof() && in.good())
   {
     // First read the date. 
-    std::string datestr = ReadNext(in);   
+    std::string datestr = ReadNext(in); 
+    //std::cerr << "At date: " << datestr << "\n";  
     date tt;
     try
     {
@@ -437,8 +550,11 @@ IoR::ReadAnnounceTable()
     ReadNext(in);
     // Read Company Name
     std::string cname = ReadNext(in);
+    //std::cerr << "Got nam: " << cname << "\n";
     // Read ISIN
     std::string isin = ReadNext(in);
+    //std::cerr << "Got isin: " << isin << "\n";
+
 
     auto isin_it = isin_company_.find(isin);
     if (isin_it != isin_company_.end())
@@ -454,9 +570,13 @@ IoR::ReadAnnounceTable()
     }
     
     // Skip id; relatedto:
-    ReadNext(in);
-    ReadNext(in);
+    std::string temp = ReadNext(in);
+    //std::cerr << "skipped: " << temp;
+    temp = ReadNext(in);
+    //std::cerr << "skipped: " << temp;
     std::string sched = ReadNext(in);
+    //std::cerr << "Got sch: " << sched << "\n";
+
     if (sched == "Non-scheduled")
     {
       ++count;
@@ -476,6 +596,7 @@ void
 IoR::ReadPriceTable()
 {
  
+  std::cerr << "Reading price table\n";
   /// Read the tables now 
   using namespace boost::gregorian; 
   std::ifstream in;
@@ -662,3 +783,110 @@ IoR::SkipLine(std::istream& in, std::ostream& out)
   }
 }
 
+void
+IoR::ReadHouseHoldTransactionTable()
+{
+  // This is for the announcment dates.   
+  std::cerr << "Reading household transactions\n";
+  /// Read the tables now 
+  using namespace boost::gregorian; 
+  std::ifstream in;
+  std::ofstream out;
+  in.open(tablesdir_ +  hhfile_);
+  out.open(TRANS_ERRFILEHANDLE);
+  if (!in.is_open())
+  {
+    std::cerr << "Warning, household table file not found, null table set\n";
+    return;
+  }
+  // Read one line  which is the header and throw away. 
+  std::string line;
+  std::getline(in, line);
+  // Reference date:
+  date ref_time(from_simple_string(REFDAY));
+  // Loop reads the line. 
+  int count = 0;
+  int nodes = 0;
+  int foo = 0;
+  int non_market = 0;
+  while (!in.eof() && in.good())
+  {
+    // First read the date. 
+    std::string datestr = ReadNext(in);   
+    date tt;
+    try
+    {
+       tt = from_simple_string(datestr);
+    }
+    catch(const std::exception& e)
+    {
+      // std::cerr << e.what() << '\n';
+      break;
+    }
+    int days = (tt-ref_time).days();
+   
+    // ReadIsin;
+    // skip owner_id; we use node id;
+    std::string owner = ReadNext(in);
+    int ownerid = -1;
+    try
+    {
+      ownerid = -1*std::stoi(owner);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      continue;
+    }
+     
+    std::string isin = ReadNext(in);
+    std::string price_str = ReadNext(in);
+    double price = -1;
+    try
+    {
+      price = std::stod(price_str);
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      SkipLine(in,out);
+    }
+    std::string volume_str = ReadNext(in);
+    double volume = std::stod(volume_str);
+    // ReadNext(in);
+    //skip vol_price
+    std::string vol_price = ReadNext(in);
+    // Skip node id. 
+    std::string temp = ReadNext(in);
+    // Does it have a node id? 
+    if (! temp.empty() ) 
+    {
+      ++nodes;
+      SkipLine(in);
+      continue;
+    }
+
+   // Market thing?
+    int x = std::stoi(ReadNext(in));
+    // Skip non-market trades
+    if (x != 1)
+    {
+      ++non_market;
+      continue;
+    }
+    
+    if (tr_table_.find(ownerid) == hh_table_.end())
+    {
+      TransactionTable novel;
+      tr_table_[ownerid] = novel;
+    }
+    if (days >= 0)
+    {
+      tr_table_[ownerid].AddPCompanyDayPriceTransaction(isin, days, price, volume);
+      ++count;
+    } 
+  }
+  //Debug output:
+  std::cerr << "Read " << count <<  " household transactions for " << hh_table_.size() << " housholds, " << nodes << " skipped insiders \n";
+  std::cerr << non_market << " total non-market transactions\n"; 
+}

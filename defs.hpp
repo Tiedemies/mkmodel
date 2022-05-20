@@ -30,6 +30,7 @@
 //#define PRICEFILE "table_prices.txt"
 #define PRICEFILE "table_prices_nan.txt"
 #define TRANSACTFILE "table_transacitions.txt"
+#define HHTFILE "table_households.txt"
 // Here define the network directory
 #define NWDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"
 // Dictionaries 
@@ -37,9 +38,14 @@
 #define NDFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"
 
 //Outputfiles
-#define XCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/X.csv"
-#define YCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/Y.csv"
+#define XINCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/X_in.csv"
+#define YINCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/Y_in.csv"
 
+#define XHHCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/X_hh.csv"
+#define YHHCSV "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/Y_hh.csv"
+
+//index file
+#define INDEXFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/indexdata.csv"
 
 
 
@@ -58,6 +64,7 @@ typedef std::vector<int> AnnouncementVector;
 typedef std::vector<double> Pmap;
 typedef std::unordered_map<int,Pmap> CompanyPmap; 
 typedef std::unordered_map<int,CompanyPmap> DatePmap; 
+typedef std::map<int,double> IndexMap;
 
 typedef std::unordered_map<std::string, std::string> IsinCompanyMap;
 
@@ -107,6 +114,7 @@ class TransactionTable
         int size();
         friend class StatTester; 
 };
+
 
 
 typedef std::unordered_map<int,TransactionTable> NodeTransactionTable;  

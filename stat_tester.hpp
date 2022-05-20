@@ -43,6 +43,10 @@ class StatTester
 
     void TestGraphIntegrity();
 
+    void SelectHouseHolds(); 
+
+    void PrintIsinMap();
+
     private:
     // Days in the window
     int profit_window_size_;
@@ -77,6 +81,9 @@ class StatTester
     int num_traders_;
     int num_companies_;
     int num_transactions_; 
+
+    // The households that have been selected
+    std::set<int> selected_households_;
 
     // The data matrix for regression 
     boost::numeric::ublas::matrix<double> X_; 
