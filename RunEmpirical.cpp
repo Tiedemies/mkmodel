@@ -24,15 +24,15 @@
 int main()
 {
 
-  double p = 0.7;
-  double w = 1;
-  double wt = 1;
-  double q = 0.4;
-  double noise = 0.1;
+  //[[maybe_unused]] double p = 0.7;
+  //[[maybe_unused]] double w = 1;
+  //[[maybe_unused]] double wt = 1;
+  //[[maybe_unused]] double q = 0.4;
+  //[[maybe_unused]] double noise = 0.1;
   auto start = std::chrono::high_resolution_clock::now(); 
 
-  auto stop1 = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop1-start); 
+  // auto stop1 = std::chrono::high_resolution_clock::now();
+  //[[maybe_unused]] auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop1-start); 
  
   IoR zed;
   zed.SetAnnouncementDirectory(ADIR);
@@ -44,7 +44,7 @@ int main()
   zed.ReadAnnouncements();
  
 
-  MetaGraph foo(NWDIR,zed.GetDates());
+  MetaGraph foo(NWDIR);
   Random bar;
   MkModel mk(bar);
   Simulator sim(&foo,mk);

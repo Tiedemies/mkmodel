@@ -39,6 +39,7 @@ public:
   NumTimeDict ReadInsiders();
   AnnouncementDict ReadAnnouncements();
   void ReadDates();
+  AnnouncementDates GetDates();
   int max_com_; 
   int max_tra_;
   std::set<int> years_;
@@ -74,6 +75,7 @@ private:
 
   // Tables:
   AnnouncementTable an_table_;
+  AnnouncementTable an_table_sc_;
   PriceTable pr_table_; 
   NodeTransactionTable tr_table_; 
   NodeTransactionTable hh_table_;

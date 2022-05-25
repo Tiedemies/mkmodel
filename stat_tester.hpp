@@ -52,6 +52,7 @@ class StatTester
     int profit_window_size_;
     int profit_window_size_2_;
     int inside_window_size_; 
+    int inside_window_size_2_; 
 
     // Io-class handle
     IoR ior_;

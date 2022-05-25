@@ -257,7 +257,7 @@ IoR::ReadDates()
   // Reference date:
   date ref_time(from_simple_string(REFDAY));
   // Loop reads the line. 
-  int count = 0;
+  //[[maybe_unused]] int count = 0;
   while (!in.eof() && in.good())
   {
     // First read the date. 
@@ -527,6 +527,7 @@ IoR::ReadAnnounceTable()
   date ref_time(from_simple_string(REFDAY));
   // Loop reads the line. 
   int count = 0;
+  int sccount = 0;
   while (!in.eof() && in.good())
   {
     // First read the date. 
@@ -582,10 +583,15 @@ IoR::ReadAnnounceTable()
       ++count;
       an_table_[isin].push_back(days);
     }
+    else
+    {
+      ++sccount;
+      an_table_sc_[isin].push_back(days);
+    }
     SkipLine(in);
   }
   //Debug output:
-  std::cerr << "Read " << count <<  " announcements for " << an_table_.size() << " isin codes \n";
+  std::cerr << "Read " << count <<  " unscheduled and " << sccount << " scheduled announcements for " << an_table_.size() << " isin codes \n";
   for (auto XY: an_table_)
   {
     std::sort(XY.second.begin(), XY.second.end());
@@ -807,7 +813,7 @@ IoR::ReadHouseHoldTransactionTable()
   // Loop reads the line. 
   int count = 0;
   int nodes = 0;
-  int foo = 0;
+  // //[[maybe_unused]] int foo = 0;
   int non_market = 0;
   while (!in.eof() && in.good())
   {
@@ -889,4 +895,10 @@ IoR::ReadHouseHoldTransactionTable()
   //Debug output:
   std::cerr << "Read " << count <<  " household transactions for " << hh_table_.size() << " housholds, " << nodes << " skipped insiders \n";
   std::cerr << non_market << " total non-market transactions\n"; 
+}
+
+AnnouncementDates
+IoR::GetDates()
+{
+  return an_dates_;
 }

@@ -126,9 +126,9 @@ void MonoGraph::ReadBoardMembers(std::ifstream& in)
 }
 
 
-std::set<int> MonoGraph::GetInsider(int k)
+std::set<int> MonoGraph::GetInsider(int k) const
 {
-  return insiderdict_[k];
+  return insiderdict_.at(k);
 }
 
 std::set<int> MonoGraph::GetInsiderOf(int i) 
@@ -201,7 +201,7 @@ MonoGraph::GetCentrality(int node)
   {
     throw std::runtime_error("Negative node index");
   }
-  if (centrality_.size() > 0 && centrality_.size() > node)
+  if (centrality_.size() > 0 && static_cast<int>(centrality_.size()) > node)
   {
     //std::cerr << centrality_.size() << " and " << node << "\n"; 
     return centrality_.at(node);
@@ -557,7 +557,7 @@ MonoGraph::GetMaxComp(std::vector<int> set) const
   int k = 0;
   for (auto ss: comps)
   {
-    if (ss.size() > i)
+    if (static_cast<int>(ss.size()) > i)
     {
       j = k;
       i = ss.size();

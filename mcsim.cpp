@@ -78,8 +78,9 @@ std::vector<int>
 Simulator::GetInside(int date, int k)
 {
   const MonoGraph* M = mgraph_->GetGraph(date);
-  //std::cerr << "got graph." << M << "\n"; 
-  return M->GetInsider(k);  
+  //std::cerr << "got graph." << M << "\n";
+  auto temp = M->GetInsider(k);
+  return std::vector<int>(temp.begin(),temp.end());  
 }
 
 void Simulator::Simplify()
@@ -150,8 +151,8 @@ Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
   {
     margin.at(j) = 0; // The derivative is 0 because these are at 0. 
   }
-  bool changed = true;
-  int iter = 0;
+  //[[maybe_unused]] bool changed = true;
+  //[[maybe_unused]] int iter = 0;
 
   return std::make_pair(result,margin); 
 }

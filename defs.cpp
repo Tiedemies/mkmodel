@@ -67,7 +67,7 @@ PriceTable::GetFirstChangePrice(const std::string& cname, int day, int offset, c
         return std::make_pair(-1, std::nan("notfound"));
     }
     
-    int num = lower->first;
+    // int num = lower->first;
     while ((lower->first-day < offset2) || std::isnan(lower->second))
     {
         ++lower;

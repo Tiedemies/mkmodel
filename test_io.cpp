@@ -32,5 +32,5 @@ int main()
     std::cerr << " Datamatrix sent to files\n";
     std::cerr << " Printhin isin-map to standard output\n";
     foo.PrintIsinMap();
-    
+    return 0;
 }

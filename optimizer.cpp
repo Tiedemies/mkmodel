@@ -50,20 +50,20 @@ double Optimizer::EvaluateDeviation(const int ns)
   } 
   // Calculare averages
   std::vector<double> average;
-  for(int i = 0; i < ps[0].size(); ++i)
+  for(size_t i = 0; i < ps[0].size(); ++i)
   {
     average.push_back(0.0);
-    for(int j = 0; j < 30; ++j)
+    for(size_t j = 0; j < 30; ++j)
     {
       average.at(i) += ps[j][i] / 30.0;
     }
   }
   // Calculate variance
   std::vector<double> var;
-  for(int i = 0; i < ps[0].size(); ++i)
+  for(size_t i = 0; i < ps[0].size(); ++i)
   {
     var.push_back(0.0);
-    for(int j = 0; j < 30; ++j)
+    for(size_t j = 0; j < 30; ++j)
     {
       var.at(i) += pow(average[i] - ps[j][i], 2) / 29.0;
     }
@@ -79,7 +79,7 @@ Optimizer::CalculateError(const DatePmap& dm, double p, double q, const DatePmap
   double dq = 0;
   double dp = 0;
   std::cerr << "calculating error from dm with " << dm.size() << " entries\n";
-  for (int k = 0; k<= n_companies_;++k)
+  for (int k = 0; k <= n_companies_;++k)
   {
     if (dm.find(k) == dm.end() || up_.find(k) == up_.end())
     {
@@ -88,7 +88,7 @@ Optimizer::CalculateError(const DatePmap& dm, double p, double q, const DatePmap
     auto D = deriv.at(k);
     for (auto& P:  dm.at(k)) 
     {
-      for (int i = 0; i < P.second.size(); ++i)
+      for (size_t i = 0; i < P.second.size(); ++i)
       {
         const double& pp = P.second.at(i); 
         const double& dip = D.at(P.first).at(i); 
@@ -172,7 +172,7 @@ Optimizer::CalculateCompanyErrorQ(const DatePmap& dm, double p, std::vector<int>
       const double& pp = P.second.at(i); 
       const double& dip = D.at(P.first).at(i);
       // When they don't take advantage, the error contribution is: 
-      double noq_e = pow((up_.at(k)).at(i) - def_rate*(1-pp), 2);
+      // double noq_e = pow((up_.at(k)).at(i) - def_rate*(1-pp), 2);
       // When they do take with low probability, the error is
       double loq_e = pow((up_.at(k)).at(i) - low_q*pp + def_rate*(1-pp), 2);
       // When they take the high probability, the error is:
@@ -245,7 +245,7 @@ void Optimizer::InitializeCY()
       {
 	      continue;
       }
-      bool c_d = false;
+      // bool c_d = false;
       for (int date: andi_.at(comp))
       {
 	      int year = date/10000;
@@ -529,7 +529,7 @@ Optimizer::Optimize(double p, double q)
     std::cerr << "Calculating DM for point [" << p << "," << q << "]\n";
     CalculateDM(dm,p,n,deriv);
     auto r = CalculateError(dm, p,q,deriv);
-    //std::cerr << "Error: " << std::get<0>(r) << "\n";
+    std::cerr << "Error: " << std::get<0>(r) << "\n";
     p = p-0.01;
     q = q-0.01;
     ++l;
@@ -542,7 +542,7 @@ std::pair<double,double>
 Optimizer::CompanyOptimize(int k, double p, double q)
 {
   int n = 500; // Number of iterations per year
-  int max_iter = 100; // Maximum number of iterations. 
+  //int max_iter = 100; // Maximum number of iterations. 
   // Initialize up_ by iterating over nodes (i) and company (k)
   std::cerr << "Initializing UP...\n";
   InitializeUp();
@@ -561,17 +561,17 @@ Optimizer::CompanyOptimize(int k, double p, double q)
   double best_p = p;
   double best_q = q;
   double best_error = -1;
-  double current_p = p;
-  double current_q = q;
-  double current_error = -1;
-  double T = 1000;
-  double scale = 0.1;
+  // double current_p = p;
+  //double current_q = q;
+  // double current_error = -1;
+  // double T = 1000;
+  //double scale = 0.1;
  
-  double top_p = 1.0;
-  double bottom_p = 0.0;
-   double top_q = 1.0;
-  double bottom_q = 0.0;  
-  bool flip = false;
+  //double top_p = 1.0;
+  //double bottom_p = 0.0;
+  //double top_q = 1.0;
+  //double bottom_q = 0.0;  
+  //bool flip = false;
 
   // We initialize a new random variable for all runs, so that the seed is initialized fresh
   Random hrnd; 
@@ -582,16 +582,16 @@ Optimizer::CompanyOptimize(int k, double p, double q)
     CalculateDM(dm,p,n,deriv,k);
     auto r = CalculateCompanyError(dm, p, q, k, deriv);
     double err = std::get<0>(r);
-    double dp = std::get<1>(r);
-    double dq = std::get<2>(r);
+    //double dp = std::get<1>(r);
+    //double dq = std::get<2>(r);
     if (best_error < 0 || best_error > err)
     {
       best_error = err; 
-      current_error = err;
+      //current_error = err;
       best_p = p;
-      current_p = p;
+      //current_p = p;
       best_q = q;
-      current_q = q;
+      //current_q = q;
       best_l = l;
       // std::cerr << "found better point at " << p << "," << q << "\n";
     } 
@@ -617,6 +617,7 @@ Optimizer::CompanyOptimize(int k, double p, double q)
   std::cerr << "best point found was: \n[" << best_p << " , " << best_q << "]\n";
   std::cerr << "error at the point was " << best_error << "\n";
   std::cerr << "it was found on iteration number " << best_l << "\n";
+  return std::make_pair(p,q);
 }
 
 // Optimizer function for three-tier q- individuals. 
@@ -624,7 +625,7 @@ std::pair<double,double>
 Optimizer::CompanyOptimizeQ(int k, double p, double q)
 {
   int n = 500; // Number of iterations per year
-  int max_iter = 100; // Maximum number of iterations. 
+  //int max_iter = 100; // Maximum number of iterations. 
   // Initialize up_ by iterating over nodes (i) and company (k)
   std::cerr << "Initializing UP...\n";
   InitializeUp();
@@ -647,17 +648,17 @@ Optimizer::CompanyOptimizeQ(int k, double p, double q)
   double best_q = q;
   std::vector<int> qv(n_nodes_, 0);  
   double best_error = -1;
-  double current_p = p;
-  double current_q = q;
-  double current_error = -1;
-  double T = 1000;
-  double scale = 0.1;
+  //double current_p = p;
+  //double current_q = q;
+  //double current_error = -1;
+  //double T = 1000;
+  //double scale = 0.1;
  
-  double top_p = 1.0;
-  double bottom_p = 0.0;
-  double top_q = 1.0;
-  double bottom_q = 0.0;  
-  bool flip = false;
+  //double top_p = 1.0;
+  //double bottom_p = 0.0;
+  //double top_q = 1.0;
+  //double bottom_q = 0.0;  
+  //bool flip = false;
   int best_l = 0;
 
   // We initialize a new random variable for all runs, so that the seed is initialized fresh
@@ -669,16 +670,16 @@ Optimizer::CompanyOptimizeQ(int k, double p, double q)
     CalculateDM(dm,p,n,deriv,k);
     auto r = CalculateCompanyErrorQ(dm, p, qv, q, k, deriv);
     double err = std::get<0>(r);
-    double dp = std::get<1>(r);
-    double dq = std::get<2>(r);
+    //double dp = std::get<1>(r);
+    //double dq = std::get<2>(r);
     if (best_error < 0 || best_error > err)
     {
       best_error = err; 
-      current_error = err;
+      //current_error = err;
       best_p = p;
-      current_p = p;
+      //current_p = p;
       best_q = q;
-      current_q = q;
+      //current_q = q;
       best_l = l;
       // std::cerr << "found better point at " << p << "," << q << "\n";
     } 
@@ -729,4 +730,5 @@ Optimizer::CompanyOptimizeQ(int k, double p, double q)
     }
   }
   std::cerr << "Non_exploiters: " << n_zero << ", low_exploiters: " << n_low << ", and high exploiters: " << n_high << "\n"; 
+  return std::make_pair(p,q);
 }

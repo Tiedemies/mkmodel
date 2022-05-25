@@ -23,6 +23,7 @@ StatTester::StatTester()
     profit_window_size_ = 5;
     profit_window_size_2_ = 21;
     inside_window_size_ = 5;
+    inside_window_size_2_ = 10;
 
 }
 
@@ -354,17 +355,17 @@ StatTester::GenerateCSV()
     outH.open(XHHCSV);
     outI << std::setprecision(std::numeric_limits<double>::digits10+2);
     outH << std::setprecision(std::numeric_limits<double>::digits10+2);
-    for (int i = 0; i < X_.size1(); ++i)
+    for (int i = 0; i < static_cast<int>(X_.size1()); ++i)
     {
         bool is_hh = (X_(i,0) < 0);
         std::ofstream& out1 = is_hh ? outH : outI;
-        for (int j = 0; j < X_.size2(); ++j)
+        for (int j = 0; j < static_cast<int>(X_.size2()); ++j)
         {
             if (is_hh && 2 <= j && j <= 5)
             {
                 continue;
             }
-            if (j != 7)
+            if (j != 8)
             {
                 if (std::isnan(X_(i,j)))
                 {
@@ -390,11 +391,11 @@ StatTester::GenerateCSV()
     outYIN.open(YINCSV);
     std::ofstream outYHH;
     outYHH.open(YHHCSV);
-    for (int i = 0; i < y_.size1(); ++i)
+    for (int i = 0; i < static_cast<int>(y_.size1()); ++i)
     {
         bool is_hh = (X_(i,0) < 0);
         std::ofstream & out2 = is_hh?outYHH:outYIN;
-        for (int j = 0; j < y_.size2(); ++j)
+        for (int j = 0; j < static_cast<int>(y_.size2()); ++j)
         {
             out2 << y_(i,j) << ",";
         }
@@ -416,7 +417,7 @@ void StatTester::PrintHGTest()
     int nn = 0;
     for (auto x: hg_pvalues_)
     {
-        int node = x.first;
+        // int node = x.first;
         for (auto y: x.second)
         {
             double p = y.second;
@@ -445,7 +446,7 @@ void StatTester::PrintHGTest()
     nesig = 0;
     for (auto x: hg_pvalues_2_)
     {
-        int node = x.first;
+        // int node = x.first;
         for (auto y: x.second)
         {
             double p = y.second;
@@ -478,11 +479,15 @@ StatTester::GenerateSmallDataMatrix()
     const AnnouncementTable& ans = ior_.an_table_;
 
 
-    // LEGEND: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree #6:in_window #7:date 
-    //         #8:volume*price  #9:business_day #10:past_inside #11:future_inside #12:How many boards #13: how many inside
+    // LEGEND X: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree #6:in_window #7:in_window_2 #8:date 
+    //         #9:volume*price  #10:business_day #11:past_inside #12:future_inside #13:How many boards #14: how many inside
     //         # 15: Insiders actually exist
-    int p_length = 15;  
+    int p_length = 16;  
     X_.resize(num_transactions_,p_length, 0.0);
+
+    // LEGEND Y: #0: Return in window 1 #1: actual trading days for window 1, #2 Return in window 2, #3 actual trading days in window 2
+    //  #4: Market return in window 1 #5: actual trading days for window 1, #6 Market Return in window 2, #7 actual trading days in window 2
+
     y_.resize(num_transactions_,8,0.0);
     std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
     int row = 0;
@@ -635,46 +640,60 @@ StatTester::GenerateSmallDataMatrix()
                 X_(row, 3) = centr;
                 X_(row, 4) = n_deg;
                 X_(row, 5) = deg;
-            
-                if (ans_v_it != ansvector.end() && *ans_v_it >= date && *ans_v_it <= date + inside_window_size_)
+
+                X_(row, 6) = 0;
+                X_(row, 7) = 0;
+                while (ans_v_it != ansvector.end() && *ans_v_it >= date)
                 {
-                    X_(row, 6) = 1;
+                    if(*ans_v_it <= date + inside_window_size_)
+                    {
+                        ++X_(row, 6);
+                    }
+                    if(*ans_v_it <= date + inside_window_size_2_)
+                    {
+                        ++X_(row, 7);
+                    }
+                    else
+                    {
+                        break;
+                    } 
+                    ++ans_v_it; 
                 }
-                X_(row, 7) = 10000*truetime.year() + 100*truetime.month() + truetime.day();
-                X_(row, 8) = volume*price;
+                X_(row, 8) = 10000*truetime.year() + 100*truetime.month() + truetime.day();
+                X_(row, 9) = volume*price;
                 // on business day
-                X_(row, 9) = business_day;
+                X_(row, 10) = business_day;
                 
                 auto g_past = ior_.metag_->GetGraph(fixed_time - 10000);
                 auto g_fut = ior_.metag_->GetGraph(fixed_time + 10000);
                 if (!g_past)
                 {
-                    X_(row, 10) = std::nan("past missing");
+                    X_(row, 11) = std::nan("past missing");
                 }
                 else
                 {
                     auto inset = g_past->GetInsider(k);
                     if (inset.find(i) != inset.end())
                     {
-                        X_(row,10) = 1;
+                        X_(row,11) = 1;
                     } 
                 }
 
                 if (!g_fut)
                 {
-                    X_(row, 11) = std::nan("future missing");
+                    X_(row, 12) = std::nan("future missing");
                 }
                 else
                 {
                     auto inset = g_fut->GetInsider(k);
                     if (inset.find(i) != inset.end())
                     {
-                        X_(row,11) = 1;
+                        X_(row,12) = 1;
                     } 
                 }
-                X_(row,12) = gg->GetBoardOf(i).size();
-                X_(row,13) = gg->GetInsiderOf(i).size();
-                X_(row,14) = insiders_exist;
+                X_(row,13) = gg->GetBoardOf(i).size();
+                X_(row,14) = gg->GetInsiderOf(i).size();
+                X_(row,15) = insiders_exist;
                 ++row;
             }
         }
@@ -685,9 +704,9 @@ void
 StatTester::DoGraphTests()
 {
        // These are the node transaction and price tables that we use to create the  delayed version. 
-    const NodeTransactionTable& transacts = ior_.tr_table_;
-    const PriceTable& pricetable = ior_.pr_table_;
-    const AnnouncementTable& ans = ior_.an_table_;
+    // const NodeTransactionTable& transacts = ior_.tr_table_;
+    // const PriceTable& pricetable = ior_.pr_table_;
+    // const AnnouncementTable& ans = ior_.an_table_;
             
     auto gg = ior_.metag_->GetGraph(0);
     std::cerr << "graph read.\n";
@@ -740,7 +759,7 @@ void
 StatTester::TestGraphIntegrity()
 {
     const NodeTransactionTable& transacts = ior_.tr_table_;
-    const PriceTable& pricetable = ior_.pr_table_;
+    // const PriceTable& pricetable = ior_.pr_table_;
     const AnnouncementTable& ans = ior_.an_table_;
     for (auto nodepair: transacts)
     {
@@ -767,15 +786,15 @@ StatTester::TestGraphIntegrity()
                 continue;
             }
              
-            const auto& ansvector = ans_it->second; 
+            // const auto& ansvector = ans_it->second; 
             for (unsigned int j = 0; j < trans.size(); ++j)
             {
                 const int date = std::get<0>(trans[j]);
-                int business_day = 1;
+                /* int business_day = 1;
                 if (ior_.trade_days_.find(date) == ior_.trade_days_.end())
                 {
                     business_day = 0;
-                }
+                }*/
                 boost::gregorian::date ref_time(boost::gregorian::from_simple_string(REFDAY));
                 boost::gregorian::date truetime = ref_time + boost::gregorian::days(date);
                 // Only take the beginning of the year network. 
@@ -793,7 +812,7 @@ StatTester::TestGraphIntegrity()
                     std::cerr << "Time stamp for graph: " << fixed_time; 
                     throw std::logic_error("Graph mismatch");
                 }
-                std::cerr << "Distance: " << d << " adjacent: " << dd << "\n";
+                std::cerr << "Distance: " << d << " adjacent: " << dd << " Centrality: " << c << "\n";
             }
         }
     }
