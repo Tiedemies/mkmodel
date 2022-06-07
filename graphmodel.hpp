@@ -79,7 +79,7 @@ class MetaGraph
 {
 
 public:
-  MetaGraph(std::string dir);
+  MetaGraph(std::string dir, int date = -1);
   MetaGraph(std::string dir, const AnnouncementDates& an);
   ~MetaGraph();
   MonoGraph* GetGraph(int date) const;

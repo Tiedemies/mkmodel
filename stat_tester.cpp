@@ -249,11 +249,11 @@ StatTester::CreateProfitWindows()
             }
         }
     }
-    std::cerr << "Inside transactions: " << n_inside_p << ", Outside transactions: " << n_outside_p << "\n";
-    std::cerr << "reversed days: " << n_reversed << "\n"; 
+    //std::cerr << "Inside transactions: " << n_inside_p << ", Outside transactions: " << n_outside_p << "\n";
+    //std::cerr << "reversed days: " << n_reversed << "\n"; 
     for (auto x: ior_.hh_table_)
     {
-        ++num_transactions_;
+        num_transactions_+=x.second.size();
     }
 }
 
@@ -365,7 +365,7 @@ StatTester::GenerateCSV()
             {
                 continue;
             }
-            if (j != 8)
+            if (j != 10)
             {
                 if (std::isnan(X_(i,j)))
                 {
@@ -477,12 +477,15 @@ StatTester::GenerateSmallDataMatrix()
     const NodeTransactionTable& transacts = ior_.tr_table_;  
     const PriceTable& pricetable = ior_.pr_table_;
     const AnnouncementTable& ans = ior_.an_table_;
+    const AnnouncementTable& ans_sc_ = ior_.an_table_sc_;
 
 
-    // LEGEND X: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree #6:in_window #7:in_window_2 #8:date 
-    //         #9:volume*price  #10:business_day #11:past_inside #12:future_inside #13:How many boards #14: how many inside
-    //         # 15: Insiders actually exist
-    int p_length = 16;  
+    // LEGEND X: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree 
+    //           #6:in_window (non-scheduled) #7:in_window_2 (non-scheduled) #8:in_window (scheduled) #9: in_window_2 (scheduled)
+
+    //         #10: date #11:volume*price  #12:business_day #13:past_inside #14:future_inside #15:How many boards #16: how many inside
+    //         # 17: Insiders actually exist
+    int p_length = 18;  
     X_.resize(num_transactions_,p_length, 0.0);
 
     // LEGEND Y: #0: Return in window 1 #1: actual trading days for window 1, #2 Return in window 2, #3 actual trading days in window 2
@@ -492,7 +495,8 @@ StatTester::GenerateSmallDataMatrix()
     std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
     int row = 0;
 
-
+    bool done = false;
+    int extras = 0;
     for (auto nodepair: transacts)
     {    
         const int node = nodepair.first;
@@ -502,6 +506,7 @@ StatTester::GenerateSmallDataMatrix()
         {
             const std::string& isin = isin_vector_pair.first;
             const std::string& comp = ior_.isin_company_[isin];
+            // std::cerr << "Company: " << comp << "\n";
             // K is for company. 
             auto comp_it = ior_.cnames_.find(comp);
             if (comp_it == ior_.cnames_.end())
@@ -512,16 +517,27 @@ StatTester::GenerateSmallDataMatrix()
             int k = ior_.cnames_[comp];
             const DatePriceVolumeVector& trans = isin_vector_pair.second;
             auto ans_it = ans.find(isin);
+            auto ans_sc_it = ans_sc_.find(isin);
+            bool nonscheduled_exist = (ans_it != ans.end());
+            bool scheduled_exist = (ans_sc_it != ans_sc_.end());
         
-            if(ans_it == ans.end())
+            if(!(nonscheduled_exist || scheduled_exist))
             {
-                std::cerr << "Warning, no announcement for " << isin << " not found\n";
+                std::cerr << "Warning, announcements for " << isin << " not found\n";
                 continue;
             }
+            std::vector<int> dummy;
              
-            const auto& ansvector = ans_it->second; 
+            const auto& ansvector = nonscheduled_exist?ans_it->second:dummy;
+            const auto& ansvector_sc = scheduled_exist?ans_sc_it->second:dummy;
+            // std::cerr << "starting transactions:\n";
             for (unsigned int j = 0; j < trans.size(); ++j)
             {
+                if (done)
+                {
+                    ++extras;
+                    continue;
+                }
                 const int date = std::get<0>(trans[j]);
                 int business_day = 1;
                 if (ior_.trade_days_.find(date) == ior_.trade_days_.end())
@@ -540,8 +556,7 @@ StatTester::GenerateSmallDataMatrix()
                 
                 
                 
-                // The next announcement. 
-                auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
+               
                 double ret = refprice/price;
                 double ret2 = refprice2/price;
 
@@ -632,8 +647,6 @@ StatTester::GenerateSmallDataMatrix()
                     }
                 }
                 
-                // LEGEND: #0:id #1:company #2:distance #3:centrality #4:normalized_degree #5:degree #6:in_window #7:date 
-                //         #8:volume*price  #9:business_day #10:past_inside #11:future_inside
                 X_(row, 0) = i;
                 X_(row, 1) = k;
                 X_(row, 2) = dist;
@@ -643,6 +656,27 @@ StatTester::GenerateSmallDataMatrix()
 
                 X_(row, 6) = 0;
                 X_(row, 7) = 0;
+
+                X_(row, 8) = 0;
+                X_(row, 9) = 0;
+
+                // The next announcements after date 
+
+                auto ans_v_it = std::lower_bound(ansvector.begin(), ansvector.end(), date);
+                auto ans_sc_v_it = ansvector_sc.begin();
+                try
+                {
+                    /* code */                 
+                    ans_sc_v_it = std::lower_bound(ansvector_sc.begin(), ansvector_sc.end(), date);
+                }                
+                catch(const std::exception& e)
+                {
+                    std::cerr << "It was the lowerbound.\n";
+                    std::cerr << e.what() << '\n';
+                }
+
+
+                // Count the number of non-scheduled announcements in the two time windows
                 while (ans_v_it != ansvector.end() && *ans_v_it >= date)
                 {
                     if(*ans_v_it <= date + inside_window_size_)
@@ -659,45 +693,89 @@ StatTester::GenerateSmallDataMatrix()
                     } 
                     ++ans_v_it; 
                 }
-                X_(row, 8) = 10000*truetime.year() + 100*truetime.month() + truetime.day();
-                X_(row, 9) = volume*price;
-                // on business day
-                X_(row, 10) = business_day;
+                try
+                {
                 
+                // count the number of scheduled announcements
+                while (ans_sc_v_it != ansvector_sc.end() && *ans_sc_v_it >= date)
+                {
+                    if(*ans_sc_v_it <= date + inside_window_size_)
+                    {
+                        ++X_(row, 8);
+                    }
+                    if(*ans_sc_v_it <= date + inside_window_size_2_)
+                    {
+                        ++X_(row, 9);
+                    }
+                    else
+                    {
+                        break;
+                    } 
+                    ++ans_sc_v_it; 
+                }
+                     /* code */
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << "It was the iteration";
+                    std::cerr << e.what() << '\n';
+                }
+               
+                //std::cerr << "announcements ok\n";
+
+                X_(row, 10) = 10000*truetime.year() + 100*truetime.month() + truetime.day();
+                X_(row, 11) = volume*price;
+                // on business day
+                X_(row, 12) = business_day;
+                //std::cerr << "bdays done.\n";
                 auto g_past = ior_.metag_->GetGraph(fixed_time - 10000);
                 auto g_fut = ior_.metag_->GetGraph(fixed_time + 10000);
+                //std::cerr << "got metagraphs.\n";
                 if (!g_past)
                 {
-                    X_(row, 11) = std::nan("past missing");
+                    X_(row, 13) = std::nan("past missing");
                 }
                 else
                 {
                     auto inset = g_past->GetInsider(k);
                     if (inset.find(i) != inset.end())
                     {
-                        X_(row,11) = 1;
-                    } 
+                        X_(row,13) = 1;
+                    }
                 }
+                //std::cerr << "gpast ok.\n";
 
                 if (!g_fut)
                 {
-                    X_(row, 12) = std::nan("future missing");
+                    X_(row, 14) = std::nan("future missing");
                 }
                 else
                 {
                     auto inset = g_fut->GetInsider(k);
                     if (inset.find(i) != inset.end())
                     {
-                        X_(row,12) = 1;
+                        X_(row,14) = 1;
                     } 
                 }
-                X_(row,13) = gg->GetBoardOf(i).size();
-                X_(row,14) = gg->GetInsiderOf(i).size();
-                X_(row,15) = insiders_exist;
+                //std::cerr << "gfut ok.\n";
+                X_(row,15) = gg->GetBoardOf(i).size();
+                X_(row,16) = gg->GetInsiderOf(i).size();
+                if (X_(row,15) > X_(row,16))
+                {
+                    std::cerr << "something bad\n";
+                }
+                X_(row,17) = insiders_exist;
                 ++row;
+                if (row >= num_transactions_)
+                {
+                    std::cerr << "Warning, too many transactions!\n";
+                    done = true;
+                }
+                //std::cerr << "this transaction done\n";
             }
         }
     }
+    std::cerr << "Generated. Skipped " << extras << " transactions. \n";
 }
 
 void 

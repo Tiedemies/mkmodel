@@ -96,7 +96,13 @@ void MonoGraph::ReadInsiders(std::ifstream& in)
 	    }
     }
     in >> company >> delimit1 >> delimit2;
+  }
+  /*
+  for (auto insider: insider_of_)
+  {
+    std::cerr << "insider " << insider.first << " had " << insider.second.size() << " companies \n";
   } 
+  */
 }
 
 void MonoGraph::ReadBoardMembers(std::ifstream& in)
@@ -122,12 +128,24 @@ void MonoGraph::ReadBoardMembers(std::ifstream& in)
 	    }
     }
     in >> company >> delimit1 >> delimit2;
+  }
+  /*
+  for (auto insider: board_of_)
+  {
+    std::cerr << "board member " << insider.first << " had " << insider.second.size() << " companies \n";
   } 
+  */
 }
 
 
 std::set<int> MonoGraph::GetInsider(int k) const
 {
+  auto foo = insiderdict_.find(k);
+  if (foo == insiderdict_.end())
+  {
+    std::set<int> bar;
+    return bar;
+  }
   return insiderdict_.at(k);
 }
 
@@ -390,7 +408,7 @@ MonoGraph::NormalDegree(int node)
 }
 
 
-MetaGraph::MetaGraph(std::string dir)
+MetaGraph::MetaGraph(std::string dir, int rdate)
 {
   DIR* dirp = opendir(dir.c_str());
   std::string fname = FHANDLE; 
@@ -404,6 +422,10 @@ MetaGraph::MetaGraph(std::string dir)
     std::string boards = dir+dp->d_name+BHANDLE; 
     int date;
     s >> date;
+    if (rdate > 0 && date != rdate)
+    {
+      continue; 
+    }
     std::ifstream in;
     in.open(filename);
     if (!in.is_open())
@@ -432,7 +454,7 @@ MetaGraph::MetaGraph(std::string dir)
   }  
 
 }
-
+// Read only specific dates
 MetaGraph::MetaGraph(std::string dir, const AnnouncementDates& an)
 {
   DIR* dirp = opendir(dir.c_str());
@@ -479,6 +501,10 @@ MetaGraph::~MetaGraph()
 
 MonoGraph* MetaGraph::GetGraph(int date) const
 {
+  if (graphs_.size() == 1)
+  {
+    return graphs_.begin()->second;
+  }
   auto it = graphs_.lower_bound(date);
   if (it == graphs_.end())
   {

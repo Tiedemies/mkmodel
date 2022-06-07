@@ -31,6 +31,7 @@
 #define PRICEFILE "table_prices_nan.txt"
 #define TRANSACTFILE "table_transacitions.txt"
 #define HHTFILE "table_households.txt"
+#define REASONFILE "table_insiderships.txt"
 // Here define the network directory
 #define NWDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"
 // Dictionaries 

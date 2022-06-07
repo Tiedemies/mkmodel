@@ -7,6 +7,7 @@
 #include<map>
 #include<vector>
 #include<list>
+#include<queue>
 #include<set>
 #include<cmath>
 
@@ -14,17 +15,18 @@
 HiddenCascade::HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp)
 {
     // We copy the structure of the monograph and ascribe constant probabilities to all links
-    size_t i = 0;
+    int i = 0;
     for (auto apair: mg->adj_)
     {
-        ++i;
         int src = apair.first;
         auto alist = apair.second; 
         adj_[src] = alist; 
         for (int tgt: alist)
         {
             p_map_[Key(src,tgt)] = p;
+            i = std::max(i, tgt);
         }
+        i = std::max(i, src);
     }
     false_positive_prob_.resize(i+1,fp);
     true_positive_prob_.resize(i+1,tp);
@@ -54,7 +56,7 @@ HiddenCascade::Key(const int& u, const int& v) const
 void
 HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits) 
 {
-  size_t nodes = simulated_profits_.size() + 1;
+  size_t nodes = simulated_profits_.size();
   double prof_fil = simulate_profits?0.0:std::nan("n");
   std::fill(simulated_profits_.begin(),simulated_profits_.end(), prof_fil);
   std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
@@ -62,36 +64,43 @@ HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits)
   #pragma omp parallel for 
   for (size_t i = 0; i < sim_n_; ++i)
   {
-    std::vector<bool> is_infected(nodes,false);
-    std::list<int> infected;
+    std::vector<bool> is_infected(nodes+1,false);
+    std::queue<int> infected;
+    // infected.reserve(nodes/2);
     for (int j: inside)
     {
       //deriv[j] = 0;
       if(!is_disabled_.at(j))
       {
-        infected.push_back(j);
+        infected.push(j);
       } 
       is_infected.at(j) = true;
     }
     for (int j: disabled_)
     {
-        is_infected.at(j) = true; 
+      is_infected.at(j) = true; 
     }
     while(!infected.empty())
     {
-      int j = infected.front(); 
-      infected.pop_front(); 
+      int j = infected.back(); 
+      infected.pop(); 
       for (int k: adj_.at(j))
       {
-        if (!is_infected.at(k) && IsSuccess(j,k))
+        if (is_infected.at(k))
+        {
+          continue;
+        }
+        if (IsSuccess(j,k))
         {
           is_infected.at(k) = true;
-          simulated_activations_.at(k) += 1.0;
-          infected.push_back(k);
+          #pragma omp critical(A)
+          {
+            simulated_activations_.at(k) += 1.0;
+          }
+          infected.push(k);
         }
       } 
     }
-    // If only propagation is simulated: 
     if (!simulate_profits)
     {
       continue;
@@ -101,16 +110,20 @@ HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits)
       // Infected gets true positive result
       if (is_infected.at(i))
       {
-        simulated_profits_[i] += (true_positive_prob_[i] > rnd_.get()?1.0:0.0);
+        #pragma omp critical(B)
+        { simulated_profits_[i] += (true_positive_prob_[i] > rnd_.get()?1.0:0.0); }
       }
       // Others get random false positive result 
       else if (false_positive_prob_[i] > rnd_.get())
       {
-        simulated_profits_[i] += rnd_.get() < 0.5 ? 1.0 : -1.0; 
+        #pragma omp critical(B)
+        { simulated_profits_[i] += rnd_.get() < 0.5 ? 1.0 : -1.0; } 
       } 
     }
 
   }
+  // Normalize
+  #pragma omp parallel for
   for(size_t i = 0; i < simulated_profits_.size(); ++i)
   {
     simulated_activations_[i] /= sim_n_;
@@ -127,6 +140,11 @@ HiddenCascade::IsSuccess(const int& u, const int& v) const
     return (p_map_.at(Key(u,v)) - rnd_.get() > 0);
 }
 
+void 
+HiddenCascade::SetSimulationN(size_t n)
+{
+  sim_n_ = n;
+}
 
 /*
     public:

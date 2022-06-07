@@ -18,6 +18,7 @@ public:
   void SetTablesDirectory(const std::string& tdir);
   void SetAnnounceTableFile(const std::string& atfile);
   void SetInsiderTableFile(const std::string& itfile);
+  void SetReasonsTableFile(const std::string& rcfile);
   void SetPriceTableFile(const std::string& ptfile);
   void SetTransactionTableFile(const std::string& ttfile);
   void ReadTables();
@@ -26,6 +27,7 @@ public:
   void ReadPriceTable();
   void ReadTransactionTable();
   void ReadHouseHoldTransactionTable();
+  void ReadReasonsTable();
   void ReadIndex();
 
   // Dictionaries
@@ -62,7 +64,7 @@ private:
   std::string ptfile_; 
   std::string hhfile_;
   std::string indexfile_;
-
+  std::string reasonfile_; 
   MetaGraph* metag_; 
 
   std::string cdictfile_;

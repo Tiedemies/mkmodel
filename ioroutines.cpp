@@ -38,6 +38,19 @@ PilkkuPisteeksi(const std::string&  luku)
   return cumulative;
 }
 
+std::set<int> 
+BracketArrayToSet(const std::string& array)
+{
+  std::string nums = array.substr(1,array.size()-2); 
+  std::stringstream input(nums);
+  std::set<int> togo;
+  std::string item; 
+  while (std::getline(input, item, ',')) {
+      togo.insert(std::stoi(item));
+  }
+  return togo;
+}
+
 IoR::IoR()
 {
   tablesdir_ = TABLEDIR; 
@@ -47,8 +60,9 @@ IoR::IoR()
   hhfile_ = HHTFILE;
   graphdir_ = NWDIR;
   indexfile_ = INDEXFILE;
+  reasonfile_ = REASONFILE;
   std::cerr << "Creating metagraph\n";
-  metag_ = new MetaGraph(graphdir_);
+  metag_ = new MetaGraph(graphdir_, -1);
   std::cerr << "metagraph created\n";
 }
 
@@ -901,4 +915,40 @@ AnnouncementDates
 IoR::GetDates()
 {
   return an_dates_;
+}
+
+void 
+IoR::ReadReasonsTable()
+{
+   // This is for the announcment dates.   
+  std::cerr << "Reading insider labels file";
+  /// Read the tables now 
+  std::ifstream in;
+  in.open(tablesdir_ +  reasonfile_);
+  // throw away the first line; 
+  std::string line;
+  std::getline(in, line);
+  while (!in.eof() && in.good())
+  {
+    // First read actual id 
+    std::string id_str = ReadNext(in);
+    if (in.eof())
+    {
+      break; 
+    }
+    int id = std::stoi(id_str);
+    // Second read to company id
+    std::string cname = ReadNext(in);
+    std::string basis = ReadNext(in);
+    std::string related_id = ReadNext(in);
+    if (related_id.empty())
+    {
+      SkipLine(in);
+      continue;
+    }
+    int node_id = std::stoi(ReadNext(in));
+    std::string related_node = ReadNext(in);
+    std::set<int> bas_set = BracketArrayToSet(basis);
+    
+  } 
 }
