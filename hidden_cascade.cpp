@@ -8,6 +8,7 @@
 #include<vector>
 #include<list>
 #include<queue>
+#include<stack>
 #include<set>
 #include<cmath>
 
@@ -53,19 +54,20 @@ HiddenCascade::Key(const int& u, const int& v) const
 }
 
 
-void
+double
 HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits) 
 {
   size_t nodes = simulated_profits_.size();
   double prof_fil = simulate_profits?0.0:std::nan("n");
   std::fill(simulated_profits_.begin(),simulated_profits_.end(), prof_fil);
   std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
-
+  double num_active = 0;
   #pragma omp parallel for 
   for (size_t i = 0; i < sim_n_; ++i)
   {
     std::vector<bool> is_infected(nodes+1,false);
-    std::queue<int> infected;
+    std::stack<int> infected;
+    std::stack<int> informed;
     // infected.reserve(nodes/2);
     for (int j: inside)
     {
@@ -82,7 +84,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits)
     }
     while(!infected.empty())
     {
-      int j = infected.back(); 
+      int j = infected.top(); 
       infected.pop(); 
       for (int k: adj_.at(j))
       {
@@ -96,8 +98,10 @@ HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits)
           #pragma omp critical(A)
           {
             simulated_activations_.at(k) += 1.0;
+            num_active += 1;
           }
           infected.push(k);
+          informed.push(k);
         }
       } 
     }
@@ -105,22 +109,27 @@ HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits)
     {
       continue;
     }
-    for(size_t i = 0; i < simulated_profits_.size(); ++i)
-    {
+    while(!informed.empty())
+    { 
+      int i = informed.top();
+      informed.pop();
       // Infected gets true positive result
       if (is_infected.at(i))
       {
         #pragma omp critical(B)
-        { simulated_profits_[i] += (true_positive_prob_[i] > rnd_.get()?1.0:0.0); }
+        { 
+          simulated_profits_[i] += (true_positive_prob_[i] > rnd_.get()?1.0:0.0);   
+        }
       }
       // Others get random false positive result 
       else if (false_positive_prob_[i] > rnd_.get())
       {
         #pragma omp critical(B)
-        { simulated_profits_[i] += rnd_.get() < 0.5 ? 1.0 : -1.0; } 
+        { 
+          simulated_profits_[i] += rnd_.get() < 0.5 ? 1.0 : -1.0;
+        } 
       } 
     }
-
   }
   // Normalize
   #pragma omp parallel for
@@ -132,6 +141,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits)
       simulated_profits_[i] /= sim_n_;
     }
   }
+  return num_active/sim_n_;
 }
 
 bool

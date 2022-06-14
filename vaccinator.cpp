@@ -2,6 +2,7 @@
 #include "ioroutines.hpp"
 #include "graphmodel.hpp"
 #include "hidden_cascade.hpp"
+// #include "stat_routines.hpp"
 #include <chrono>
 #include <iostream>
 
@@ -28,8 +29,8 @@ int main()
     zed.ReadNodeDictionary();
     zed.ReadAnnouncements();
     */
-    std::cout << "Reading Metagraph for " << REFDATE << "\n";
-    MetaGraph foo(NWDIR, REFDATE);
+    std::cout << "Intialize IoR and Metagraph for " << REFDATE << "\n";
+    IoR foo(REFDATE);
     std::cout << "Initializing monograph for " << REFDATE << "\n";
     MonoGraph* bar = foo.GetGraph(REFDATE);
     if (bar == nullptr)
@@ -37,7 +38,7 @@ int main()
         std::cerr << "Error: Null metagraph \n";
         return -1;
     }
-    double p = 0.2;
+    double p = 0.08;
     double tp = 0.1;
     double fp = 0.08;
     std::cout << "Initializing hidden cascade model \n"; 
@@ -46,20 +47,27 @@ int main()
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop-start);
     std::cout << "Initialization took " << duration.count()/1000 << "ms total\n";
 
-    auto board = bar->GetInsider(5);
+    auto board = bar->GetInsider(6);
     std::vector<int> insiders(board.begin(), board.end());
     size_t n = 1500;
     int k = 100;
     cas.SetSimulationN(n);
     std::cout << "starting simulations. \n";
+    std::vector<double> num_active;
+    double sum =0.0;
+    num_active.resize(k,0.0);
     for (int i = 0; i < k; ++i)
     {
-        cas.Simulate(insiders,true);
+        num_active[i] = cas.Simulate(insiders,true);
+        sum += num_active[i]/k; 
     }
     auto stop2 = std::chrono::high_resolution_clock::now();   
     auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(stop2-stop);
+    
+
+    std::cout << "On average " << sum << " nodes were activated \n";
     std::cout <<  n*k << " simulations took " << duration2.count()/1000 << "ms total\n";
     std::cout << duration2.count()/(n*k) << " microseconds per simulation \n";
-    std::cout << static_cast<double>(n*k)/(duration2.count()/1000000) << "simulations per second \n";
+    std::cout << static_cast<double>(n*k)/(duration2.count()/1000000) << " simulations per second \n";
     return 0;
 }

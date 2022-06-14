@@ -17,7 +17,7 @@ class HiddenCascade
     // 
         HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp);
         ~HiddenCascade();
-        void Simulate(const std::vector<int>& inside, bool simulate_profits);
+        double Simulate(const std::vector<int>& inside, bool simulate_profits);
         void Disable(int node);
         void SetSimulationN(size_t n);
         bool IsSuccess(const int& u, const int& v) const;
@@ -33,6 +33,7 @@ class HiddenCascade
         std::set<int> disabled_; 
         std::vector<double> simulated_profits_;
         std::vector<double> simulated_activations_; 
+        double num_activated_; 
 };
 
 #endif

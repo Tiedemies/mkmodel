@@ -12,6 +12,7 @@ class IoR
 {
 public: 
   IoR();
+  IoR(int year);
   ~IoR();
   void SetAnnouncementDirectory(const std::string& andir);
   // Tables
@@ -29,6 +30,7 @@ public:
   void ReadHouseHoldTransactionTable();
   void ReadReasonsTable();
   void ReadIndex();
+  MonoGraph* GetGraph(int year);
 
   // Dictionaries
   void SetCompanyDictionaryFile(const std::string& cdictfile);

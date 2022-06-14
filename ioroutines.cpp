@@ -66,6 +66,21 @@ IoR::IoR()
   std::cerr << "metagraph created\n";
 }
 
+IoR::IoR(int year)
+{
+  tablesdir_ = TABLEDIR; 
+  atfile_ = ANFILE;
+  ptfile_ = PRICEFILE;
+  ttfile_ = TRANSACTFILE;
+  hhfile_ = HHTFILE;
+  graphdir_ = NWDIR;
+  indexfile_ = INDEXFILE;
+  reasonfile_ = REASONFILE;
+  std::cerr << "Creating metagraph\n";
+  metag_ = new MetaGraph(graphdir_, year);
+  std::cerr << "metagraph created\n";
+}
+
 IoR::~IoR()
 {
   //void default
@@ -950,5 +965,11 @@ IoR::ReadReasonsTable()
     std::string related_node = ReadNext(in);
     std::set<int> bas_set = BracketArrayToSet(basis);
     
-  } 
+  }
 }
+
+MonoGraph* 
+IoR::GetGraph(int date)
+{
+  return metag_->GetGraph(date);
+} 
