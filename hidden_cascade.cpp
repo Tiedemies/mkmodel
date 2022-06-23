@@ -54,12 +54,12 @@ HiddenCascade::Key(const int& u, const int& v) const
 }
 
 
+// Run a simulation. 
+// Store the information to simulated activations.
 double
-HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits) 
+HiddenCascade::Simulate(const std::vector<int>& inside) 
 {
   size_t nodes = simulated_profits_.size();
-  double prof_fil = simulate_profits?0.0:std::nan("n");
-  std::fill(simulated_profits_.begin(),simulated_profits_.end(), prof_fil);
   std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
   double num_active = 0;
   #pragma omp parallel for 
@@ -105,66 +105,39 @@ HiddenCascade::Simulate(const std::vector<int>& inside,bool simulate_profits)
         }
       } 
     }
-    if (!simulate_profits)
-    {
-      continue;
-    }
-    while(!informed.empty())
-    { 
-      int i = informed.top();
-      informed.pop();
-      // Infected gets true positive result
-      if (is_infected.at(i))
-      {
-        #pragma omp critical(B)
-        { 
-          simulated_profits_[i] += (true_positive_prob_[i] > rnd_.get()?1.0:0.0);   
-        }
-      }
-      // Others get random false positive result 
-      else if (false_positive_prob_[i] > rnd_.get())
-      {
-        #pragma omp critical(B)
-        { 
-          simulated_profits_[i] += rnd_.get() < 0.5 ? 1.0 : -1.0;
-        } 
-      } 
-    }
   }
   // Normalize
   #pragma omp parallel for
   for(size_t i = 0; i < simulated_profits_.size(); ++i)
   {
     simulated_activations_[i] /= sim_n_;
-    if (simulate_profits)
-    {
-      simulated_profits_[i] /= sim_n_;
-    }
   }
   return num_active/sim_n_;
 }
 
+// Calculte a single success over a connection. 
 bool
 HiddenCascade::IsSuccess(const int& u, const int& v) const
 {
     return (p_map_.at(Key(u,v)) - rnd_.get() > 0);
 }
 
+
+// Change the simulation's number of simulations
 void 
 HiddenCascade::SetSimulationN(size_t n)
 {
   sim_n_ = n;
 }
 
-/*
-    public:
-        HiddenCascde(const MonoGraph& mg, const double& p);
-        ~HiddenCascde();
-        std::vector<double> Simulate
-        void Disable(int node);
-    private:
-        std::vector<double> q_vec_;
-        std::unordered_map<std::pair<int,int>, double> p_map_;
-*/
-
+// Generate a trading pattern for a day, depending on whether it is inside the time window
+std::vector<double> 
+HiddenCascade::Generate(const std::vector<int>& inside, bool window_day)
+{
+  if (window_day)
+  {
+    SetSimulationN(1);
+    Simulate(inside);
+  }
+}
  

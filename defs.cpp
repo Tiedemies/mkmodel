@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 PriceTable::PriceTable()
 {

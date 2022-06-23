@@ -15,11 +15,18 @@ class HiddenCascade
 {
     public:
     // 
+    // Constructor and destructor
         HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp);
         ~HiddenCascade();
-        double Simulate(const std::vector<int>& inside, bool simulate_profits);
+    // Simulate. 
+        double Simulate(const std::vector<int>& inside);
+    // Change parameters: 
+        void SetTradingProp(const std::vector<double>& props);
+        void SetExpectedVolumes(const std::vector<double>& vols);
         void Disable(int node);
         void SetSimulationN(size_t n);
+    // Generate a datapoint:
+        std::vector<double> Generate(const std::vector<int>& inside, bool window_day);
         bool IsSuccess(const int& u, const int& v) const;
     private:
         inline size_t Key(const int& u, const int& v) const;
@@ -33,6 +40,8 @@ class HiddenCascade
         std::set<int> disabled_; 
         std::vector<double> simulated_profits_;
         std::vector<double> simulated_activations_; 
+        std::vector<double> trading_prob_;
+        std::vector<double> volume_; 
         double num_activated_; 
 };
 

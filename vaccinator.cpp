@@ -58,7 +58,7 @@ int main()
     num_active.resize(k,0.0);
     for (int i = 0; i < k; ++i)
     {
-        num_active[i] = cas.Simulate(insiders,true);
+        num_active[i] = cas.Simulate(insiders);
         sum += num_active[i]/k; 
     }
     auto stop2 = std::chrono::high_resolution_clock::now();   
