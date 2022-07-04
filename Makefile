@@ -1,6 +1,6 @@
 CC=g++ 
-CFLAGS= -std=gnu++11 -O3 -Wall -pedantic -fopenmp -lboost_date_time
-CXXFLAGS= -std=gnu++11 -O3 -Wall -pedantic -fopenmp -lboost_date_time
+CFLAGS= -std=gnu++17 -O3 -Wall -pedantic -fopenmp -lboost_date_time
+CXXFLAGS= -std=gnu++17 -O3 -Wall -pedantic -fopenmp -lboost_date_time
 CFILES=RunEmpirical.cpp mkmodel.cpp h_random.cpp graphmodel.cpp mcsim.cpp ioroutines.cpp optimizer.cpp test_io.cpp defs.cpp vaccinator.cpp hidden_cascade.cpp
 EMPOBJ=RunEmpirical.o mkmodel.o h_random.o graphmodel.o mcsim.o ioroutines.o optimizer.o defs.o 
 TIOBJ=defs.o test_io.o ioroutines.o stat_tester.o graphmodel.o
@@ -21,5 +21,8 @@ test_io: $(TIOBJ)
 
 vaccinator: $(VACOBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
+
+all: RunEmpirical test_io vaccinator 
+
 clean:
 	rm *.o

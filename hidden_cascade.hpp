@@ -34,7 +34,8 @@ class HiddenCascade
         std::vector<double> false_positive_prob_;
         std::vector<double> true_positive_prob_;
         std::unordered_map<size_t, double> p_map_;
-        std::unordered_map<int,Alist2> adj_;
+        std::vector<std::vector<int>> adj_; 
+        //std::unordered_map<int,Alist2> adj_;
         mutable Random rnd_; 
         std::vector<bool> is_disabled_;
         std::set<int> disabled_; 

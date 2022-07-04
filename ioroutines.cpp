@@ -486,8 +486,8 @@ IoR::ReadIndex()
     }
     catch(const std::exception& e)
     {
-      // std::cerr << e.what() << '\n';
-      break;
+      std::cerr << e.what() << '\n';
+      continue;
     }
     int days = (tt-ref_time).days();
     if (days >= 0)
@@ -503,14 +503,7 @@ IoR::ReadIndex()
     double price = std::nan("missing");
     if (days >= 0)
     {
-      try
-      {
-        price = PilkkuPisteeksi(pricestr);/* code */
-      }
-      catch(const std::exception& e)
-      {
-        price = std::nan("missing");
-      }
+      price = PilkkuPisteeksi(pricestr);
       pr_table_.AddPCompanyDayPrice("index", days, price);
       ++count; 
     }

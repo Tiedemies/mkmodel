@@ -10,23 +10,22 @@
 
 int main()
 {
-    /*
+    
     StatTester foo;
     std::cerr << "init.\n";
     
-    //foo.CreateInsideDayWindows();
-    //std::cerr << "inside windows calculated\n";
+    foo.CreateInsideDayWindows();
+    std::cerr << "inside windows calculated\n";
     foo.CreateProfitWindows();
     std::cerr << " profit windows done\n";
-    */
-    /*
-    foo.TestHyperG();
-    std::cerr << " hypergeometric tests done\n";
-    foo.PrintHGTest();
-     */
+    
+    //foo.TestHyperG();
+    //std::cerr << " hypergeometric tests done\n";
+    // foo.PrintHGTest();
+    
     // foo.TestGraphIntegrity();
     //std::cerr << " graph tests done \n";
-    /*
+    
     foo.GenerateSmallDataMatrix();
     std::cerr << " Datamatrix generated \n";
     foo.GenerateCSV();
@@ -34,8 +33,9 @@ int main()
     // std::cerr << " Printhin isin-map to standard output\n";
     // foo.PrintIsinMap();
     return 0;
-    */
-    IoR foo;
+    
+    /* IoR foo;
     foo.ReadReasonsTable();
-    return 0;  
+    return 0;
+    */  
 }

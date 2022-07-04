@@ -20,14 +20,21 @@ HiddenCascade::HiddenCascade(const MonoGraph* mg, const double& p, const double&
     for (auto apair: mg->adj_)
     {
         int src = apair.first;
-        auto alist = apair.second; 
-        adj_[src] = alist; 
-        for (int tgt: alist)
+        for (int tgt: apair.second)
+          {
+              p_map_[Key(src,tgt)] = p;
+              i = std::max(i, tgt);
+          }
+          i = std::max(i, src);
+    }
+    adj_.resize(i+1);
+    for (auto apair: mg->adj_)
+    {
+        int src = apair.first;
+        for (int tgt: apair.second)
         {
-            p_map_[Key(src,tgt)] = p;
-            i = std::max(i, tgt);
-        }
-        i = std::max(i, src);
+            adj_[src].push_back(tgt); 
+        }         
     }
     false_positive_prob_.resize(i+1,fp);
     true_positive_prob_.resize(i+1,tp);
@@ -62,7 +69,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   size_t nodes = simulated_profits_.size();
   std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
   double num_active = 0;
-  #pragma omp parallel for 
+  #pragma omp parallel for shared(simulated_activations_)
   for (size_t i = 0; i < sim_n_; ++i)
   {
     std::vector<bool> is_infected(nodes+1,false);
@@ -84,10 +91,11 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
     }
     while(!infected.empty())
     {
-      int j = infected.top(); 
+      const int j = infected.top(); 
       infected.pop(); 
-      for (int k: adj_.at(j))
+      for (auto l = adj_.at(j).begin(); l != adj_.at(j).end(); ++l)
       {
+        const int& k = *l; 
         if (is_infected.at(k))
         {
           continue;
@@ -95,11 +103,9 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
         if (IsSuccess(j,k))
         {
           is_infected.at(k) = true;
-          #pragma omp critical(A)
-          {
-            simulated_activations_.at(k) += 1.0;
-            num_active += 1;
-          }
+          #pragma omp atomic   
+          ++simulated_activations_.at(k);
+         
           infected.push(k);
           informed.push(k);
         }
@@ -107,12 +113,13 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
     }
   }
   // Normalize
-  #pragma omp parallel for
+  #pragma omp parallel for reduction(+:num_active)
   for(size_t i = 0; i < simulated_profits_.size(); ++i)
   {
     simulated_activations_[i] /= sim_n_;
+    num_active += simulated_activations_[i];
   }
-  return num_active/sim_n_;
+  return num_active;
 }
 
 // Calculte a single success over a connection. 

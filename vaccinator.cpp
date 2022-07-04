@@ -5,6 +5,7 @@
 // #include "stat_routines.hpp"
 #include <chrono>
 #include <iostream>
+#include <cmath>
 
 #define TABLEDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/raw_tables/" 
 #define ANFILE "table_announcements.txt"
@@ -14,6 +15,19 @@
 #define ADIR "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/announcements"
 
 #define REFDATE 20101231
+
+double st_error(std::vector<double> input)
+{
+    double n = static_cast<double>(input.size());
+    double avg = std::accumulate(input.begin(), input.end(), 0.0) / n;
+    double err = 0.0;
+    for(auto k: input)
+    {
+        err += (avg - k)*(avg-k);
+    }
+    err /= (n-1);
+    return err; 
+}
 
 int main()
 {
@@ -49,8 +63,8 @@ int main()
 
     auto board = bar->GetInsider(6);
     std::vector<int> insiders(board.begin(), board.end());
-    size_t n = 1500;
-    int k = 100;
+    size_t n = 5000;
+    int k = 30;
     cas.SetSimulationN(n);
     std::cout << "starting simulations. \n";
     std::vector<double> num_active;
@@ -66,6 +80,7 @@ int main()
     
 
     std::cout << "On average " << sum << " nodes were activated \n";
+    std::cout << "Sigma: " << std::sqrt(st_error(num_active)) << "\n";
     std::cout <<  n*k << " simulations took " << duration2.count()/1000 << "ms total\n";
     std::cout << duration2.count()/(n*k) << " microseconds per simulation \n";
     std::cout << static_cast<double>(n*k)/(duration2.count()/1000000) << " simulations per second \n";
