@@ -3,24 +3,8 @@
 #ifndef DEFS
 #define DEFS 
 
-#include<map>
-#include<unordered_map>
-#include<vector>
-#include<string>
-#include<set>
-
-// Number of days
-#define NDAYS 5
-// Reference day is 5 days before the first announcement
-#define REFDAY "2005-05-21 12:00:00"
-
-// Define significance levels:
-#define SIGNIFICANT 0.05
-#define VERY_SIGNIFICANT 0.01
-#define EXTRA_SIGNIFICANT 0.001
-
-// What return is considered profit:
-#define PROFIT_THRESHOLD 0.0
+/*** Definitions for directories and files 
+ * EDIT THIS SECTION IF YOUR FILES ARE ELSEWHERE ***/ 
 
 // The default directories and files. 
 #define TABLEDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/raw_tables/" 
@@ -32,8 +16,11 @@
 #define TRANSACTFILE "table_transacitions.txt"
 #define HHTFILE "table_households.txt"
 #define REASONFILE "table_insiderships.txt"
+
+
 // Here define the network directory
 #define NWDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"
+
 // Dictionaries 
 #define CDFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/comp_dict_unified_INTERNAL.txt"
 #define NDFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"
@@ -48,6 +35,29 @@
 //index file
 #define INDEXFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/indexdata.csv"
 
+
+/*** Basic definition of constants ***/
+
+// Number of days
+#define NDAYS 5
+// Reference day is 5 days before the first announcement
+#define REFDAY "2005-05-21 12:00:00"
+
+// Define significance levels:
+#define SIGNIFICANT 0.05
+#define VERY_SIGNIFICANT 0.01
+#define EXTRA_SIGNIFICANT 0.001
+
+// What return is considered profit:
+#define PROFIT_THRESHOLD 0.0
+
+
+
+#include<map>
+#include<unordered_map>
+#include<vector>
+#include<string>
+#include<set>
 
 
 // Dictionaries 
@@ -85,6 +95,7 @@ typedef std::map<int,double> DatePriceMap;
 typedef std::vector<std::tuple<int,double,double>> DatePriceVolumeVector; 
 typedef std::unordered_map<std::string,DatePriceMap> InternalPriceTable;
 typedef std::unordered_map<std::string,DatePriceVolumeVector> InternalTransactionTable; 
+
 // Pricetable and functionality
 class PriceTable
 {

@@ -11,12 +11,14 @@
 #include<stack>
 #include<set>
 #include<cmath>
+#include<algorithm>
 
 // The constructor uses uniform p, false positive and true positive probabilities
 HiddenCascade::HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp)
 {
     // We copy the structure of the monograph and ascribe constant probabilities to all links
     int i = 0;
+    uni_p_ = p; 
     for (auto apair: mg->adj_)
     {
         int src = apair.first;
@@ -67,6 +69,8 @@ double
 HiddenCascade::Simulate(const std::vector<int>& inside) 
 {
   size_t nodes = simulated_profits_.size();
+  max_activated_ = 0;
+  min_activated_ = simulated_activations_.size();
   std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
   double num_active = 0;
   #pragma omp parallel for shared(simulated_activations_)
@@ -84,6 +88,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
         infected.push(j);
       } 
       is_infected.at(j) = true;
+      informed.push(j);
     }
     for (int j: disabled_)
     {
@@ -111,6 +116,8 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
         }
       } 
     }
+    min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));
+    max_activated_ = std::max(min_activated_, static_cast<int>(informed.size()));
   }
   // Normalize
   #pragma omp parallel for reduction(+:num_active)
@@ -147,4 +154,50 @@ HiddenCascade::Generate(const std::vector<int>& inside, bool window_day)
     Simulate(inside);
   }
 }
- 
+
+int
+HiddenCascade::GetMaxActivated() const
+{
+  return max_activated_;
+}
+
+int
+HiddenCascade::GetMinActivated() const
+{
+  return min_activated_;
+}
+
+void 
+HiddenCascade::DeactivateConnection(int u, int v)
+{
+  // Remove (u,v) and (v,u) from the adjacency lists.
+  auto &z = adj_.at(u);
+  auto &w = adj_.at(v);
+  z.erase(std::remove(z.begin(), z.end(), v), z.end());
+  w.erase(std::remove(w.begin(), w.end(), u), w.end());
+}
+
+void 
+HiddenCascade::ActivateConnection(int u, int v, double p)
+{
+  // If p  is not given it is negative, and then it is assumed to be the uniform probability
+  if (p < 0) 
+  {
+    p = uni_p_;
+  }
+  // Add the element to the adjacency lists
+  auto &z = adj_.at(u);
+  auto &w = adj_.at(v);
+  if (std::find(z.begin(), z.end(), v) == z.end())
+  {
+    z.push_back(v);
+  }
+  if (std::find(w.begin(), w.end(), u) == w.end())
+  {
+    w.push_back(u);
+  }
+  // Give them the probability
+  p_map_[Key(u,v)] = p;
+  p_map_[Key(v,u)] = p;
+}
+
