@@ -16,6 +16,7 @@ class HiddenCascade
     public:
     // 
     // Constructor and destructor
+        HiddenCascade() = delete;
         HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp);
         ~HiddenCascade();
     // Simulate. 

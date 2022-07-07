@@ -13,6 +13,7 @@ class IoR
 public: 
   IoR();
   IoR(int year);
+  IoR(bool none);
   ~IoR();
   void SetAnnouncementDirectory(const std::string& andir);
   // Tables
@@ -51,6 +52,8 @@ public:
   std::set<std::string> isin_set_; 
   CompanyNameDict cnames_;
   CompanyNameInvDict cids_;
+  IsinCompanyMap isin_company_; 
+  AnnouncementTable an_table_;
 private:
   std::string ReadNext(std::istream& in);
   void SkipLine(std::istream& in);
@@ -78,14 +81,14 @@ private:
   AnnouncementDict announcements_;
 
   // Tables:
-  AnnouncementTable an_table_;
+  
   AnnouncementTable an_table_sc_;
   PriceTable pr_table_; 
   NodeTransactionTable tr_table_; 
   NodeTransactionTable hh_table_;
 
   // Transformations:
-  IsinCompanyMap isin_company_; 
+  
 
   friend class StatTester; 
 };

@@ -4,6 +4,7 @@
 #include "defs.hpp"
 #include "graphmodel.hpp"
 #include "h_random.hpp"
+#include "ioroutines.hpp"
 #include<iostream>
 #include<fstream>
 #include<unordered_map>
@@ -19,16 +20,19 @@ class IndustryCascade
 {
     public:
         IndustryCascade(HiddenCascade h);
+        IndustryCascade(int year);
         ~IndustryCascade();
         std::vector<double> RunTotal();
         std::vector<double> RunSingle(int i);
         void SetSimulationCoef(int n);
 
     private:
-        std::vector<std::vector<int>> insiders_;
-        std::vector<int> num_announcements_; 
-        HiddenCascade& hc_; 
         int simulation_coefficient_; 
+        double def_p_;
+        IoR foo_; 
+        HiddenCascade hc_;
+        std::vector<std::vector<int>> insiders_;
+        std::vector<int> num_announcements_;
 };
 
 

@@ -21,6 +21,9 @@
 // Here define the network directory
 #define NWDIR "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/output/"
 
+// Define the announcement directory
+#define ADIR "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/announcements"
+
 // Dictionaries 
 #define CDFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/comp_dict_unified_INTERNAL.txt"
 #define NDFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/unified_networks/dicts/nodes_dict_unified_INTERNAL.txt"

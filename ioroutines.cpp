@@ -66,9 +66,15 @@ IoR::IoR()
   std::cerr << "metagraph created\n";
 }
 
+IoR::IoR(bool none)
+{
+  // void
+}
+
 IoR::IoR(int year)
 {
-  tablesdir_ = TABLEDIR; 
+  tablesdir_ = TABLEDIR;
+  andir_ = ADIR; 
   atfile_ = ANFILE;
   ptfile_ = PRICEFILE;
   ttfile_ = TRANSACTFILE;
@@ -76,9 +82,10 @@ IoR::IoR(int year)
   graphdir_ = NWDIR;
   indexfile_ = INDEXFILE;
   reasonfile_ = REASONFILE;
-  std::cerr << "Creating metagraph\n";
+  cdictfile_ = CDFILE;
+  //std::cerr << "Creating metagraph\n";
   metag_ = new MetaGraph(graphdir_, year);
-  std::cerr << "metagraph created\n";
+  //std::cerr << "metagraph created\n";
 }
 
 IoR::~IoR()
@@ -260,11 +267,11 @@ IoR::ReadAnnouncements()
       ReadTimes(in);
     }
     else if (in.good())
-      {
-	int i = cnames_.at(namestr);
-	togo[i] = ReadTimes(in);
-	std::copy(togo[i].begin(), togo[i].end(), std::inserter(an_dates_, an_dates_.end()));
-      }
+    {
+	    int i = cnames_.at(namestr);
+	    togo[i] = ReadTimes(in);
+	    std::copy(togo[i].begin(), togo[i].end(), std::inserter(an_dates_, an_dates_.end()));
+    }
   }
   std::cerr << "announcements done\n";
   return togo; 
