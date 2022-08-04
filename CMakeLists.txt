@@ -15,29 +15,29 @@ add_subdirectory(algorithms)
 add_subdirectory(data_gen)
 
 #add executables
-#add_executable(RunEmpirical RunEmpirical.cpp)
-#add_executable(test_io test_io.cpp)
+add_executable(RunEmpirical RunEmpirical.cpp)
+add_executable(test_io test_io.cpp)
 add_executable(vaccinator vaccinator.cpp)
 
-#install(TARGETS RunEmpirical DESTINATION .)
-#install(TARGETS test_io DESTINATION .)
+install(TARGETS RunEmpirical DESTINATION build)
+install(TARGETS test_io DESTINATION build)
 install(TARGETS vaccinator DESTINATION build)
 
 # Link libraries
-#target_link_libraries(RunEmpirical
-#    h_random
-#    defs
-#    ioroutines
-#    mkmodel    
-#    graphmodel
-#    mcsim
-#    optimizer
-#)
+target_link_libraries(RunEmpirical
+    h_random
+    defs
+    ioroutines
+    mkmodel    
+    graphmodel
+    mcsim
+    optimizer
+)
 
-#target_link_libraries(test_io
-#    stat_tester
-#    ioroutines
-#)
+target_link_libraries(test_io
+    stat_tester
+    ioroutines
+)
 
 target_link_libraries(vaccinator
     defs

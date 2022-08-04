@@ -19,9 +19,9 @@ target_link_libraries(industry_cascade
     hidden_cascade   
 )
 
-#target_link_libraries(mcsim
-#    graphmodel
-#    defs
-#    mkmodel
-#    h_random
-#)
+target_link_libraries(mcsim
+    graphmodel
+    defs
+    mkmodel
+    h_random
+)
