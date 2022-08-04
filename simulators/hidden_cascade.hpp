@@ -1,9 +1,11 @@
 
 #ifndef H_CASCADE
 #define H_CASCADE
-#include "defs.hpp"
-#include "graphmodel.hpp"
-#include "h_random.hpp"
+
+#include "../utils/h_random.hpp"
+#include "../utils/defs.hpp"
+#include "../graphmodel/graphmodel.hpp"
+
 #include<iostream>
 #include<fstream>
 #include<unordered_map>
@@ -30,11 +32,15 @@ class HiddenCascade
         std::vector<double> Generate(const std::vector<int>& inside, bool window_day);
     // Test for success of infomation transfer between u and v:
         bool IsSuccess(const int& u, const int& v) const;
+    // Maximum  and  minimum number of activated nodes in a sim
         int GetMaxActivated() const;
         int GetMinActivated() const;
-
+    // Deactivate a given connection from u to v
         void DeactivateConnection(int u, int v);
+    // Re-acticate the connection, given a probability (default probability if not given)
         void ActivateConnection(int u, int v, double p = -1);
+    // Randomize connection weights to expected value/deviation. 
+        void RandomizeWeights(double mu, double sigma = -1);
   
     private:
         inline size_t Key(const int& u, const int& v) const;

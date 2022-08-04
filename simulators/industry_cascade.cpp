@@ -1,8 +1,11 @@
 #include"industry_cascade.hpp"
-#include"graphmodel.hpp"
 #include"hidden_cascade.hpp"
-#include"h_random.hpp"
-#include"ioroutines.hpp"
+
+#include"../graphmodel/graphmodel.hpp"
+
+#include"../utils/h_random.hpp"
+#include"../utils/ioroutines.hpp"
+
 #include<iostream>
 #include<fstream>
 #include<unordered_map>

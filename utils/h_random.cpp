@@ -1,5 +1,6 @@
 #include<random>
 #include "h_random.hpp"
+#include <boost/math/distributions.hpp>
 
 Random::Random()
 {
@@ -29,4 +30,22 @@ NormalRandom::~NormalRandom()
 double NormalRandom::get()
 {
   return dis_(gen_);
+}
+
+BetaRandom::BetaRandom(double a, double b)
+{
+  BOOST_ASSERT(a > 0);
+  BOOST_ASSERT(b > 0);
+  dist_ = BDist(a,b);
+  rand_gen_ = RNDGenerator(2018);
+}
+
+BetaRandom::~BetaRandom()
+{
+  //void
+}
+
+double BetaRandom::get()
+{
+    return dist_(rand_gen_);
 }

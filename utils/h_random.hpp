@@ -2,6 +2,8 @@
 #define H_RANDOM
 
 #include<random>
+#include<boost/random.hpp>
+#include <boost/math/distributions.hpp>
 
 // Global random generator
 class Random
@@ -24,6 +26,20 @@ class NormalRandom
   private:
     std::default_random_engine gen_;
     std::normal_distribution<double> dis_;
+};
+
+class BetaRandom
+{
+  typedef boost::random::mt19937 RNDGenerator;
+  typedef boost::random::beta_distribution<> BDist;
+  public:
+    BetaRandom() = delete;
+    BetaRandom(double a, double b);
+    ~BetaRandom();
+    double get();
+  private:
+    BDist dist_;
+    RNDGenerator rand_gen_;
 };
 
 #endif

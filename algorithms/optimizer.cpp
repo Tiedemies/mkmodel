@@ -1,17 +1,22 @@
-#include "graphmodel.hpp"
-#include "mkmodel.hpp"
-#include "ioroutines.hpp"
+// Optimizer
+
 #include "optimizer.hpp"
-#include "mcsim.hpp"
+
+#include "../graphmodel/graphmodel.hpp"
+#include "../mkmodel/mkmodel.hpp"
+#include "../utils/ioroutines.hpp"
+#include "../utils/defs.hpp"
+#include "../utils/h_random.hpp"
+#include "../simulators/mcsim.hpp"
+
+// Standard c++
 #include <map>
-#include "defs.hpp"
 #include <random>
-#include "h_random.hpp"
-#include "mcsim.hpp"
 #include <chrono>
 #include <math.h>
 #define FIXED_FLOAT(x) std::fixed <<std::setprecision(2)<<(x)
 
+// Boost include
 #include <boost/math/distributions/hypergeometric.hpp>
 #include <boost/math/distributions/poisson.hpp>
 

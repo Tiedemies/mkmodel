@@ -1,6 +1,8 @@
-#include"graphmodel.hpp"
 #include"hidden_cascade.hpp"
-#include"h_random.hpp"
+
+#include"../graphmodel/graphmodel.hpp"
+#include"../utils/h_random.hpp"
+
 #include<iostream>
 #include<fstream>
 #include<unordered_map>
@@ -201,3 +203,35 @@ HiddenCascade::ActivateConnection(int u, int v, double p)
   p_map_[Key(v,u)] = p;
 }
 
+void
+HiddenCascade::RandomizeWeights(double mu, double sigma)
+{
+  // Precondition
+  BOOST_ASSERT(mu > 0.0);
+  BOOST_ASSERT(mu < 1.0);
+
+  double a = 0.0;
+  double b = 0.0;
+  if (sigma < 0)
+  {
+    b = 50; 
+    a = b / (1-mu);
+  }
+  else 
+  {
+    BOOST_ASSERT(sigma > 0);
+    BOOST_ASSERT(sigma < mu*(1-mu));
+    a = ( (1-mu) / (sigma*sigma) - 1/mu)*mu*mu;
+    b = a*(1/mu - 1);
+  }
+  BetaRandom gen(a,b);
+
+  /* We iterate over the adjacency list and generate probabilities from beta-distribution */
+  for(int u = 0; u < adj_.size(); ++u)
+  {
+    for(int v: adj_.at(u))
+    {
+      p_map_[Key(u,v)] = gen.get();
+    }
+  }
+}

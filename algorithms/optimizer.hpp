@@ -1,17 +1,18 @@
 #ifndef OPTIM
 #define OPTIM
-#include "graphmodel.hpp"
-#include "mkmodel.hpp"
-#include "ioroutines.hpp"
-#include "mcsim.hpp"
-#include <map>
-#include "defs.hpp"
-#include <random>
-#include "h_random.hpp"
-#include "mcsim.hpp"
+#include "../graphmodel/graphmodel.hpp"
+#include "../mkmodel/mkmodel.hpp"
+#include "../utils/ioroutines.hpp"
+#include "../utils/defs.hpp"
+#include "../utils/h_random.hpp"
+#include "../simulators/mcsim.hpp"
+
+
 #include <chrono>
 #include <set>
 #include <vector>
+#include <map>
+#include <random>
 
 class Optimizer
 {

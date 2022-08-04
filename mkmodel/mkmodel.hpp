@@ -1,7 +1,9 @@
-#ifndef MK
-#define MK
-#include "defs.hpp"
-#include "h_random.hpp"
+#ifndef MK_MODEL
+#define MK_MODEL
+
+#include "../utils/defs.hpp"
+#include "../utils/h_random.hpp"
+
 #include<vector>
 
 class MkModel

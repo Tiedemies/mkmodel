@@ -1,10 +1,12 @@
 #ifndef MC_SIM
 #define MC_SIM
 
-#include "graphmodel.hpp"
-#include "mkmodel.hpp"
+#include "../graphmodel/graphmodel.hpp"
+#include "../mkmodel/mkmodel.hpp"
+#include "../utils/defs.hpp"
+
+
 #include<vector> 
-#include "defs.hpp"
 
 class Simulator
 {

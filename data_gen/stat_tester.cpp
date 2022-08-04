@@ -1,5 +1,5 @@
 #include "stat_tester.hpp"
-#include "defs.hpp"
+#include "../utils/defs.hpp"
 #include<string>
 #include<set>
 #include<iostream>

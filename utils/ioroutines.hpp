@@ -1,7 +1,7 @@
 #ifndef IO_R
 #define IO_R
 #include "defs.hpp"
-#include "graphmodel.hpp"
+#include "../graphmodel/graphmodel.hpp"
 #include<fstream>
 #include<iostream>
 #include<string>

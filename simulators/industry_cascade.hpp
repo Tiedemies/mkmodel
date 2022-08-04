@@ -1,10 +1,12 @@
 #ifndef I_CASCADE
 #define I_CASCADE
 #include "hidden_cascade.hpp"
-#include "defs.hpp"
-#include "graphmodel.hpp"
-#include "h_random.hpp"
-#include "ioroutines.hpp"
+#include "../utils/defs.hpp"
+#include "../utils/h_random.hpp"
+#include "../utils/ioroutines.hpp"
+
+#include "../graphmodel/graphmodel.hpp"
+
 #include<iostream>
 #include<fstream>
 #include<unordered_map>

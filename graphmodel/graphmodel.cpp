@@ -1,11 +1,15 @@
-#include<iostream>
-#include<sstream>
-#include "defs.hpp"
+/*
+* Graphmodel binary files
+*/
+
 #include "graphmodel.hpp"
+#include "../utils/defs.hpp"
 #include<dirent.h>
 #include<new>
 #include<algorithm>
 #include<list>
+#include<iostream>
+#include<sstream>
 
 #define FHANDLE "/egde_list.txt"
 #define CHANDLE "/company_dict_insiders.txt"

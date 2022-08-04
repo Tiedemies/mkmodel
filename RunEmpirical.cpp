@@ -1,22 +1,31 @@
-#include "graphmodel.hpp"
-#include "mkmodel.hpp"
-#include "ioroutines.hpp"
-#include "mcsim.hpp"
-#include "optimizer.hpp"
+/*
+ * Older version of running an empirical analysis  
+ */
+
+
+// Include project libraries
+#include "graphmodel/graphmodel.hpp"
+#include "mkmodel/mkmodel.hpp"
+
+#include "utils/ioroutines.hpp"
+#include "utils/defs.hpp"
+#include "utils/h_random.hpp"
+
+#include "simulators/mcsim.hpp"
+
+#include "algorithms/optimizer.hpp"
+
+// Include standard libraries
 #include <map>
-#include "defs.hpp"
 #include <random>
-#include "h_random.hpp"
 #include <iostream>
 #include <fstream>
 #include <new>
-#include "mcsim.hpp"
 #include <chrono>
 
 
 
 #define ADIR "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/announcements"
-
 #define FFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/fraction of trades/fraction of trades before announcement period/mean/fraction_of_trades_before_and_outside_announcement_period_5d.txt"
 
 

@@ -1,7 +1,9 @@
 #include "mkmodel.hpp"
-#include "h_random.hpp"
-#include "defs.hpp"
+
+#include "../utils/h_random.hpp"
+#include "../utils/defs.hpp"
 #include <chrono>
+#include <vector>
 
 MkModel::MkModel()
 {

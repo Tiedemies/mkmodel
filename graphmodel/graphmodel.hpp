@@ -1,7 +1,7 @@
 
 #ifndef GRAPH
 #define GRAPH
-#include "defs.hpp"
+#include "../utils/defs.hpp"
 #include<iostream>
 #include<fstream>
 #include<unordered_map>

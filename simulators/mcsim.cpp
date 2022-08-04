@@ -1,8 +1,9 @@
 #include"mcsim.hpp"
-#include"mkmodel.hpp"
-#include"defs.hpp"
+#include"../mkmodel/mkmodel.hpp"
+#include"../utils/defs.hpp"
+
 #include<vector>
-#include<list>
+#include<deque>
 #include<iostream>
 
 Simulator::Simulator(MetaGraph* mg, MkModel mk)
@@ -11,7 +12,7 @@ Simulator::Simulator(MetaGraph* mg, MkModel mk)
   mkproto_ = mk;
   n_markovs_ = 1; 
   int n = mg->GetNumber();
-  markovs_.resize(n+1,&mkproto_);
+  markovs_.resize(n+1, &mkproto_);
   // std::cerr << "Debug: Instantiated simulator with " << n << " markov copies\n";
 }
   
@@ -123,7 +124,7 @@ Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
   for (int i = 0; i < n; ++i)
   {
     std::vector<bool> is_infected(nodes+1,false);
-    std::list<int> infected;
+    std::deque<int> infected;
     for (auto j: inside)
     {
       //deriv[j] = 0;

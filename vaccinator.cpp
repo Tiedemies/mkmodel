@@ -1,9 +1,8 @@
-#include "defs.hpp"
-#include "ioroutines.hpp"
-#include "graphmodel.hpp"
-#include "hidden_cascade.hpp"
-#include "industry_cascade.hpp"
-// #include "stat_routines.hpp"
+#include "utils/defs.hpp"
+#include "utils/ioroutines.hpp"
+#include "graphmodel/graphmodel.hpp"
+#include "simulators/hidden_cascade.hpp"
+#include "simulators/industry_cascade.hpp"
 #include <chrono>
 #include <iostream>
 #include <iomanip>
