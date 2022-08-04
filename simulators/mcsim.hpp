@@ -5,7 +5,6 @@
 #include "../mkmodel/mkmodel.hpp"
 #include "../utils/defs.hpp"
 
-
 #include<vector> 
 
 class Simulator

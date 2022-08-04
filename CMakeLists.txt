@@ -21,7 +21,7 @@ add_executable(vaccinator vaccinator.cpp)
 
 #install(TARGETS RunEmpirical DESTINATION .)
 #install(TARGETS test_io DESTINATION .)
-install(TARGETS vaccinator DESTINATION .)
+install(TARGETS vaccinator DESTINATION build)
 
 # Link libraries
 #target_link_libraries(RunEmpirical

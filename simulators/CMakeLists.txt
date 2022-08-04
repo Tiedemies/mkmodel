@@ -1,7 +1,7 @@
 # Cmake list for directory Simulators
 add_library(hidden_cascade hidden_cascade.cpp)
 add_library(industry_cascade industry_cascade.cpp)
-#add_library(mcsim mcsim.cpp)
+add_library(mcsim mcsim.cpp)
 
 # Link libraries
 target_link_libraries(hidden_cascade
@@ -22,6 +22,6 @@ target_link_libraries(industry_cascade
 #target_link_libraries(mcsim
 #    graphmodel
 #    defs
-#    mcsim
+#    mkmodel
 #    h_random
 #)

@@ -12,10 +12,10 @@ Simulator::Simulator(MetaGraph* mg, MkModel mk)
   mkproto_ = mk;
   n_markovs_ = 1; 
   int n = mg->GetNumber();
-  markovs_.resize(n+1, &mkproto_);
+  // markovs_.resize(n+1, &mkproto_);
   // std::cerr << "Debug: Instantiated simulator with " << n << " markov copies\n";
 }
-  
+
 Simulator::Simulator(MetaGraph* mg, std::vector<MkModel*> mk)
 {
   mgraph_ = mg;
@@ -26,6 +26,7 @@ Simulator::Simulator(MetaGraph* mg, std::vector<MkModel*> mk)
     throw std::logic_error("different number of nodes and markovs"); 
   }
 } 
+
  
 Simulator::~Simulator() 
 {
@@ -75,6 +76,7 @@ void Simulator::SetTradeProps(std::vector<double> props)
 
 }
 
+
 std::vector<int> 
 Simulator::GetInside(int date, int k)
 {
@@ -112,7 +114,7 @@ void Simulator::SetTradeProp(double prop)
   }
   mkproto_.setTradeProb(prop);
 }
-  
+
 std::pair<std::vector<double>, std::vector<double>> 
 Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
 {
