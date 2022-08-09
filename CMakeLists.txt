@@ -4,9 +4,23 @@ project(MkModel VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -pedantic -std=gnu++17 -fopenmp")
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -lboost_date_time -std=gnu++17")
 
+SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
+IF(DEFINED CMAKE_BUILD_TYPE AND CMAKE_VERSION VERSION_GREATER "3.0")
+  SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS  ${CMAKE_CONFIGURATION_TYPES})
+ENDIF()
+
+set(CMAKE_INSTALL_PREFIX .)
+
+if(CMAKE_BUILD_TYPE MATCHES "Release")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -pedantic -std=gnu++17 -fopenmp -DNDEBUG")
+  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wall -O3 -fopenmp -lboost_date_time -std=gnu++17")
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g3 -pedantic -std=gnu++17 -fopenmp")
+  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -lboost_date_time -std=gnu++17")
+endif()
 
 
 #Add library
@@ -22,7 +36,8 @@ add_executable(RunEmpirical RunEmpirical.cpp)
 add_executable(test_io test_io.cpp)
 add_executable(vaccinator vaccinator.cpp)
 
-install(TARGETS RunEmpirical test_io vaccinator DESTINATION .)
+# Install into build-type directory
+install(TARGETS RunEmpirical test_io vaccinator DESTINATION ${CMAKE_BUILD_TYPE})
 
 
 # Link libraries

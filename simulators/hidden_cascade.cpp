@@ -70,6 +70,7 @@ HiddenCascade::Key(const int& u, const int& v) const
 double
 HiddenCascade::Simulate(const std::vector<int>& inside) 
 {
+  BOOST_ASSERT(sim_n_ > 0);
   size_t nodes = simulated_profits_.size();
   max_activated_ = 0;
   min_activated_ = simulated_activations_.size();
@@ -128,6 +129,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
     simulated_activations_[i] /= sim_n_;
     num_active += simulated_activations_[i];
   }
+  BOOST_ASSERT(!std::isnan(num_active));
   return num_active;
 }
 

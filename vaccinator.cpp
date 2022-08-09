@@ -34,8 +34,6 @@ double st_error(std::vector<double> input)
 
 int main()
 {
-    // Start timing.
-    auto start = std::chrono::high_resolution_clock::now(); 
     // Initialize a metagraph.      
     /*
     IoR zed;
@@ -50,8 +48,15 @@ int main()
     IndustryCascade foo(VREFDATE);
     std::cerr << "all created.\n";
 
+    // Start timing.
+    auto start = std::chrono::high_resolution_clock::now(); 
     auto tvec = foo.RunTotal();
+    // Stop timing.
+    auto stop = std::chrono::high_resolution_clock::now(); 
+    double count = std::chrono::duration<double>(stop-start).count();
+    
     std::cerr << "Simulations run. Total number of activations: " << sum(tvec) << "\n";
     std::cerr << "Avg: " << avg(tvec) << ", stde:" << st_error(tvec) << "\n";
+    std::cerr << "Simulations took " << count << "s \n";
     return 0;
 }

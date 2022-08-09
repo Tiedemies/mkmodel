@@ -26,7 +26,7 @@ IndustryCascade::IndustryCascade(HiddenCascade h) : simulation_coefficient_(10),
   //void
 }
 
-IndustryCascade::IndustryCascade(int year) : simulation_coefficient_(10), def_p_(0.1), foo_(year),
+IndustryCascade::IndustryCascade(int year) : simulation_coefficient_(100), def_p_(0.1), foo_(year),
   hc_(HiddenCascade(foo_.GetGraph(year),def_p_,def_p_,def_p_))
 {
   foo_.ReadAnnounceTable();
@@ -116,9 +116,10 @@ IndustryCascade::RunTotal()
     {
       continue;
     }
-    int n = simulation_coefficient_*num_announcements_[i];
+    int n = simulation_coefficient_*(num_announcements_[i] + 1);
     hc_.SetSimulationN(n);
     totals[i] = (hc_.Simulate(insiders_.at(i)));
+    BOOST_ASSERT(!std::isnan(totals[i]));
   }
   return totals;
 }
