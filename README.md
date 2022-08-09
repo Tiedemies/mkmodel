@@ -1,19 +1,23 @@
 # mkmodel
 This package contains my simulator and statistic analyzer for trading information research.
 
-Filestructure is complex and in dire need of documentation. 
+Filestructure is complex and in dire need of documentation, but now some architectural sense has been made.
+The build now uses cmake.
 
-$ make test_io 
-will make the binary test_io, which will produce the regressor matrices for all transactions. It also does a check of data
-integrity 
+$ cmake .
+$ make 
 
-$ make RunEmpirical
-will make the RunEmpirical binary which will try to fit the two-parameter model. This is currently not functional
-due to overhaul in the I/O
+Binaries that are generated are:
+$ RunEmpirical
+This will try to fit the data into a rudimetary version of the hidden cascade. Currently it is defunct. The optimizer is retained only for reference.
 
-$ make vaccinator
-will make the single-run "vaccinator" program that is intended (eventually) to fit the multiparameter model and 
-solve the so-called "vaccination problem", i.e., find out which nodes or connections need to be shut down in order to
-minimize the spread of information as measured by the number of expected infections
+$ Vaccinator
+This is work in progress which uses the IndustryCascade - wrapper for the HiddenCascade class. It supports simulations where the number of simulations is proportional to the number of announcements by the company. 
+
+$ test_io
+This binary will generate the data matrices used in our seminal paper based on the data files that are (at this moment) hard coded in the file
+util/defs.hpp 
+If you wish to generate the matrices with different data, you must change defs.hpp for the appropriate constants. TODO-list includes creating an installation script that only requires the user to specify the root of the data directory. 
+
 
 
