@@ -4,8 +4,16 @@ This package contains my simulator and statistic analyzer for trading informatio
 Filestructure is complex and in dire need of documentation, but now some architectural sense has been made.
 The build now uses cmake.
 
-$ cmake .
-$ make 
+To make a clean build of both run:
+$ Build_All.sh
+
+And to make release and debug builds, the following scripts
+$ BuildRelease.sh
+$ BuildDebug.sh
+
+The binaries will be installed in the working directory subdirectories 
+./Release/
+./Bebug/
 
 Binaries that are generated are:
 $ RunEmpirical
