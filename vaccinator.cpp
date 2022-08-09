@@ -8,20 +8,25 @@
 #include <iomanip>
 #include <cmath>
 
+double sum(const std::vector<double>& input)
+{
+    return std::accumulate(input.cbegin(), input.cend(), 0.0);
+}
 
-
-#define REFDATE 20081231
-#define PLOTFILE "plotfile.txt"
+double avg(const std::vector<double>& input)
+{
+    return sum(input) / input.size();
+}
 
 double st_error(std::vector<double> input)
 {
     const int& n = static_cast<int>(input.size());
-    const double& avg = std::accumulate(input.begin(), input.end(), 0.0) / n;
+    const double& avgs = avg(input);
     double err = 0.0;
     #pragma omp parallel for reduction(+:err)
     for(int i = 0; i <= n-1;++i)
     {
-        err += (avg - input[i])*(avg - input[i]);
+        err += (avgs - input[i])*(avgs - input[i]);
     }
     err /= (n-1);
     return std::sqrt(err); 
@@ -41,16 +46,12 @@ int main()
     zed.ReadNodeDictionary();
     zed.ReadAnnouncements();
     */
-    std::cout << "Intialize IndustryCascade for " << REFDATE << "\n";
-    IndustryCascade foo(REFDATE);
+    std::cout << "Intialize IndustryCascade for " << VREFDATE << "\n";
+    IndustryCascade foo(VREFDATE);
+    std::cerr << "all created.\n";
 
-    /*
-    std::cout << "On average " << sum << " nodes were activated \n";
-    std::cout << "Min: " << mina << ", Max: " << maxa << "\n";
-    std::cout << "Sigma: " << st_error(num_active) << "\n";
-    std::cout <<  n*k << " simulations took " << duration2.count()/1000 << "ms total\n";
-    std::cout << duration2.count()/(n*k) << " microseconds per simulation \n";
-    std::cout << static_cast<double>(n*k)/(duration2.count()/1000000) << " simulations per second \n";
+    auto tvec = foo.RunTotal();
+    std::cerr << "Simulations run. Total number of activations: " << sum(tvec) << "\n";
+    std::cerr << "Avg: " << avg(tvec) << ", stde:" << st_error(tvec) << "\n";
     return 0;
-    */
 }

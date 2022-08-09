@@ -26,6 +26,7 @@ class IndustryCascade
         ~IndustryCascade();
         std::vector<double> RunTotal();
         std::vector<double> RunSingle(int i);
+        void RandomizeCoefs(double mu);
         void SetSimulationCoef(int n);
 
     private:
@@ -35,6 +36,7 @@ class IndustryCascade
         HiddenCascade hc_;
         std::vector<std::vector<int>> insiders_;
         std::vector<int> num_announcements_;
+        std::vector<std::vector<int>> announcement_days_; 
 };
 
 

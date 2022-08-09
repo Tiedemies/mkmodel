@@ -54,6 +54,10 @@
 // What return is considered profit:
 #define PROFIT_THRESHOLD 0.0
 
+//Vaccinator begin date:
+#define VREFDATE 20081231
+
+
 
 
 #include<map>
