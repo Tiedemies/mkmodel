@@ -91,6 +91,7 @@ private:
   
 
   friend class StatTester; 
+  friend class IndustryCascade;
 };
 
 #endif

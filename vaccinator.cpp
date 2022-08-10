@@ -50,13 +50,11 @@ int main()
 
     // Start timing.
     auto start = std::chrono::high_resolution_clock::now(); 
-    auto tvec = foo.RunTotal();
+    auto tvec = foo.RunGeneration();
     // Stop timing.
     auto stop = std::chrono::high_resolution_clock::now(); 
     double count = std::chrono::duration<double>(stop-start).count();
     
-    std::cerr << "Simulations run. Total number of activations: " << sum(tvec) << "\n";
-    std::cerr << "Avg: " << avg(tvec) << ", stde:" << st_error(tvec) << "\n";
-    std::cerr << "Simulations took " << count << "s \n";
+    std::cerr << "Generation took " << count << "s \n";
     return 0;
 }

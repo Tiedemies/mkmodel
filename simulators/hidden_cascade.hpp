@@ -41,6 +41,8 @@ class HiddenCascade
         void ActivateConnection(int u, int v, double p = -1);
     // Randomize connection weights to expected value/deviation. 
         void RandomizeWeights(double mu, double sigma = -1);
+    // Get number of nodes
+        int GetN() const;
   
     private:
         inline size_t Key(const int& u, const int& v) const;
@@ -55,9 +57,7 @@ class HiddenCascade
         mutable Random rnd_; 
         std::vector<bool> is_disabled_;
         std::set<int> disabled_; 
-        std::vector<double> simulated_profits_;
         std::vector<double> simulated_activations_; 
-        std::vector<double> trading_prob_;
         std::vector<double> volume_; 
         double num_activated_;
         int max_activated_;

@@ -106,32 +106,34 @@ typedef std::unordered_map<std::string,DatePriceVolumeVector> InternalTransactio
 // Pricetable and functionality
 class PriceTable
 {
-    private:
-        InternalPriceTable pt_;
-        // bool sorted_;
-    public:
-        PriceTable();
-        ~PriceTable();
-        void AddPCompanyDayPrice(const std::string& cname, int day, double price);
-        double GetCompanyDayPrice(const std::string& cname, int day, int offset) const;
-        std::pair<int,double> GetFirstChangePrice(const std::string& cname, int day, int offset, const std::set<int>& dates) const;
-        // void Sort();
-        int size();
-        friend class StatTester; 
+  private:
+    InternalPriceTable pt_;
+    // bool sorted_;
+  public:
+    PriceTable();
+    ~PriceTable();
+    void AddPCompanyDayPrice(const std::string& cname, int day, double price);
+    double GetCompanyDayPrice(const std::string& cname, int day, int offset) const;
+    std::pair<int,double> GetFirstChangePrice(const std::string& cname, int day, int offset, const std::set<int>& dates) const;
+    // void Sort();
+    int size();
+    friend class StatTester;
+    friend class IndustryCascade; 
 };
 
 class TransactionTable
 {
-    private:
-        InternalTransactionTable pt_;
-        bool sorted_;
-    public:
-        TransactionTable();
-        ~TransactionTable();
-        void AddPCompanyDayPriceTransaction(const std::string& cname, int day, double price, double volume);
-        void Sort();
-        int size();
-        friend class StatTester; 
+  private:
+    InternalTransactionTable pt_;
+    bool sorted_;
+  public:
+    TransactionTable();
+    ~TransactionTable();
+    void AddPCompanyDayPriceTransaction(const std::string& cname, int day, double price, double volume);
+    void Sort();
+    int size();
+    friend class StatTester; 
+    friend class IndustryCascade;
 };
 
 

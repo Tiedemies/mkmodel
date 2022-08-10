@@ -26,25 +26,29 @@ IndustryCascade::IndustryCascade(HiddenCascade h) : simulation_coefficient_(10),
   //void
 }
 
-IndustryCascade::IndustryCascade(int year) : simulation_coefficient_(100), def_p_(0.1), foo_(year),
-  hc_(HiddenCascade(foo_.GetGraph(year),def_p_,def_p_,def_p_))
+IndustryCascade::IndustryCascade(int tdate, int days): simulation_coefficient_(100), days_(days), def_p_(0.1), foo_(tdate),
+  hc_(HiddenCascade(foo_.GetGraph(tdate),def_p_,def_p_,def_p_))
 {
+  // We will use announcements, companies, and transactions. 
   foo_.ReadAnnounceTable();
   foo_.ReadCompanyDictionary();
-  using  namespace boost::gregorian; 
+  foo_.ReadTransactionTable();
+  using namespace boost::gregorian; 
   date ref_time(from_simple_string(REFDAY));
   int yy = VREFDATE / 10000;
   int mm = (VREFDATE - yy*10000) / 100;
   int dd = VREFDATE%100; 
   date bgtime(yy,mm,dd);
   int days_begin = (bgtime - ref_time).days();
-  int days_end = days_begin + 365; 
+  int days_end = days_begin + days; 
 
   // We initialize the announcement numbers first
-  num_announcements_.resize(foo_.cnames_.size()+1,0);
-  announcement_days_.resize(foo_.cnames_.size()+1);
-  insiders_.resize(foo_.cnames_.size()+1);
-  MonoGraph* graph = foo_.GetGraph(year);
+  size_t nn = foo_.cnames_.size() + 1;
+  num_announcements_.resize(nn,0);
+  announcement_days_.resize(nn);
+  insiders_.resize(nn);
+  const MonoGraph* graph = foo_.GetGraph(tdate);
+  trading_prob_.resize(hc_.GetN(),std::vector<double>(nn,0.0));
   //std::cerr << "grap ok " << graph << "\n";
   for (auto is_name: foo_.cnames_)
   {
@@ -88,8 +92,38 @@ IndustryCascade::IndustryCascade(int year) : simulation_coefficient_(100), def_p
     min = std::min(num_announcements_[cnum], min);
     max = std::max(num_announcements_[cnum], max);
   }
-  std::cerr << total << " announcements for " << comps << " companies in time window, min:" 
-            << min << ", max:" << max << "\n"; 
+  // std::cerr << total << " announcements for " << comps << " companies in time window, min:" 
+  //          << min << ", max:" << max << "\n";
+  // Next we root out the transactions
+  for (auto tran: foo_.tr_table_)
+  {
+    int node = tran.first;
+    for(auto trans_v: tran.second.pt_)
+    {
+      const std::string& isin = trans_v.first;
+      const std::string& cname = foo_.isin_company_[isin];
+      const int cnum = foo_.cnames_[cname];
+      // Go through the transactions. 
+      for (auto trans: trans_v.second)
+      {
+        int date = std::get<0>(trans);
+        // Skip those that are not in the data.
+        if (date <= days_begin || date > days_end)
+        {
+          continue;
+        }
+        Transaction tr;
+        tr.node_ = node;
+        tr.comp_ = cnum;
+        tr.date_ = date-days_begin;
+        tr.price_ = std::get<1>(trans); 
+        tr.vol_ = std::get<2>(trans);
+        transacts_.push_back(tr);
+        trading_prob_[node][cnum] += 1.0/((double) days);
+      }
+    }
+  }
+  std::sort(transacts_.begin(), transacts_.end());
 }
 
 
@@ -131,3 +165,51 @@ IndustryCascade::RandomizeCoefs(double mu)
   hc_.RandomizeWeights(mu);
 }
 
+bool
+IndustryCascade::Transaction::operator<(const IndustryCascade::Transaction& rhs) const
+{
+  // First priority is company number
+  if (comp_ < rhs.comp_)
+  {
+    return true;
+  }
+  if (comp_ > rhs.comp_)
+  {
+    return false;
+  }
+  // Second priority is date
+  if (date_ < rhs.date_)
+  {
+    return true;
+  }
+  if (date_ > rhs.date_)
+  {
+    return false;
+  }
+  // Third is node 
+  if (node_ < rhs.node_)
+  {
+    return true;
+  }
+  if (node_ > rhs.node_)
+  {
+    return false;
+  }  
+  return false;
+
+}
+
+NodeTransactionTable 
+IndustryCascade::RunGeneration()
+{
+  for(int comp = 0; comp < insiders_.size(); ++comp)
+  {
+    for(int d = 1; d < days_; ++d)
+    {
+      for(int node = 0; node < trading_prob_.size(); ++node)
+      {
+        
+      }
+    }
+  }
+}

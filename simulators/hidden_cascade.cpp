@@ -44,7 +44,6 @@ HiddenCascade::HiddenCascade(const MonoGraph* mg, const double& p, const double&
     true_positive_prob_.resize(i+1,tp);
     is_disabled_.resize(i+1,false);
     simulated_activations_.resize(i+1,0.0);
-    simulated_profits_.resize(i+1,0.0);
     sim_n_ = 5*i;
 }
 
@@ -52,7 +51,6 @@ HiddenCascade::~HiddenCascade()
 {
     p_map_.clear();
     simulated_activations_.clear();
-    simulated_profits_.clear();
     adj_.clear();
 
     // void;
@@ -71,7 +69,7 @@ double
 HiddenCascade::Simulate(const std::vector<int>& inside) 
 {
   BOOST_ASSERT(sim_n_ > 0);
-  size_t nodes = simulated_profits_.size();
+  size_t nodes = simulated_activations_.size();
   max_activated_ = 0;
   min_activated_ = simulated_activations_.size();
   std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
@@ -124,7 +122,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   }
   // Normalize
   #pragma omp parallel for reduction(+:num_active)
-  for(size_t i = 0; i < simulated_profits_.size(); ++i)
+  for(size_t i = 0; i < simulated_activations_.size(); ++i)
   {
     simulated_activations_[i] /= sim_n_;
     num_active += simulated_activations_[i];
@@ -137,7 +135,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
 bool
 HiddenCascade::IsSuccess(const int& u, const int& v) const
 {
-    return (p_map_.at(Key(u,v)) - rnd_.get() > 0);
+  return (p_map_.at(Key(u,v)) - rnd_.get() > 0);
 }
 
 
@@ -236,4 +234,10 @@ HiddenCascade::RandomizeWeights(double mu, double sigma)
       p_map_[Key(u,v)] = gen.get();
     }
   }
+}
+
+int
+HiddenCascade::GetN() const
+{
+  return adj_.size();
 }
