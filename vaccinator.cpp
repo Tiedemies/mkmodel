@@ -54,7 +54,6 @@ int main()
     // Stop timing.
     auto stop = std::chrono::high_resolution_clock::now(); 
     double count = std::chrono::duration<double>(stop-start).count();
-    
     std::cerr << "Generation took " << count << "s \n";
     return 0;
 }
