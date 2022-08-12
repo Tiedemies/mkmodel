@@ -43,6 +43,8 @@ class HiddenCascade
         void RandomizeWeights(double mu, double sigma = -1);
     // Get number of nodes
         int GetN() const;
+
+        friend class IndustryCascade; 
   
     private:
         inline size_t Key(const int& u, const int& v) const;

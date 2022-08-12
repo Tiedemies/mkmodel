@@ -48,6 +48,8 @@ int main()
     IndustryCascade foo(VREFDATE);
     std::cerr << "all created.\n";
 
+    foo.RunDiagnostics();
+    
     // Start timing.
     auto start = std::chrono::high_resolution_clock::now(); 
     auto tvec = foo.RunGeneration();
