@@ -78,6 +78,7 @@ class IndustryCascade
     std::vector<int> n_out_days_;
 };
 
-
+// Helper functions
+double InterPolate(const std::vector<double>& vec, int i);
 
 #endif
