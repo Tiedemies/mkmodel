@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cmath>
 
+namespace util
+{
 PriceTable::PriceTable()
 {
     // Default
@@ -144,4 +146,4 @@ TransactionTable::size()
 {
     return (int) pt_.size(); 
 }
-
+}

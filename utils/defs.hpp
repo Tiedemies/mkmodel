@@ -38,7 +38,6 @@
 //index file
 #define INDEXFILE "/worktmp/hansen/TAU_epidemic_modelling_for_insiders/indexdata.csv"
 
-
 /*** Basic definition of constants ***/
 
 // Number of days
@@ -55,10 +54,7 @@
 #define PROFIT_THRESHOLD 0.0
 
 //Vaccinator begin date:
-#define VREFDATE 20081231
-
-
-
+#define VREFDATE 20071231
 
 #include<map>
 #include<unordered_map>
@@ -67,6 +63,20 @@
 #include<set>
 
 
+// forward declaration
+
+namespace data
+{
+  class StatTester; 
+}
+
+namespace simulator
+{
+  class IndustryCascade; 
+}
+
+namespace util
+{
 // Dictionaries 
 // Fraction entry: <#possible inside, #profit pi, #announcements, #market days, #outside trades, #outside profit trades>
 typedef std::tuple<int,double,int,int,double, double> FractionEntry;
@@ -117,8 +127,8 @@ class PriceTable
     std::pair<int,double> GetFirstChangePrice(const std::string& cname, int day, int offset, const std::set<int>& dates) const;
     // void Sort();
     int size();
-    friend class StatTester;
-    friend class IndustryCascade; 
+    friend class data::StatTester;
+    friend class simulator::IndustryCascade; 
 };
 
 class TransactionTable
@@ -132,8 +142,8 @@ class TransactionTable
     void AddPCompanyDayPriceTransaction(const std::string& cname, int day, double price, double volume);
     void Sort();
     int size();
-    friend class StatTester; 
-    friend class IndustryCascade;
+    friend class data::StatTester; 
+    friend class simulator::IndustryCascade;
 };
 
 
@@ -147,5 +157,6 @@ typedef std::unordered_map<int, IsinCountMap> NodeIsinCountMap;
 typedef std::unordered_map<int, double> CompanyPValueMap;
 typedef std::unordered_map<int, CompanyPValueMap> NodeCompanyPValueMap;
 
+}
 
 #endif

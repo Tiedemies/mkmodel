@@ -13,7 +13,12 @@
 #include <vector>
 #include <boost/numeric/ublas/matrix.hpp>
 
-
+namespace data
+{
+    using namespace graphmodel;
+    using namespace markov;
+    using namespace util;
+    using namespace simulator;
 class StatTester
 {
     public:
@@ -92,7 +97,6 @@ class StatTester
     // Sets that entail the elements in the major cluster:
     std::unordered_map<int,int> major_companies_;
     std::unordered_map<int,int> major_players_; 
-
-
 };
+}
 #endif

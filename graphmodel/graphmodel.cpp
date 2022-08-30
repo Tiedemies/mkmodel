@@ -15,7 +15,9 @@
 #define CHANDLE "/company_dict_insiders.txt"
 #define BHANDLE "/company_dict_board_members.txt"
 
-
+namespace graphmodel
+{
+  using namespace util;
 MonoGraph::MonoGraph(std::ifstream& in):def_({}),p_calculated_(false)
 {
   // Read the graph in
@@ -37,7 +39,7 @@ MonoGraph::MonoGraph(std::ifstream& in):def_({}),p_calculated_(false)
       auto a_it = adj_.find(s_node);
       if (a_it == adj_.end())
       {
-	      adj_[s_node] = Alist2{t_node};
+	      adj_[s_node] = Alist2({t_node});
         ++num_edges_;
       }
       else
@@ -47,7 +49,7 @@ MonoGraph::MonoGraph(std::ifstream& in):def_({}),p_calculated_(false)
       }
       if (adj_.find(t_node) == adj_.end())
       {
-        adj_[t_node] = {s_node};
+        adj_[t_node] = Alist2({s_node});
       }
       else
       {
@@ -403,10 +405,6 @@ MonoGraph::NormalDegree(int node)
   {
     P_[i] /= max;
   }
-  if (node == 11)
-  {
-    std::cerr << P_[node] << "Nm degree for node " << node << "\n" ; 
-  }
   p_calculated_ = true;
   return P_[node];
 }
@@ -595,4 +593,25 @@ MonoGraph::GetMaxComp(std::vector<int> set) const
     ++k;
   }
   return comps[j];
+}
+
+bool 
+MetaGraph::CheckValidity(int node)
+{
+  if (validated_nodes_.empty())
+  {
+    for (auto gg_pair: graphs_)
+    {
+      const MonoGraph* gg = gg_pair.second;
+      for (auto a_pair: gg->adj_)
+      {
+        if(!a_pair.second.empty())
+        {
+          validated_nodes_.insert(a_pair.first);
+        }
+      }
+    }
+  }
+  return (validated_nodes_.find(node) != validated_nodes_.end());
+}
 }

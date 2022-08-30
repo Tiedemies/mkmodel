@@ -13,6 +13,10 @@
 #include<vector>
 #include<set>
 
+namespace simulator
+{
+    using namespace graphmodel;
+    using namespace util;
 class HiddenCascade
 {
     public:
@@ -45,6 +49,7 @@ class HiddenCascade
         int GetN() const;
 
         friend class IndustryCascade; 
+        friend class InfluenceMinimizer;
   
     private:
         inline size_t Key(const int& u, const int& v) const;
@@ -66,6 +71,7 @@ class HiddenCascade
         int min_activated_;  
 
 };
+}
 
 #endif
  

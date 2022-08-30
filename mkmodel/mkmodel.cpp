@@ -5,6 +5,9 @@
 #include <chrono>
 #include <vector>
 
+namespace markov
+{
+  using namespace util; 
 MkModel::MkModel()
 {
   //void
@@ -67,4 +70,5 @@ void MkModel::setTradeProb(double p)
 void MkModel::setTransmitProb(double p)
 {
   transmitprop_ = p;
+}
 }

@@ -11,6 +11,9 @@
 #include "boost/date_time/gregorian/gregorian.hpp"
 #define TRANS_ERRFILEHANDLE "bad_transactions.txt"
 
+namespace util
+{
+  using namespace graphmodel;
 double 
 PilkkuPisteeksi(const std::string&  luku)
 {
@@ -964,7 +967,7 @@ IoR::ReadReasonsTable()
     int node_id = std::stoi(ReadNext(in));
     std::string related_node = ReadNext(in);
     std::set<int> bas_set = BracketArrayToSet(basis);
-    
+    relativemap_[node_id] = std::stoi(related_node);
   }
 }
 
@@ -973,3 +976,16 @@ IoR::GetGraph(int date)
 {
   return metag_->GetGraph(date);
 } 
+
+void
+IoR::PrintISINTable(std::ofstream& out)
+{
+  for (auto isin_t: isin_company_)
+  {
+    std::string isin = isin_t.first;
+    std::string cname = isin_t.second;
+    int cnum = cnames_[cname];
+    out << isin << ";" << cname << ";" << cnum << "\n";
+  }
+}
+}

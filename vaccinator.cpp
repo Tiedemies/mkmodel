@@ -8,6 +8,10 @@
 #include <iomanip>
 #include <cmath>
 
+using namespace util;
+using namespace graphmodel;
+using namespace simulator;
+
 double sum(const std::vector<double>& input)
 {
     return std::accumulate(input.cbegin(), input.cend(), 0.0);

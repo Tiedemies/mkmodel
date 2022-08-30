@@ -5,6 +5,7 @@
 #include<boost/random.hpp>
 #include <boost/math/distributions.hpp>
 
+namespace util{
 // Global random generator
 class Random
 {
@@ -41,6 +42,6 @@ class BetaRandom
     BDist dist_;
     RNDGenerator rand_gen_;
 };
-
+}
 #endif
 

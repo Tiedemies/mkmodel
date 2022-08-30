@@ -19,7 +19,12 @@
 // Boost include
 #include <boost/math/distributions/hypergeometric.hpp>
 #include <boost/math/distributions/poisson.hpp>
-
+namespace algorithm
+{
+  using namespace util;
+  using namespace markov;
+  using namespace simulator;
+  using namespace graphmodel;
 Optimizer::Optimizer(Simulator* sim, IoR* zed)
 {
   zed_ = zed; 
@@ -736,4 +741,5 @@ Optimizer::CompanyOptimizeQ(int k, double p, double q)
   }
   std::cerr << "Non_exploiters: " << n_zero << ", low_exploiters: " << n_low << ", and high exploiters: " << n_high << "\n"; 
   return std::make_pair(p,q);
+}
 }

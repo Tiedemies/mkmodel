@@ -22,7 +22,10 @@
 #include "boost/date_time/gregorian/gregorian.hpp"
 
 
-
+namespace simulator
+{
+  using namespace util;
+  using namespace graphmodel;
 IndustryCascade::IndustryCascade(HiddenCascade h) : simulation_coefficient_(10), foo_(false), hc_(h)
 {
   //void
@@ -73,6 +76,35 @@ IndustryCascade::RunDiagnostics()
   }
   */
   std::cerr << "*************\n";
+  std::cerr << "Windows sanity check: \n";
+
+  for(int comp = 0; comp < n_comp_; ++comp)
+  {
+    int in_d = 0;
+    int out_d = 0;
+    for(int day = 0; day < days_; ++day)
+    {
+      if (in_window_days_[comp][day])
+      {
+        in_d++;
+      }
+      else
+      {
+        out_d++;
+      }
+    }
+    if (n_in_days_[comp] != in_d)
+    {
+      std::cerr << "Company " << comp << " had " << in_d << " vs " << n_in_days_[comp] << "in days \n";
+    }
+    if (n_out_days_[comp] != out_d)
+    {
+      std::cerr << "Company " << comp << " had " << out_d << " vs " << n_out_days_[comp] << "out days \n";
+    }
+  }
+
+  std::cerr << "passed. \n";
+  std::cerr << "**************\n";
   std::cerr << "Probabilities sanity check: \n";
   int zero_prob_n = 0;
   for (int node = 0; node < n_node_; ++node)
@@ -83,13 +115,15 @@ IndustryCascade::RunDiagnostics()
       //std::cerr << "node: " << node << "comp: " << comp << ", i-prob: "<< in_trading_prob_[node][comp] << "\n";
       if (in_trading_prob_[node][comp] > 1 || in_trading_prob_[node][comp] < 0)
       {
-        std::cerr << "bad probability at " << node << "," << comp << ": " << in_trading_prob_[node][comp] << "\n";
+        std::cerr << "bad in probability at " << node << "," << comp << ": " << in_trading_prob_[node][comp] << "\n";
+        std::cerr << "In trade days " << n_in_days_[comp] << "\n";
         throw std::logic_error("bad probability"); 
       }   
       //std::cerr << "node: " << node << "comp: " << comp << ", o-prob: "<< out_trading_prob_[node][comp] << "\n";
       if (out_trading_prob_[node][comp] > 1 || in_trading_prob_[node][comp] < 0)
       {
-        std::cerr << "bad probability at " << node << "," << comp << ": " << out_trading_prob_[node][comp] << "\n";
+        std::cerr << "bad out probability at " << node << "," << comp << ": " << out_trading_prob_[node][comp] << "\n";
+        std::cerr << "Out trade days " << n_out_days_[comp] << "\n";
         throw std::logic_error("bad probability"); 
       }   
       if (in_trading_prob_[node][comp] > 0.01 || out_trading_prob_[node][comp] > 0.01)
@@ -104,6 +138,8 @@ IndustryCascade::RunDiagnostics()
   }
   std::cerr << "Number of zero prob nodes:" << zero_prob_n << " out of " << n_node_ << "\n";
   std::cerr << "passed \n"; 
+  std::cerr << "****************\n";
+  
 
 }
 
@@ -299,6 +335,8 @@ IndustryCascade::InitializeAnnouncements()
 void 
 IndustryCascade::InitializeTransactions()
 {
+  std::unordered_map<int,bool> trades; 
+  int unique = 0; 
   for (auto tran: foo_.tr_table_)
   {
     int node = tran.first;
@@ -308,8 +346,8 @@ IndustryCascade::InitializeTransactions()
       const std::string& isin = trans_v.first;
       const std::string& cname = foo_.isin_company_[isin];
       const int cnum = foo_.cnames_[cname];
-      auto announce_it = announcement_days_[cnum].begin();
       // Go through the transactions. 
+      int prev_day = -1;
       for (auto trans: trans_v.second)
       {
         int date = std::get<0>(trans);
@@ -319,6 +357,11 @@ IndustryCascade::InitializeTransactions()
           continue;
         }
         int n_date = date-days_begin_;
+        if (n_date != prev_day)
+        {
+          unique++;
+        }
+        prev_day = n_date; 
         Transaction tr;
         tr.node_ = node;
         tr.comp_ = cnum;
@@ -327,11 +370,17 @@ IndustryCascade::InitializeTransactions()
         tr.vol_ = std::get<2>(trans);
         tr.inside_ = in_window_days_[cnum][n_date]; 
         transacts_.push_back(tr);
+        trades[node] = true; 
       }
     }
   }
   std::sort(transacts_.begin(), transacts_.end());
-  std::cerr << "Stored " << transacts_.size() << " transactions \n";
+  int num_trades = 0;
+  for (auto tra: trades)
+  {
+    if (tra.second) {++num_trades;}
+  }
+  std::cerr << "Stored " << transacts_.size() << " transactions on " << unique << " nodedays, " << num_trades << "nodes active \n";
 }
 
 void
@@ -340,7 +389,8 @@ IndustryCascade::InitializeWindows()
   in_window_days_.resize(n_comp_, std::vector<bool>(days_+1,false));
   n_in_days_.resize(n_comp_,0);
   n_out_days_.resize(n_comp_,0);
-  int n_zerod = 0;
+  int n_zero_in = 0;
+  int n_zero_out = 0;
   for (int comp = 0; comp < n_comp_; ++comp)
   {
     auto an_it = announcement_days_[comp].cbegin(); 
@@ -350,34 +400,43 @@ IndustryCascade::InitializeWindows()
       continue;
     }
     */
-    bool zeroed = true;
+    bool zero_in = true;
+    bool zero_out = true;
     for (int day = 0; day < days_; ++day)
     {
+      /*
       if (std::isnan(prices_[comp][day]))
       {
         continue;
       }
+      */
       while (an_it != announcement_days_[comp].end() && *an_it <= day)
       {
         ++an_it;
       }
       if (an_it  == announcement_days_[comp].end() || *an_it > day+window_size_)
       {
+        n_out_days_[comp]++;
         in_window_days_[comp][day] = false;
-        n_out_days_[comp] += 1;
-        zeroed = false;
+        zero_out = false;
       }
       else
       {
+        n_in_days_[comp]++;
         in_window_days_[comp][day] = true;
-        n_in_days_[comp] += 1;
-        zeroed = false; 
+        zero_in = false; 
       }
     }
-    if (zeroed)
-    n_zerod++;
+    if (zero_in)
+    {
+      n_zero_in++;
+    }
+    if (zero_out)
+    {
+      n_zero_out++; 
+    }
   }
-  std::cerr << "Initialized windows, " << n_zerod << " zero-traded companies \n";
+  std::cerr << "Initialized windows, " << n_zero_in << " zero in-window companies, " << n_zero_out << " zero out-windows \n";
 }
 
 
@@ -386,15 +445,44 @@ IndustryCascade::InitializeProbabilities()
 {
   out_trading_prob_.resize(n_node_, std::vector<double>(n_comp_,0.0));
   in_trading_prob_.resize(n_node_, std::vector<double>(n_comp_,0.0));
+
+  int prev_day = -1;
+  int prev_node = -1;
+  int prev_comp = -1; 
   for (auto tr: transacts_)
   {
+    if (tr.date_ == prev_day && tr.node_ == prev_node && tr.comp_ == prev_comp)
+    {
+      continue; 
+    }
     if (tr.inside_)
     {
-      in_trading_prob_[tr.node_][tr.comp_] += 1.0 / (double (n_in_days_[tr.comp_])); 
+      in_trading_prob_[tr.node_][tr.comp_] += 1.0; 
     }
-    else 
+    else
     {
-      out_trading_prob_[tr.node_][tr.comp_] += 1.0 / (double (n_out_days_[tr.comp_])); 
+      out_trading_prob_[tr.node_][tr.comp_] += 1.0;
+    }
+    prev_day = tr.date_;
+    prev_comp = tr.comp_;
+    prev_node = tr.node_;
+  }
+  for (int n = 0; n < n_node_; ++n)
+  {
+    for (int c = 0; c < n_comp_; ++c)
+    {
+      if (n_out_days_[c] > 0.1)
+      {
+        out_trading_prob_[n][c] /= n_out_days_[c];
+      }
+      else
+      {
+        out_trading_prob_[n][c] = 0;
+      }
+      if (n_in_days_[c] > 0.1)
+      {
+        in_trading_prob_[n][c] /= n_in_days_[c];
+      }
     }
   }
 }
@@ -532,4 +620,5 @@ double InterPolate(const std::vector<double>& vec, int i)
   }
   double unit_inc = (vec[k] - vec[j])/(k-j);
   return vec[j] + unit_inc*(i-j);
+}
 }

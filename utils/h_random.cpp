@@ -2,6 +2,8 @@
 #include "h_random.hpp"
 #include <boost/math/distributions.hpp>
 
+namespace util
+{
 Random::Random()
 {
   dis_ = std::uniform_real_distribution<double>(0,1);
@@ -48,4 +50,5 @@ BetaRandom::~BetaRandom()
 double BetaRandom::get()
 {
     return dist_(rand_gen_);
+}
 }

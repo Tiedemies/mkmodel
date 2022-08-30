@@ -28,7 +28,11 @@
 #define ADIR "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/announcements"
 #define FFILE "/opt/lintula/worktmp/hansen/TAU_epidemic_modelling_for_insiders/fraction of trades/fraction of trades before announcement period/mean/fraction_of_trades_before_and_outside_announcement_period_5d.txt"
 
-
+using namespace graphmodel;
+using namespace markov;
+using namespace util;
+using namespace simulator;
+using namespace algorithm; 
 
 int main()
 {

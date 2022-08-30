@@ -7,6 +7,11 @@
 
 #include<vector> 
 
+namespace simulator
+{
+  using namespace graphmodel;
+  using namespace markov;
+  using namespace util;
 class Simulator
 {
 public:
@@ -30,6 +35,6 @@ private:
   std::unordered_map<int,int> yearmap_;
   std::unordered_map<int,int> yfirstmap_;
 };
-
+}
 
 #endif

@@ -8,17 +8,26 @@
 #include "boost/date_time/gregorian/gregorian.hpp"
 
 
-
+namespace data
+{
+  using namespace graphmodel;
+  using namespace markov;
+  using namespace util;
+  using namespace simulator;
 // 
 StatTester::StatTester()
 {
     ior_.ReadDates();
     ior_.ReadTables();
-    // ior_.pr_table_.Sort(); 
     ior_.SetCompanyDictionaryFile(CDFILE);
     ior_.SetNodeDictionaryFile(NDFILE);
     ior_.ReadCompanyDictionary();
     ior_.ReadNodeDictionary();
+    std::ofstream out;
+    out.open("IsinCompanyTable.csv");
+    ior_.PrintISINTable(out);
+    ior_.ReadReasonsTable();
+    out.close();
     std::cerr << ior_.trade_days_.size(); 
     profit_window_size_ = 5;
     profit_window_size_2_ = 21;
@@ -123,6 +132,7 @@ StatTester::CreateProfitWindows()
             const std::string& comp = ior_.isin_company_[isin];
             const DatePriceVolumeVector& trans = isin_vector_pair.second;
             auto ans_it = ans.find(isin);
+            auto other_ans_it = ior_.an_table_sc_.find(isin);
             {
                 if(ans_it == ans.end())
                 {
@@ -361,7 +371,7 @@ StatTester::GenerateCSV()
         std::ofstream& out1 = is_hh ? outH : outI;
         for (int j = 0; j < static_cast<int>(X_.size2()); ++j)
         {
-            if (is_hh && 2 <= j && j <= 5)
+            if (is_hh && 2 <= j && j <= 5 && j > 17)
             {
                 continue;
             }
@@ -473,6 +483,7 @@ void StatTester::PrintHGTest()
 void
 StatTester::GenerateSmallDataMatrix()
 {
+    std::cerr << "Generating matrix \n";
        // These are the node transaction and price tables that we use to create the  delayed version. 
     const NodeTransactionTable& transacts = ior_.tr_table_;  
     const PriceTable& pricetable = ior_.pr_table_;
@@ -484,14 +495,14 @@ StatTester::GenerateSmallDataMatrix()
     //           #6:in_window (non-scheduled) #7:in_window_2 (non-scheduled) #8:in_window (scheduled) #9: in_window_2 (scheduled)
 
     //         #10: date #11:volume*price  #12:business_day #13:past_inside #14:future_inside #15:How many boards #16: how many inside
-    //         # 17: Insiders actually exist
-    int p_length = 18;  
-    X_.resize(num_transactions_,p_length, 0.0);
+    //         # 17: Insiders actually exist, #18 number companies relative is insider, #19 is relative at some point
+    int p_length = 20;  
+    X_.resize(num_transactions_,p_length, std::nan(""));
 
     // LEGEND Y: #0: Return in window 1 #1: actual trading days for window 1, #2 Return in window 2, #3 actual trading days in window 2
     //  #4: Market return in window 1 #5: actual trading days for window 1, #6 Market Return in window 2, #7 actual trading days in window 2
 
-    y_.resize(num_transactions_,8,0.0);
+    y_.resize(num_transactions_,8,std::nan(""));
     std::cerr << "generating " << num_transactions_ << " x " << p_length << " matrix \n";   
     int row = 0;
 
@@ -501,6 +512,11 @@ StatTester::GenerateSmallDataMatrix()
     {    
         const int node = nodepair.first;
         int i = node;
+        if (node >= 0 && !ior_.metag_->CheckValidity(node))
+        {
+            std::cerr << "Warning, node " << node << " is invalid;";
+            continue;
+        }
         const TransactionTable& c_trans = nodepair.second;
         for (auto isin_vector_pair: c_trans.pt_)
         {
@@ -591,6 +607,13 @@ StatTester::GenerateSmallDataMatrix()
                 auto gg = ior_.metag_->GetGraph(fixed_time);
 
                 int insiders_exist = 1;
+                int relative = -1;
+                auto rel_it = ior_.relativemap_.find(i);
+                if (rel_it != ior_.relativemap_.end())
+                {
+                    relative = rel_it->second;
+                }
+                X_(row, 19) = (relative >= 0)?1:0;
 
                 // The following code is only done for insiders.    
                 if (i >= 0)
@@ -644,6 +667,10 @@ StatTester::GenerateSmallDataMatrix()
                     if (!std::isnan(dist) && deg == 0)
                     {
                         throw std::logic_error("distance exists but zero degree");
+                    }
+                    if (relative >= 0)
+                    {
+                        X_(row,18) = gg->GetInsiderOf(relative).size();
                     }
                 }
                 
@@ -895,4 +922,4 @@ StatTester::TestGraphIntegrity()
         }
     }
 }
-
+}

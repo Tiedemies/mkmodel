@@ -9,6 +9,9 @@
 #include<vector>
 #include<set>
 
+namespace graphmodel
+{
+  using namespace util;
 class MonoGraph
 {
   typedef std::unordered_map<int,int> DistMap;
@@ -85,11 +88,12 @@ public:
   MonoGraph* GetGraph(int date) const;
   int GetNumber() const;
   std::vector<int> GetDates() const;
+  bool CheckValidity(int node); 
 private:
   std::map<int,MonoGraph*> graphs_;
   int number_;
-  
+  std::set<int> validated_nodes_; 
 };
-
+}
 #endif
  

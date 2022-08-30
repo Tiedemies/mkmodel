@@ -8,6 +8,20 @@
 #include<vector>
 #include<set>
 
+namespace data
+{
+  class StatTester; 
+}
+
+namespace simulator
+{
+  class IndustryCascade; 
+}
+
+
+namespace util
+{
+  using namespace graphmodel; 
 class IoR
 {
 public: 
@@ -31,6 +45,8 @@ public:
   void ReadHouseHoldTransactionTable();
   void ReadReasonsTable();
   void ReadIndex();
+  void ReadInsiderBasis();
+  void PrintISINTable(std::ofstream& out);
   MonoGraph* GetGraph(int year);
 
   // Dictionaries
@@ -53,7 +69,8 @@ public:
   CompanyNameDict cnames_;
   CompanyNameInvDict cids_;
   IsinCompanyMap isin_company_; 
-  AnnouncementTable an_table_;
+  AnnouncementTable an_table_; 
+  std::unordered_map<int, int> relativemap_;
 private:
   std::string ReadNext(std::istream& in);
   void SkipLine(std::istream& in);
@@ -71,6 +88,7 @@ private:
   std::string indexfile_;
   std::string reasonfile_; 
   MetaGraph* metag_; 
+ 
 
   std::string cdictfile_;
   std::string fractionsfile_;
@@ -90,8 +108,8 @@ private:
   // Transformations:
   
 
-  friend class StatTester; 
-  friend class IndustryCascade;
+  friend class data::StatTester; 
+  friend class simulator::IndustryCascade;
 };
-
+}
 #endif

@@ -6,6 +6,11 @@
 #include<deque>
 #include<iostream>
 
+namespace simulator
+{
+  using namespace util;
+  using namespace markov;
+  using namespace graphmodel;
 Simulator::Simulator(MetaGraph* mg, MkModel mk)
 {
   mgraph_ = mg;
@@ -158,4 +163,5 @@ Simulator::Simulate(const std::vector<int>& inside, int date, int n) const
   //[[maybe_unused]] int iter = 0;
 
   return std::make_pair(result,margin); 
+}
 }

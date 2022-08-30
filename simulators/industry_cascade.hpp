@@ -14,6 +14,10 @@
 #include<vector>
 #include<set>
 
+namespace simulator
+{
+  using namespace util;
+  using namespace graphmodel;
 /* 
  * The IndustryCascade class is a wrapper for a hidden cascade that also includes the information 
  * about announcement numbers and insider sets, and we can run the whole system through them.
@@ -45,6 +49,7 @@ class IndustryCascade
 
     // Check if the prices is rising (true) or dropping (false). 
     bool IsBear(int comp, int day);
+    friend class InfluenceMinimizer; 
 
   private:
     void InitializeFoo();
@@ -80,5 +85,5 @@ class IndustryCascade
 
 // Helper functions
 double InterPolate(const std::vector<double>& vec, int i);
-
+}
 #endif

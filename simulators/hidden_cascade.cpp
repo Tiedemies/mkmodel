@@ -15,6 +15,10 @@
 #include<cmath>
 #include<algorithm>
 
+namespace simulator
+{
+  using namespace graphmodel;
+  using namespace util;
 // The constructor uses uniform p, false positive and true positive probabilities
 HiddenCascade::HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp)
 {
@@ -240,4 +244,5 @@ int
 HiddenCascade::GetN() const
 {
   return adj_.size();
+}
 }

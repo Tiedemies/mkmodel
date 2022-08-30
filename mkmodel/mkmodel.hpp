@@ -6,6 +6,9 @@
 
 #include<vector>
 
+namespace markov
+{
+  using namespace util;
 class MkModel
 {
 public:
@@ -29,5 +32,5 @@ private:
   Random rnd_;
 
 };
-
+}
 #endif

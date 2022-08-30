@@ -7,6 +7,8 @@
 #define PRICEFILE "table_prices_nan.txt"
 #define TRANSACTFILE "table_transacitions.txt"
 
+using namespace util;
+using namespace data;
 
 int main()
 {

@@ -13,9 +13,14 @@
 #include <vector>
 #include <map>
 #include <random>
-
-class Optimizer
+namespace algorithm
 {
+using namespace util;
+using namespace simulator;
+using namespace markov;
+using namespace graphmodel;
+class Optimizer
+{ 
 public: 
   
   Optimizer(Simulator* sim, IoR* zed);
@@ -57,7 +62,7 @@ private:
   void CalculateDM(DatePmap& dm, double p, int n, DatePmap& deriv, int k); 
   void InitializeCY();
 
-  Simulator* sim_;
+  simulator::Simulator* sim_;
   IoR* zed_;
   AnnouncementDates andat_;
   AnnouncementDict andi_;
@@ -77,5 +82,5 @@ private:
  
 };
 
-
+}
 #endif
