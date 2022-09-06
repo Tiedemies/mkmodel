@@ -58,6 +58,8 @@ class HiddenCascade
         void SetConstantProb(double p);
     // Get number of nodes
         int GetN() const;
+    // Query the latest variation of nodes 
+        double LastVar() const;
 
         friend class IndustryCascade; 
         friend class algorithm::InfluenceMinimizer;
@@ -79,7 +81,9 @@ class HiddenCascade
         std::vector<double> volume_; 
         double num_activated_;
         int max_activated_;
-        int min_activated_;  
+        int min_activated_; 
+
+        std::vector<int> infected_by_sim_; 
 
 };
 }

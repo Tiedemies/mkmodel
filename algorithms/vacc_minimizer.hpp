@@ -22,7 +22,7 @@ namespace algorithm
       // Find a minimal set via greedy algorithm of size n 
       std::set<int> GreedyMinimalSet(int n);
       // Find single minimal node. 
-      std::tuple<int,int,double> FindMinimalNodeComp();
+      std::tuple<int,int,double,double> FindMinimalNodeComp();
     private:
       simulator::IndustryCascade& ind_; 
   };

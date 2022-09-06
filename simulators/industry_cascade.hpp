@@ -36,8 +36,8 @@ class IndustryCascade
     // Copy constructor:
     IndustryCascade(const IndustryCascade& rhs);
     ~IndustryCascade();
-    double RunTotal();
-    double RunTotal(const std::vector<double>& weights);
+    std::pair<double,double> RunTotal();
+    std::pair<double,double> RunTotal(const std::vector<double>& weights);
     std::vector<double> RunSingle(int i);
     void RandomizeCoefs(double mu);
     std::vector<double> GetSimulationWeights();

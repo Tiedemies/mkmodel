@@ -29,7 +29,7 @@ namespace algorithm
   }
 
   /* Find a minimal node */
-  std::tuple<int,int,double>
+  std::tuple<int,int,double,double>
   InfluenceMinimizer::FindMinimalNodeComp()
   {
     // Precondition
@@ -41,6 +41,7 @@ namespace algorithm
     int max_comp = -1;
     double min_influence = std::numeric_limits<double>::max();
     double max_influence = std::numeric_limits<double>::min();
+    double min_var = 0.0;
     /* Find the node */
     int simcount = 0;
     const auto weights = ind_.GetSimulationWeights();
@@ -50,13 +51,15 @@ namespace algorithm
       {
         int node = *node_it; 
         ind_.DeactivateFromInside(node,comp);
-        double inf = ind_.RunTotal(weights);
+        auto res_pair = ind_.RunTotal(weights);
+        const double& inf = res_pair.first;
         ind_.ReactivateInside();
         if (inf < min_influence)
         {
           min_influence = inf;
           min_node = node;
           min_comp = comp; 
+          min_var = res_pair.second;
         }
         if (inf > max_influence)
         {
@@ -75,7 +78,7 @@ namespace algorithm
     BOOST_ASSERT(max_comp > 0);
     BOOST_ASSERT(min_comp > 0);
     std::cerr << "max influence: " << max_influence << " vs min " << min_influence <<"\n";
-    return std::make_tuple(min_node, min_comp, min_influence);
+    return std::make_tuple(min_node, min_comp, min_influence, min_var);
   }
 
 

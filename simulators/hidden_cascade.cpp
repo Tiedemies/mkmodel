@@ -74,9 +74,10 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
 {
   BOOST_ASSERT(sim_n_ > 0);
   size_t nodes = simulated_activations_.size();
-  max_activated_ = 0;
-  min_activated_ = simulated_activations_.size();
+  //max_activated_ = 0;
+  //min_activated_ = simulated_activations_.size();
   std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
+  infected_by_sim_ = std::vector<int>(sim_n_, 0);
   double num_active = 0;
   #pragma omp parallel for shared(simulated_activations_)
   for (size_t i = 0; i < sim_n_; ++i)
@@ -84,6 +85,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
     std::vector<bool> is_infected(nodes+1,false);
     std::stack<int> infected;
     std::stack<int> informed;
+    int num_infected = 0;
     // infected.reserve(nodes/2);
     for (int j: inside)
     {
@@ -117,13 +119,15 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
             #pragma omp atomic   
             ++simulated_activations_.at(k);
           }  
+          ++num_infected;
           infected.push(k);
           informed.push(k);
         }
       } 
     }
-    min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));
-    max_activated_ = std::max(min_activated_, static_cast<int>(informed.size()));
+    infected_by_sim_[i] = num_infected;
+    //min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));
+    //max_activated_ = std::max(min_activated_, static_cast<int>(informed.size()));
   }
   // Normalize
   #pragma omp parallel for reduction(+:num_active)
@@ -278,6 +282,18 @@ HiddenCascade::SetConstantProb(double p)
   {
     entry.second = p;
   }
+}
+
+double
+HiddenCascade::LastVar() const
+{
+  double avg = std::accumulate(infected_by_sim_.cbegin(), infected_by_sim_.cend(), 0.0) / sim_n_; 
+  double err = 0;
+  for(size_t i = 0; i < sim_n_; ++i)
+  {
+      err += (avg - infected_by_sim_[i])*(avg - infected_by_sim_[i]);
+  }
+  return err; 
 }
 
 

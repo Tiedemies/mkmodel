@@ -14,44 +14,6 @@ using namespace graphmodel;
 using namespace simulator;
 
 
-double sum(const std::vector<double>& input)
-{
-  return std::accumulate(input.cbegin(), input.cend(), 0.0);
-}
-
-double avg(const std::vector<double>& input)
-{
-  return sum(input) / input.size();
-}
-
-double w_avg(const std::vector<double>& input, const std::vector<double>& weights)
-{
-  BOOST_ASSERT(input.size() == weights.size());
-  double ws = 0;
-  double div = 0;
-  for (size_t i = 0; i < input.size(); ++i) 
-  {
-    ws += input[i]*weights[i];
-    div += weights[i];
-  }
-  BOOST_ASSERT(div > 0);
-  return ws/div;
-}
-
-double st_error(std::vector<double> input)
-{
-  const int& n = static_cast<int>(input.size());
-  const double& avgs = avg(input);
-  double err = 0.0;
-  #pragma omp parallel for reduction(+:err)
-  for(int i = 0; i <= n-1;++i)
-  {
-      err += (avgs - input[i])*(avgs - input[i]);
-  }
-  err /= (n-1);
-  return std::sqrt(err); 
-}
-
 int main()
 {
   // Initialize a metagraph.      
@@ -79,10 +41,10 @@ int main()
   for (double p = 0.05; p < 1; p += 0.05)
   {
     foo.SetConstantProb(p);
-    double ref_inf = foo.RunTotal(weights);
-    std::cerr << "Ref: " << ref_inf << "\n";
+    auto ref_inf = foo.RunTotal(weights);
+    std::cerr << "Ref: " << ref_inf.first << " std: " << sqrt(ref_inf.second) << "\n";
     auto res = minim.FindMinimalNodeComp();
-    out << p << "," << ref_inf << "," << std::get<2>(res) << "\n";
+    out << p << "," << ref_inf.first << "," <<  sqrt(ref_inf.second) << "," << std::get<2>(res) << "," << std::get<3>(res) << "\n";
     out.flush();
   }
   out.close();

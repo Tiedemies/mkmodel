@@ -170,14 +170,14 @@ namespace simulator
     return togo; 
   }
 
-   double 
+  std::pair<double,double> 
   IndustryCascade::RunTotal()
   {
     std::vector<double> weights(n_comp_,1);
     return RunTotal(weights); 
   }
 
-  double 
+  std::pair<double,double>
   IndustryCascade::RunTotal(const std::vector<double>& weights)
   {
     BOOST_ASSERT(weights.size() == n_comp_);
@@ -187,6 +187,7 @@ namespace simulator
     }    
     double totals = 0;
     double div = 0.0;
+    double var = 0.0; 
     for (int i = 0; i < static_cast<int>(insiders_.size()); ++i)
     {
       // Skip the insiders that empty
@@ -202,9 +203,10 @@ namespace simulator
       hc_.SetSimulationN(n);
       div += n;
       totals+= n*(hc_.Simulate(insiders_.at(i)));
+      var += weights[i]*weights[i]*hc_.LastVar(); 
       BOOST_ASSERT(!std::isnan(totals));
     }
-    return totals/div;
+    return std::make_pair(totals/div,var);
   }
   // std::vector<double> RunSingle(int i);
 
@@ -256,7 +258,7 @@ namespace simulator
     BOOST_ASSERT(true);
     bool was_in = false;
     hc_.SetSimulationN(1); 
-    for(int comp = 0; comp < insiders_.size(); ++comp)
+    for(int comp = 0; comp < (int) insiders_.size(); ++comp)
     {
       for(int d = 0; d < days_; ++d)
       {
@@ -272,7 +274,7 @@ namespace simulator
           hc_.Simulate(insiders_[comp]);
         }
         was_in = in; 
-        for(int node = 0; node < out_trading_prob_.size(); ++node)
+        for(int node = 0; node < (int) out_trading_prob_.size(); ++node)
         {
           if ( (in && std::isnan(in_trading_prob_[node][comp])) || (!in && std::isnan(out_trading_prob_[node][comp])) )
           {
@@ -608,11 +610,11 @@ namespace simulator
     BOOST_ASSERT(0 <= day && day + window_size_ < prices_[comp].size());
     int w = window_size_ + day - 1;
     const double& ref_pr = prices_[comp][day];
-    while (w < prices_[comp].size() && std::isnan(prices_[comp][w]))
+    while (w < (int) prices_[comp].size() && std::isnan(prices_[comp][w]))
     {
       ++w;
     }
-    if (w >= prices_[comp].size())
+    if (w >= (int) prices_[comp].size())
     {
       return false; 
     }
@@ -626,7 +628,7 @@ namespace simulator
     BOOST_ASSERT(vec.size() > 1);
 
     // Case one: It is outside and we extrapolate:
-    if (i >= vec.size())
+    if (i >= (int) vec.size())
     {
       int j = vec.size() - 1;
       while (j > 0 && std::isnan(vec[j]))
@@ -654,7 +656,7 @@ namespace simulator
     {
       --j;
     } 
-    while (k < vec.size() && std::isnan(vec[k]))
+    while (k < (int) vec.size() && std::isnan(vec[k]))
     {
       ++k;
     }
@@ -692,6 +694,12 @@ namespace simulator
     BOOST_ASSERT(0 <= node && node < n_node_);
     BOOST_ASSERT(0 <= comp && comp < n_comp_);
     BOOST_ASSERT(std::find(insiders_.at(comp).begin(), insiders_.at(comp).end(), node) == insiders_.at(comp).end());
+    auto dis_it = std::find(disable_cache_.begin(),disable_cache_.end(), DisableCacheEntry(node,comp));
+    while (dis_it != disable_cache_.end())
+    {
+      disable_cache_.erase(dis_it);
+      dis_it = std::find(disable_cache_.begin(),disable_cache_.end(), DisableCacheEntry(node,comp));
+    }
     // Activate all connections:
     for (int i: insiders_[comp])
     {
@@ -701,7 +709,7 @@ namespace simulator
     insiders_[comp].push_back(node);
   
     // Postcondition: The entry is not in disablecache. 
-    BOOST_ASSERT(std::find(disable_cache_.begin(),disable_cache_.end(), DisableCacheEntry(node,comp)) == disable_cache_.end()  );
+    BOOST_ASSERT(dis_it == disable_cache_.end()  );
   }
 
   void 
@@ -714,7 +722,7 @@ namespace simulator
     {
       if (cache_it->node_ == node)
       {
-        int comp = cache_it->comp_;
+        [[maybe_unused]] int comp = cache_it->comp_;
         auto temp = cache_it;
         ++cache_it;
         disable_cache_.erase(temp);
