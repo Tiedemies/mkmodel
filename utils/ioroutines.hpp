@@ -26,6 +26,7 @@ class IoR
 {
 public: 
   IoR();
+  IoR(const IoR& rhs);
   IoR(int year);
   IoR(bool none);
   ~IoR();

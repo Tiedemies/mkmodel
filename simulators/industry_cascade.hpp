@@ -13,6 +13,12 @@
 #include<map>
 #include<vector>
 #include<set>
+#include<list>
+
+namespace algorithm
+{
+  class InfluenceMinimizer;
+}
 
 namespace simulator
 {
@@ -27,12 +33,22 @@ class IndustryCascade
   public:
     IndustryCascade(HiddenCascade h);
     IndustryCascade(int date, int days = 365);
+    // Copy constructor:
+    IndustryCascade(const IndustryCascade& rhs);
     ~IndustryCascade();
-    std::vector<double> RunTotal();
+    double RunTotal();
+    double RunTotal(const std::vector<double>& weights);
     std::vector<double> RunSingle(int i);
     void RandomizeCoefs(double mu);
+    std::vector<double> GetSimulationWeights();
     void SetSimulationCoef(int n);
+    void SetConstantProb(double p);
     void RunDiagnostics(); 
+    void DeactivateFromInside(int node, int comp);
+    void ReactivateInside(int node, int comp);
+    void ReactivateInside(int node);
+    void ReactivateInside();
+    bool IsCached(int node, int comp);
    
     struct Transaction
     {
@@ -49,7 +65,7 @@ class IndustryCascade
 
     // Check if the prices is rising (true) or dropping (false). 
     bool IsBear(int comp, int day);
-    friend class InfluenceMinimizer; 
+    friend class algorithm::InfluenceMinimizer; 
 
   private:
     void InitializeFoo();
@@ -81,6 +97,16 @@ class IndustryCascade
     std::vector<std::vector<double>> in_trading_prob_;
     std::vector<int> n_in_days_;
     std::vector<int> n_out_days_;
+    
+    struct DisableCacheEntry
+    {
+      int node_; 
+      int comp_;
+      DisableCacheEntry(int node, int comp): node_(node), comp_(comp) {};
+      bool operator==(const DisableCacheEntry& rhs) const { return rhs.node_ == node_ && rhs.comp_ == comp_; };  
+    };
+
+    std::list<DisableCacheEntry> disable_cache_; 
 };
 
 // Helper functions

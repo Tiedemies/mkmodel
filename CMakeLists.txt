@@ -62,4 +62,5 @@ target_link_libraries(vaccinator
     graphmodel
     hidden_cascade
     industry_cascade
+    vacc_minimizer
 )

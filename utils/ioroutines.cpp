@@ -69,6 +69,27 @@ IoR::IoR()
   std::cerr << "metagraph created\n";
 }
 
+IoR::IoR(const IoR& rhs):
+max_com_(rhs.max_com_), 
+max_tra_(rhs.max_tra_),
+years_(rhs.years_),
+trade_days_(rhs.trade_days_),
+isin_set_(rhs.isin_set_),
+cnames_(rhs.cnames_),
+cids_(rhs.cids_),
+isin_company_(rhs.isin_company_),
+an_table_(rhs.an_table_),
+relativemap_(rhs.relativemap_),
+metag_(rhs.metag_), 
+nodedict_(rhs.nodedict_),
+nodeinvdict_(rhs.nodeinvdict_),
+dateindex_(rhs.dateindex_),
+an_dates_(rhs.an_dates_),
+announcements_(rhs.announcements_)
+{
+  // void
+}
+
 IoR::IoR(bool none)
 {
   // void

@@ -113,9 +113,10 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
         if (IsSuccess(j,k))
         {
           is_infected.at(k) = true;
-          #pragma omp atomic   
-          ++simulated_activations_.at(k);
-         
+          {
+            #pragma omp atomic   
+            ++simulated_activations_.at(k);
+          }  
           infected.push(k);
           informed.push(k);
         }
@@ -128,7 +129,10 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   #pragma omp parallel for reduction(+:num_active)
   for(size_t i = 0; i < simulated_activations_.size(); ++i)
   {
-    simulated_activations_[i] /= sim_n_;
+    {
+      #pragma omp atomic
+      simulated_activations_[i] /= sim_n_;
+    }
     num_active += simulated_activations_[i];
   }
   BOOST_ASSERT(!std::isnan(num_active));
@@ -186,10 +190,14 @@ HiddenCascade::DeactivateConnection(int u, int v)
 void 
 HiddenCascade::ActivateConnection(int u, int v, double p)
 {
+  auto p_it = p_map_.find(Key(u,v));
   // If p  is not given it is negative, and then it is assumed to be the uniform probability
   if (p < 0) 
   {
-    p = uni_p_;
+    if (p_it == p_map_.end())
+    {
+      p = uni_p_;
+    }
   }
   // Add the element to the adjacency lists
   auto &z = adj_.at(u);
@@ -202,9 +210,12 @@ HiddenCascade::ActivateConnection(int u, int v, double p)
   {
     w.push_back(u);
   }
-  // Give them the probability
-  p_map_[Key(u,v)] = p;
-  p_map_[Key(v,u)] = p;
+  // Give them the probability unless it exists in which case you reactivate:
+  if (p >= 0 && p <= 1)
+  {
+    p_map_[Key(u,v)] = p;
+    p_map_[Key(v,u)] = p;
+  }
 }
 
 void
@@ -245,4 +256,29 @@ HiddenCascade::GetN() const
 {
   return adj_.size();
 }
+
+void 
+HiddenCascade::DeactivateNode(int n)
+{
+  disabled_.insert(n);
+}
+
+void 
+HiddenCascade::ReactivateNode(int n)
+{
+  disabled_.erase(n);
+}
+
+void 
+HiddenCascade::SetConstantProb(double p)
+{
+  BOOST_ASSERT(p >= 0.0);
+  BOOST_ASSERT(p <= 1.0);
+  for (auto& entry: p_map_)
+  {
+    entry.second = p;
+  }
+}
+
+
 }

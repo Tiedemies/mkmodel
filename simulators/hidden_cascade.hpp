@@ -13,6 +13,12 @@
 #include<vector>
 #include<set>
 
+// Forward declaration
+namespace algorithm
+{
+  class InfluenceMinimizer;
+}
+
 namespace simulator
 {
     using namespace graphmodel;
@@ -39,17 +45,22 @@ class HiddenCascade
     // Maximum  and  minimum number of activated nodes in a sim
         int GetMaxActivated() const;
         int GetMinActivated() const;
+    // Deactivate or "vaccinate" a given node:
+        void DeactivateNode(int u);
+    // Re-activate node:
+        void ReactivateNode(int u);
     // Deactivate a given connection from u to v
         void DeactivateConnection(int u, int v);
     // Re-acticate the connection, given a probability (default probability if not given)
         void ActivateConnection(int u, int v, double p = -1);
     // Randomize connection weights to expected value/deviation. 
         void RandomizeWeights(double mu, double sigma = -1);
+        void SetConstantProb(double p);
     // Get number of nodes
         int GetN() const;
 
         friend class IndustryCascade; 
-        friend class InfluenceMinimizer;
+        friend class algorithm::InfluenceMinimizer;
   
     private:
         inline size_t Key(const int& u, const int& v) const;
