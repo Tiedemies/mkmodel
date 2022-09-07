@@ -1,8 +1,8 @@
 #ifndef H_RANDOM
 #define H_RANDOM
 
-#include<random>
-#include<boost/random.hpp>
+#include <random>
+#include <boost/random.hpp>
 #include <boost/math/distributions.hpp>
 #include <boost/math/distributions/beta.hpp>
 
@@ -33,7 +33,7 @@ class NormalRandom
 class BetaRandom
 {
   typedef boost::random::mt19937 RNDGenerator;
-  typedef boost::random::beta_distribution<> BDist;
+  typedef boost::math::beta_distribution<> BDist;
   public:
     BetaRandom() = delete;
     BetaRandom(double a, double b);
@@ -42,6 +42,7 @@ class BetaRandom
   private:
     BDist dist_;
     RNDGenerator rand_gen_;
+    std::uniform_real_distribution<double> dis1_;
 };
 }
 #endif

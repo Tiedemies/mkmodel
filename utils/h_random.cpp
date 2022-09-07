@@ -41,6 +41,7 @@ BetaRandom::BetaRandom(double a, double b)
   BOOST_ASSERT(b > 0);
   dist_ = BDist(a,b);
   rand_gen_ = RNDGenerator(2018);
+  dis1_ = std::uniform_real_distribution<double>(0,1);
 }
 
 BetaRandom::~BetaRandom()
@@ -50,6 +51,6 @@ BetaRandom::~BetaRandom()
 
 double BetaRandom::get()
 {
-    return dist_(rand_gen_);
+    return boost::math::quantile(dist_, dis1_(rand_gen_));
 }
 }
