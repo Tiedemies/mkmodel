@@ -4,6 +4,7 @@
 #include<random>
 #include<boost/random.hpp>
 #include <boost/math/distributions.hpp>
+#include <boost/math/distributions/beta.hpp>
 
 namespace util{
 // Global random generator

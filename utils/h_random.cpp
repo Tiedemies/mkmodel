@@ -1,6 +1,7 @@
 #include<random>
 #include "h_random.hpp"
 #include <boost/math/distributions.hpp>
+#include <boost/math/distributions/beta.hpp>
 
 namespace util
 {
