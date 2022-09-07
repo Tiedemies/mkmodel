@@ -163,6 +163,7 @@ namespace simulator
   IndustryCascade::GetSimulationWeights()
   {
     std::vector<double> togo;
+    double div = 0;
     for (int i = 0; i < static_cast<int>(insiders_.size()); ++i)
     {
       togo.push_back((double) num_announcements_[i]);
@@ -188,6 +189,7 @@ namespace simulator
     double totals = 0;
     double div = 0.0;
     double var = 0.0; 
+    double normalizer = std::accumulate(weights.cbegin(), weights.cend(),0.0);
     for (int i = 0; i < static_cast<int>(insiders_.size()); ++i)
     {
       // Skip the insiders that empty
@@ -203,7 +205,8 @@ namespace simulator
       hc_.SetSimulationN(n);
       div += n;
       totals+= n*(hc_.Simulate(insiders_.at(i)));
-      var += weights[i]*weights[i]*hc_.LastVar(); 
+      double a = weights[i]/normalizer;
+      var += a*a*hc_.LastVar(); 
       BOOST_ASSERT(!std::isnan(totals));
     }
     return std::make_pair(totals/div,var);

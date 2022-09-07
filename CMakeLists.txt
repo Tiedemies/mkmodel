@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.0.0)
-project(MkModel VERSION 0.1.0)
+#cmake_minimum_required(VERSION 2.8.12)
+#project(MkModel VERSION 0.1.0)
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
@@ -13,13 +13,13 @@ ENDIF()
 set(CMAKE_INSTALL_PREFIX .)
 
 if(CMAKE_BUILD_TYPE MATCHES "Release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -pedantic -std=gnu++17 -fopenmp -DNDEBUG")
-  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wall -O3 -fopenmp -lboost_date_time -std=gnu++17")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -pedantic -std=gnu++11 -fopenmp -DNDEBUG")
+  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wall -O3 -fopenmp -lboost_date_time -std=gnu++11")
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g3 -pedantic -std=gnu++17 -fopenmp")
-  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -lboost_date_time -std=gnu++17")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g3 -pedantic -std=gnu++11 -fopenmp")
+  SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -lboost_date_time -std=gnu++11")
 endif()
 
 

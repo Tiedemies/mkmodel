@@ -291,8 +291,9 @@ HiddenCascade::LastVar() const
   double err = 0;
   for(size_t i = 0; i < sim_n_; ++i)
   {
-      err += (avg - infected_by_sim_[i])*(avg - infected_by_sim_[i]);
+      err += (avg - infected_by_sim_[i])*(avg - infected_by_sim_[i]) / (sim_n_- 1);
   }
+  std::cerr << "Variance :" << err << " with ste " << sqrt(err) << " and avg " << avg << "\n";
   return err; 
 }
 
