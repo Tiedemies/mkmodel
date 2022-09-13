@@ -126,19 +126,18 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
       } 
     }
     infected_by_sim_[i] = num_infected;
+    //std::cerr << "Simulated: " << num_infected << "\n";
     //min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));
     //max_activated_ = std::max(min_activated_, static_cast<int>(informed.size()));
   }
+  // std::cerr << "complete\n";
   // Normalize
-  #pragma omp parallel for reduction(+:num_active)
+  #pragma omp parallel for
   for(size_t i = 0; i < simulated_activations_.size(); ++i)
   {
-    {
-      #pragma omp atomic
-      simulated_activations_[i] /= sim_n_;
-    }
-    num_active += simulated_activations_[i];
+    simulated_activations_[i] /= sim_n_;
   }
+  num_active = std::accumulate(simulated_activations_.begin(), simulated_activations_.end(), 0.0);
   BOOST_ASSERT(!std::isnan(num_active));
   return num_active;
 }
@@ -293,7 +292,7 @@ HiddenCascade::LastVar() const
   {
       err += (avg - infected_by_sim_[i])*(avg - infected_by_sim_[i]) / (sim_n_- 1);
   }
-  std::cerr << "Variance :" << err << " with ste " << sqrt(err) << " and avg " << avg << "\n";
+  // std::cerr << "Variance :" << err << " with ste " << sqrt(err) << " and avg " << avg << "\n";
   return err; 
 }
 
