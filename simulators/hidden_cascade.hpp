@@ -33,6 +33,8 @@ class HiddenCascade
         ~HiddenCascade();
     // Simulate. 
         double Simulate(const std::vector<int>& inside);
+    // Enhanced Simulate. 
+        double SimulateEnc(const std::vector<int>& inside);
     // Change parameters: 
         void SetTradingProp(const std::vector<double>& props);
         void SetExpectedVolumes(const std::vector<double>& vols);

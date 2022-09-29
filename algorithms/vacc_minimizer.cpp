@@ -81,7 +81,50 @@ namespace algorithm
     return std::make_tuple(min_node, min_comp, min_influence, min_var);
   }
 
-
+  /* Find a minimal node */
+  std::set<std::tuple<int,int>> 
+  InfluenceMinimizer::MinizeDiffBetween(int n)
+  {
+    // Precondition
+    BOOST_ASSERT(ind_.hc_.GetN() > 0);
+    
+    int min_node = -1;
+    int min_comp = -1;
+    int max_node = -1;
+    int max_comp = -1;
+    double min_influence = std::numeric_limits<double>::max();
+    double max_influence = std::numeric_limits<double>::min();
+    double min_var = 0.0;
+    /* Find the node */
+    int simcount = 0;
+    const auto weights = ind_.GetSimulationWeights();
+    for (int comp = 0; comp < ind_.n_comp_;++comp)
+    {
+      for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
+      {
+        int node = *node_it; 
+        ind_.DeactivateFromInside(node,comp);
+        auto res_pair = ind_.RunTotal(weights);
+        const double& inf = res_pair.first;
+        ind_.ReactivateInside();
+        if (inf < min_influence)
+        {
+          min_influence = inf;
+          min_node = node;
+          min_comp = comp; 
+          min_var = res_pair.second;
+        }
+        if (inf > max_influence)
+        {
+          max_influence = inf;
+          max_node = node;
+          max_comp = comp; 
+        }
+        std::cerr << ++simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
+      }
+     
+    }
+  }
 
 }
 // DoneInfluenceMinimizer
