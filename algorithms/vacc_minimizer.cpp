@@ -45,6 +45,7 @@ namespace algorithm
     /* Find the node */
     int simcount = 0;
     const auto weights = ind_.GetSimulationWeights();
+    #pragma omp parallel for shared(min_node, min_comp, max_node, max_comp, min_influence, max_influence)
     for (int comp = 0; comp < ind_.n_comp_;++comp)
     {
       for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
@@ -54,6 +55,8 @@ namespace algorithm
         auto res_pair = ind_.RunTotal(weights);
         const double& inf = res_pair.first;
         ind_.ReactivateInside();
+        #pragma omp critical
+        {
         if (inf < min_influence)
         {
           min_influence = inf;
@@ -61,13 +64,21 @@ namespace algorithm
           min_comp = comp; 
           min_var = res_pair.second;
         }
+        }
+
+        #pragma omp critical
+        {
         if (inf > max_influence)
         {
           max_influence = inf;
           max_node = node;
           max_comp = comp; 
         }
-        std::cerr << ++simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
+        }
+        #pragma omp atomic
+        ++simcount; 
+
+        std::cerr << simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
       }
      
     }
