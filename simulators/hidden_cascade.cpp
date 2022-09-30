@@ -76,10 +76,10 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   size_t nodes = simulated_activations_.size();
   //max_activated_ = 0;
   //min_activated_ = simulated_activations_.size();
-  std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
-  infected_by_sim_ = std::vector<int>(sim_n_, 0);
+  // std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
+  // infected_by_sim_ = std::vector<int>(sim_n_, 0);
   double num_active = 0;
-  #pragma omp parallel for shared(simulated_activations_)
+  #pragma omp parallel for shared(num_active)
   for (size_t i = 0; i < sim_n_; ++i)
   {
     std::vector<bool> is_infected(nodes+1,false);
@@ -115,23 +115,26 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
         if (IsSuccess(j,k))
         {
           is_infected.at(k) = true;
+          // #atomic
           {
-            #pragma omp atomic   
-            ++simulated_activations_.at(k);
+            #pragma omp atomic update
+            ++num_active;
+            // ++simulated_activations_.at(k);
           }  
-          ++num_infected;
+          //++num_infected;
           infected.push(k);
           informed.push(k);
         }
       } 
     }
-    infected_by_sim_[i] = num_infected;
+    // infected_by_sim_[i] = num_infected;
     //std::cerr << "Simulated: " << num_infected << "\n";
     //min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));
     //max_activated_ = std::max(min_activated_, static_cast<int>(informed.size()));
   }
   // std::cerr << "complete\n";
   // Normalize
+  /*
   #pragma omp parallel for
   for(size_t i = 0; i < simulated_activations_.size(); ++i)
   {
@@ -139,7 +142,8 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   }
   num_active = std::accumulate(simulated_activations_.begin(), simulated_activations_.end(), 0.0);
   BOOST_ASSERT(!std::isnan(num_active));
-  return num_active;
+  */
+  return num_active / sim_n_;
 }
 
 // Calculte a single success over a connection. 
@@ -286,6 +290,7 @@ HiddenCascade::SetConstantProb(double p)
 double
 HiddenCascade::LastVar() const
 {
+  return 0;
   double avg = std::accumulate(infected_by_sim_.cbegin(), infected_by_sim_.cend(), 0.0) / sim_n_; 
   double err = 0;
   for(size_t i = 0; i < sim_n_; ++i)

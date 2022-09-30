@@ -24,7 +24,7 @@ void GenerateRawGraphs(IndustryCascade& ind, const double& p0, const double& pn,
   std::ofstream out;
   out.open(filename);
   const std::vector<double> weights = ind.GetSimulationWeights();
-
+  std::cerr << "Starting the simulation cycles \n";
   for (double p = p0; p <= pn; p += (pn -p0)/n)
   {
     ind.SetConstantProb(p);
