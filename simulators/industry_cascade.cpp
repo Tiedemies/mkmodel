@@ -207,7 +207,7 @@ namespace simulator
       div += n;
       totals+= n*(hc_.Simulate(insiders_.at(i)));
       double a = weights[i]/normalizer;
-      var += a*a*hc_.LastVar(); 
+      // var += a*a*hc_.LastVar(); 
       BOOST_ASSERT(!std::isnan(totals));
     }
     return std::make_pair(totals/div,var);

@@ -84,7 +84,6 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   {
     std::vector<bool> is_infected(nodes+1,false);
     std::stack<int> infected;
-    std::stack<int> informed;
     int num_infected = 0;
     // infected.reserve(nodes/2);
     for (int j: inside)
@@ -95,7 +94,6 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
         infected.push(j);
       } 
       is_infected.at(j) = true;
-      informed.push(j);
     }
     for (int j: disabled_)
     {
@@ -115,18 +113,13 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
         if (IsSuccess(j,k))
         {
           is_infected.at(k) = true;
-          // #atomic
-          {
-            #pragma omp atomic update
-            ++num_active;
-            // ++simulated_activations_.at(k);
-          }  
-          //++num_infected;
           infected.push(k);
-          informed.push(k);
+          ++num_infected;
         }
       } 
     }
+    #pragma omp atomic update
+    num_active += num_infected; 
     // infected_by_sim_[i] = num_infected;
     //std::cerr << "Simulated: " << num_infected << "\n";
     //min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));

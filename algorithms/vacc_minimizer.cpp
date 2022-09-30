@@ -45,7 +45,6 @@ namespace algorithm
     /* Find the node */
     int simcount = 0;
     const auto weights = ind_.GetSimulationWeights();
-    #pragma omp parallel for shared(min_node, min_comp, max_node, max_comp, min_influence, max_influence)
     for (int comp = 0; comp < ind_.n_comp_;++comp)
     {
       for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
