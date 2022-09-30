@@ -190,6 +190,7 @@ namespace simulator
     double div = 0.0;
     double var = 0.0; 
     double normalizer = std::accumulate(weights.cbegin(), weights.cend(),0.0);
+    std::cerr << "Starting insider cycle\n";
     for (int i = 0; i < static_cast<int>(insiders_.size()); ++i)
     {
       // Skip the insiders that empty
