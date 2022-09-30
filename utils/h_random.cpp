@@ -2,12 +2,14 @@
 #include "h_random.hpp"
 #include <boost/math/distributions.hpp>
 #include <boost/math/distributions/beta.hpp>
+#include <chrono>
 
 namespace util
 {
 Random::Random()
 {
   dis_ = std::uniform_real_distribution<double>(0,1);
+  gen_.seed(std::chrono::system_clock::now().time_since_epoch().count());
 }
 
 Random::~Random()
