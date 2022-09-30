@@ -82,11 +82,12 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   #pragma omp parallel for shared(num_active)
   for (size_t i = 0; i < sim_n_; ++i)
   {
+    Random rnd;
     std::vector<bool> is_infected(nodes+1,false);
     std::stack<int> infected;
     int num_infected = 0;
     // infected.reserve(nodes/2);
-    for (int j: inside)
+    for (const int j: inside)
     {
       //deriv[j] = 0;
       if(!is_disabled_.at(j))
@@ -95,7 +96,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
       } 
       is_infected.at(j) = true;
     }
-    for (int j: disabled_)
+    for (const int j: disabled_)
     {
       is_infected.at(j) = true; 
     }
@@ -103,14 +104,14 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
     {
       const int j = infected.top(); 
       infected.pop(); 
-      for (auto l = adj_.at(j).begin(); l != adj_.at(j).end(); ++l)
+      for (auto l = adj_.at(j).cbegin(); l != adj_.at(j).cend(); ++l)
       {
         const int& k = *l; 
         if (is_infected.at(k))
         {
           continue;
         }
-        if (IsSuccess(j,k))
+        if (IsSuccess(j,k,rnd))
         {
           is_infected.at(k) = true;
           infected.push(k);
@@ -141,9 +142,9 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
 
 // Calculte a single success over a connection. 
 bool
-HiddenCascade::IsSuccess(const int& u, const int& v) const
+HiddenCascade::IsSuccess(const int& u, const int& v, Random& rnd) const
 {
-  return (p_map_.at(Key(u,v)) - rnd_.get() > 0);
+  return (p_map_.at(Key(u,v)) - rnd.get() > 0);
 }
 
 
