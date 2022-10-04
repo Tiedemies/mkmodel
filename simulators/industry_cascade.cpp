@@ -31,7 +31,7 @@ namespace simulator
     //void
   }
 
-  IndustryCascade::IndustryCascade(int tdate, int days): simulation_coefficient_(20), window_size_(7), date_(tdate), days_(days), n_node_(-1), n_comp_(-1), 
+  IndustryCascade::IndustryCascade(int tdate, int days): simulation_coefficient_(100), window_size_(7), date_(tdate), days_(days), n_node_(-1), n_comp_(-1), 
     def_p_(0.1), foo_(tdate), hc_(HiddenCascade(foo_.GetGraph(tdate),def_p_,def_p_,def_p_))
   {
     using namespace boost::gregorian; 
