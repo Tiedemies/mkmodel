@@ -22,6 +22,7 @@
 #include "boost/date_time/gregorian/gregorian.hpp"
 
 
+
 namespace simulator
 {
   using namespace util;
@@ -32,7 +33,7 @@ namespace simulator
   }
 
   IndustryCascade::IndustryCascade(int tdate, int days): simulation_coefficient_(100), window_size_(7), date_(tdate), days_(days), n_node_(-1), n_comp_(-1), 
-    def_p_(0.1), foo_(tdate), hc_(HiddenCascade(foo_.GetGraph(tdate),def_p_,def_p_,def_p_))
+    def_p_(0.1), foo_(tdate), hc_(HiddenCascade(foo_.GetGraph(tdate),def_p_,def_p_,def_p_) )
   {
     using namespace boost::gregorian; 
     date ref_time(from_simple_string(REFDAY));
@@ -207,10 +208,10 @@ namespace simulator
       div += n;
       totals+= n*(hc_.Simulate(insiders_.at(i)));
       double a = weights[i]/normalizer;
-      // var += a*a*hc_.LastVar(); 
+      var += a*a*hc_.LastVar(); 
       BOOST_ASSERT(!std::isnan(totals));
     }
-    return std::make_pair(totals/div,var);
+    return std::make_pair(totals/div,sqrt(var));
   }
   // std::vector<double> RunSingle(int i);
 
@@ -754,5 +755,115 @@ namespace simulator
   {
     hc_.SetConstantProb(p);
   }
+
+const std::vector<double>& 
+IndustryCascade::GetCompCentrality()
+{
+  if (comp_adj_.size() != n_comp_)
+  {
+    InitializeCompAdj();
+  }
+  // Precondition
+  if (comp_centrality_.size() != n_comp_)
+  {
+    comp_centrality_.resize(n_comp_, 0);
+
+    std::vector<std::list<int>> P(n_comp_);
+    for (int s = 0; s < n_comp_; ++s)
+    {
+      std::list<int> S;
+      std::vector<std::list<int>> P(n_comp_);
+      std::list<int> Q; 
+      std::vector<double> sigma(n_comp_,0);
+      std::vector<int> d(n_comp_, -1);
+      d[s] = 0;
+      sigma[s] = 1.0; 
+      Q.push_back(s);
+      while (!Q.empty())
+      {
+        int u = Q.front();
+        Q.pop_front();
+        S.push_back(u);
+        for (int v: comp_adj_[u])
+        {
+          if (d[v] < 0)
+          {
+            d[v] = d[u] + 1;
+            Q.push_back(v);
+          }
+          if (d[v] == d[u] + 1)
+          { 
+            sigma[v] = sigma[v] + sigma[u];
+            P[v].push_back(u);
+          } 
+        }
+      }
+      std::vector<double> delta(n_comp_,0.0);
+      while(!S.empty())
+      {
+        // How many from s to w 
+        int w = S.back();
+        S.pop_back();
+        for (int v: P[w])
+        {
+          delta[v] = delta[v] + (sigma[v]/sigma[w])*(1 + delta[w]);
+        }
+        if(w != s)
+        {
+          comp_centrality_[w] = comp_centrality_[w] + delta[w];
+        }
+      }
+    }
+  }
+  return comp_centrality_; 
+}
+
+void
+IndustryCascade::InitializeCompAdj()
+{
+  BOOST_ASSERT(true);
+  // Precondition.
+  comp_adj_.resize(n_comp_);
+  for (int i = 0; i < n_comp_-1; ++i)
+  {
+    std::set<int> adjs(insiders_[i].begin(), insiders_[i].end());
+    for (int j = i+1; j < n_comp_; ++j)
+    {
+      for (int v: insiders_[j])
+      {
+        if (adjs.find(v) != adjs.end())
+        {
+          comp_adj_[i].push_back(j);
+          comp_adj_[j].push_back(i);
+          break;
+        }
+      }    
+    }
+  }
+}
+
+void 
+IndustryCascade::GraphDiagnostics(std::ostream& out)
+{
+  const auto& comp_c = GetCompCentrality();
+  const auto& node_c = hc_.GetNodeCentrality();
+  out << "* diagnostic start *\n";
+  out.flush();
+
+  for (int i = 0; i < n_comp_; ++i)
+  {
+    out << "comp: " << i << " centrality: " << comp_c.at(i) << "\n";
+    out.flush(); 
+  } 
+  out << "*** \n"; 
+  for (int i = 0; i < n_node_; ++i)
+  {
+    out << "Node: " << i << " centrality: " << node_c.at(i) << "\n";
+    out.flush(); 
+  } 
+
+  
+  return;
+}
 
 }

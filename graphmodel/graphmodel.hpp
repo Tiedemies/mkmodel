@@ -25,7 +25,7 @@ public:
   void ReadInsiders(std::ifstream& in);
   void ReadBoardMembers(std::ifstream& in);
   std::set<int> GetInsider(int k) const; 
-  std::set<int> GetInsiderOf(int i);
+  std::set<int> GetInsiderOf(int i) const;
   std::set<int> GetBoard(int k); 
   std::set<int> GetBoardOf(int i); 
   std::set<int> GetMaxComp(std::vector<int> input) const;

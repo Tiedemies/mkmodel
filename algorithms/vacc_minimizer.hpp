@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <random>
+#include <iostream>
 
 namespace algorithm
 {
@@ -24,6 +25,8 @@ namespace algorithm
       // Find single minimal node. 
       std::tuple<int,int,double,double> FindMinimalNodeComp();
       std::set<std::tuple<int,int>> MinizeDiffBetween(int n);
+
+      void DiagnoseBetweenMinimal(std::ostream& = std::cerr);
     private:
       simulator::IndustryCascade& ind_; 
   };

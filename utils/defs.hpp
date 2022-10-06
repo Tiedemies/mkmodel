@@ -201,6 +201,24 @@ double st_error(std::vector<double> input)
 }
 */ 
 
+class NLargest
+{
+  public:
+    NLargest() = delete;
+    NLargest(int n);
+    ~NLargest();
+    void Insert(int i, double v);
+    const std::vector<int>& GetIndeces() const;
+    const std::vector<double>& GetValues() const; 
+    std::pair<int,double> PopSmallest(); 
+  private:
+    void BuildHeap();
+    void Heapify(int cur = 0); 
+    const int n_; 
+    std::vector<double> values_;
+    std::vector<int> indices_;
+};
+
 }
 
 #endif

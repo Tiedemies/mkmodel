@@ -14,6 +14,7 @@ using namespace graphmodel;
 using namespace simulator;
 
 #define RAWGRAPHFILE "plot_output_raw.csv"
+#define DIAGNOSTICSFILE "optimization_diagnostics.txt"
 
 
 void GenerateRawGraphs(IndustryCascade& ind, const double& p0, const double& pn, const int& n)
@@ -49,17 +50,28 @@ int main()
   zed.ReadNodeDictionary();
   zed.ReadAnnouncements();
   */
+
+  std::ofstream out;
+  out.open(DIAGNOSTICSFILE);
+
   std::cerr << "Intialize IndustryCascade for " << VREFDATE << "\n";
   IndustryCascade foo(VREFDATE);
-  std::cerr << "all created.\nStarting minimization procedure.";
 
+  std::cerr << " Running initial diagnostics \n";
+  foo.GraphDiagnostics(out);
+
+  std::cerr << "Running singleton influence check";
+
+  
   // Start timing.
   auto start = std::chrono::high_resolution_clock::now(); 
-  
-  GenerateRawGraphs(foo, 0.05, 0.99, 15);
+  foo.SetConstantProb(0.2);
+  algorithm::InfluenceMinimizer minim(foo);
+
+  minim.DiagnoseBetweenMinimal(out);
 
   auto stop = std::chrono::high_resolution_clock::now(); 
   double count = std::chrono::duration<double>(stop-start).count();
-  std::cerr << "Raw Graph Minimization  took " << count << "s \n";
+  std::cerr << "Singleton influence check took " << count << "s \n";
   return 0;
 }

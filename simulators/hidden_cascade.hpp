@@ -63,6 +63,8 @@ class HiddenCascade
     // Query the latest variation of nodes 
         double LastVar() const;
 
+        const std::vector<double>& GetNodeCentrality();
+
         friend class IndustryCascade; 
         friend class algorithm::InfluenceMinimizer;
   
@@ -86,6 +88,8 @@ class HiddenCascade
         int min_activated_; 
 
         std::vector<int> infected_by_sim_; 
+        std::vector<double> node_centrality_;
+    
 
 };
 }

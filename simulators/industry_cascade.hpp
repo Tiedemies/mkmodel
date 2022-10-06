@@ -44,11 +44,14 @@ class IndustryCascade
     void SetSimulationCoef(int n);
     void SetConstantProb(double p);
     void RunDiagnostics(); 
+    void GraphDiagnostics(std::ostream& = std::cerr);
     void DeactivateFromInside(int node, int comp);
     void ReactivateInside(int node, int comp);
     void ReactivateInside(int node);
     void ReactivateInside();
     bool IsCached(int node, int comp);
+    const std::vector<double>& GetNodeCentrality();
+    const std::vector<double>& GetCompCentrality(); 
    
     struct Transaction
     {
@@ -74,6 +77,8 @@ class IndustryCascade
     void InitializeTransactions();
     void InitializeProbabilities(); 
     void InitializePrices(); 
+
+    void InitializeCompAdj();
     int simulation_coefficient_; 
     int window_size_;
     int date_; 
@@ -107,6 +112,8 @@ class IndustryCascade
     };
 
     std::list<DisableCacheEntry> disable_cache_; 
+    std::vector<double> comp_centrality_; 
+    std::vector<std::vector<int>> comp_adj_; 
 };
 
 // Helper functions

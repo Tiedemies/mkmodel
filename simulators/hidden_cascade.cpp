@@ -77,7 +77,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   //max_activated_ = 0;
   //min_activated_ = simulated_activations_.size();
   // std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
-  // infected_by_sim_ = std::vector<int>(sim_n_, 0);
+  infected_by_sim_ = std::vector<int>(sim_n_, 0);
   double num_active = 0;
   #pragma omp parallel for shared(num_active)
   for (size_t i = 0; i < sim_n_; ++i)
@@ -121,7 +121,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
     }
     #pragma omp atomic update
     num_active += num_infected; 
-    // infected_by_sim_[i] = num_infected;
+    infected_by_sim_[i] = num_infected;
     //std::cerr << "Simulated: " << num_infected << "\n";
     //min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));
     //max_activated_ = std::max(min_activated_, static_cast<int>(informed.size()));
@@ -284,8 +284,8 @@ HiddenCascade::SetConstantProb(double p)
 double
 HiddenCascade::LastVar() const
 {
-  return 0;
-  /*
+  //return 0;
+  
   double avg = std::accumulate(infected_by_sim_.cbegin(), infected_by_sim_.cend(), 0.0) / sim_n_; 
   double err = 0;
   for(size_t i = 0; i < sim_n_; ++i)
@@ -294,8 +294,72 @@ HiddenCascade::LastVar() const
   }
   // std::cerr << "Variance :" << err << " with ste " << sqrt(err) << " and avg " << avg << "\n";
   return err;
-  */ 
+  
 }
 
+const std::vector<double>& 
+HiddenCascade::GetNodeCentrality()
+{
+  // Precondition
+  if (node_centrality_.size() != adj_.size())
+  {
+    int n = (int) adj_.size();
+    node_centrality_.resize(n, 0);
+
+    std::vector<std::list<int>> P(n);
+    for (int s = 0; s < n; ++s)
+    {
+      std::list<int> S;
+      std::vector<std::list<int>> P(n);
+      std::list<int> Q; 
+      std::vector<double> sigma(n,0);
+      std::vector<int> d(n, -1);
+      d[s] = 0;
+      sigma[s] = 1.0; 
+      Q.push_back(s);
+      while (!Q.empty())
+      {
+        int u = Q.front();
+        Q.pop_front();
+        S.push_back(u);
+        const auto adj_u = adj_[u];
+        if (adj_u.empty())
+        {
+          // no neighbours
+          continue;
+        }
+        for (int v: adj_u)
+        {
+          if (d[v] < 0)
+          {
+            d[v] = d[u] + 1;
+            Q.push_back(v);
+          }
+          if (d[v] == d[u] + 1)
+          { 
+            sigma[v] = sigma[v] + sigma[u];
+            P[v].push_back(u);
+          } 
+        }
+      }
+      std::vector<double> delta(n,0.0);
+      while(!S.empty())
+      {
+        // How many from s to w 
+        int w = S.back();
+        S.pop_back();
+        for (int v: P[w])
+        {
+          delta[v] = delta[v] + (sigma[v]/sigma[w])*(1 + delta[w]);
+        }
+        if(w != s)
+        {
+          node_centrality_[w] = node_centrality_[w] + delta[w];
+        }
+      }
+    }
+  }
+  return node_centrality_; 
+}
 
 }

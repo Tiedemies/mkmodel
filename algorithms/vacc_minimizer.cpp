@@ -91,9 +91,26 @@ namespace algorithm
     return std::make_tuple(min_node, min_comp, min_influence, min_var);
   }
 
-  /* Find a minimal node */
+  /* Find a minimal node/comp using betweenness-heuristics  */
   std::set<std::tuple<int,int>> 
   InfluenceMinimizer::MinizeDiffBetween(int n)
+  {
+    // Precondition
+    BOOST_ASSERT(ind_.hc_.GetN() > 0);
+    const auto weights = ind_.GetSimulationWeights();
+    std::set<std::tuple<int,int>> togo;
+
+    // TODO ACTUAL IMPLEMENTATION 
+
+    //Postcondition
+    BOOST_ASSERT(togo.size() == n);
+    return togo;
+  }
+
+
+  // DIagnostic minimization procedure
+  void
+  InfluenceMinimizer::DiagnoseBetweenMinimal(std::ostream& out)
   {
     // Precondition
     BOOST_ASSERT(ind_.hc_.GetN() > 0);
@@ -106,34 +123,32 @@ namespace algorithm
     double max_influence = std::numeric_limits<double>::min();
     double min_var = 0.0;
     /* Find the node */
+    out << "**** \n";
     int simcount = 0;
     const auto weights = ind_.GetSimulationWeights();
     for (int comp = 0; comp < ind_.n_comp_;++comp)
     {
+      out << comp << ";";
       for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
       {
+        if (node_it != ind_.insiders_.at(comp).begin())
+        {
+          out << " , ";
+        }
         int node = *node_it; 
         ind_.DeactivateFromInside(node,comp);
         auto res_pair = ind_.RunTotal(weights);
         const double& inf = res_pair.first;
+        out << node << ":(" << inf << "," << res_pair.second << ")";  
         ind_.ReactivateInside();
-        if (inf < min_influence)
-        {
-          min_influence = inf;
-          min_node = node;
-          min_comp = comp; 
-          min_var = res_pair.second;
-        }
-        if (inf > max_influence)
-        {
-          max_influence = inf;
-          max_node = node;
-          max_comp = comp; 
-        }
-        std::cerr << ++simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
       }
-     
+      out << "\n";
     }
+    // Postcondition
+    BOOST_ASSERT(max_node > 0);
+    BOOST_ASSERT(min_node > 0);
+    BOOST_ASSERT(max_comp > 0);
+    BOOST_ASSERT(min_comp > 0);
   }
 
 }

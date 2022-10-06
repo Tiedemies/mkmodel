@@ -155,10 +155,10 @@ std::set<int> MonoGraph::GetInsider(int k) const
   return insiderdict_.at(k);
 }
 
-std::set<int> MonoGraph::GetInsiderOf(int i) 
+std::set<int> MonoGraph::GetInsiderOf(int i) const
 {
   // std::cerr << "insider dictionary size: " << insiderdict_.size() << "\n";
-  return insider_of_[i]; 
+  return insider_of_.at(i); 
 }
 
 std::set<int> MonoGraph::GetBoard(int k)
