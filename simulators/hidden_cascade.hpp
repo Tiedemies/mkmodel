@@ -44,6 +44,7 @@ class HiddenCascade
         std::vector<double> Generate(const std::vector<int>& inside, bool window_day);
     // Test for success of infomation transfer between u and v:
         bool IsSuccess(const int& u, const int& v, Random& rnd) const;
+        bool IsSuccess(const int& u, const int& v, const double& r_num) const;
     // Maximum  and  minimum number of activated nodes in a sim
         int GetMaxActivated() const;
         int GetMinActivated() const;

@@ -80,48 +80,63 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   infected_by_sim_ = std::vector<int>(sim_n_, 0);
   double num_active = 0;
   #pragma omp parallel for shared(num_active)
-  for (size_t i = 0; i < sim_n_; ++i)
+  for (size_t i = 0; i < sim_n_; i=i+2)
   {
     Random rnd;
-    std::vector<bool> is_infected(nodes+1,false);
-    std::stack<int> infected;
+    std::queue<double> random_numbers;
     int num_infected = 0;
-    // infected.reserve(nodes/2);
-    for (const int j: inside)
+    for (int pass = 0; pass < 2; ++pass)
     {
-      //deriv[j] = 0;
-      if(!is_disabled_.at(j))
+      std::vector<bool> is_infected(nodes+1,false);
+      std::stack<int> infected;
+      
+      // infected.reserve(nodes/2);
+      for (const int j: inside)
       {
-        infected.push(j);
-      } 
-      is_infected.at(j) = true;
-    }
-    for (const int j: disabled_)
-    {
-      is_infected.at(j) = true; 
-    }
-    while(!infected.empty())
-    {
-      const int j = infected.top(); 
-      infected.pop(); 
-      for (auto l = adj_.at(j).cbegin(); l != adj_.at(j).cend(); ++l)
+        //deriv[j] = 0;
+        if(!is_disabled_.at(j))
+        {
+          infected.push(j);
+        } 
+        is_infected.at(j) = true;
+      }
+      for (const int j: disabled_)
       {
-        const int& k = *l; 
-        if (is_infected.at(k))
+        is_infected.at(j) = true; 
+      }
+      while(!infected.empty())
+      {
+        const int j = infected.top(); 
+        infected.pop(); 
+        for (auto l = adj_.at(j).cbegin(); l != adj_.at(j).cend(); ++l)
         {
-          continue;
-        }
-        if (IsSuccess(j,k,rnd))
-        {
-          is_infected.at(k) = true;
-          infected.push(k);
-          ++num_infected;
-        }
-      } 
+          const int& k = *l; 
+          if (is_infected.at(k))
+          {
+            continue;
+          }
+          double r_num = (pass==0 || random_numbers.empty())?rnd.get():1-random_numbers.back();
+          if (pass && !random_numbers.empty())
+          {
+            random_numbers.pop();
+          }
+          if (!pass)
+          {
+            random_numbers.push(r_num);
+          }
+          if (IsSuccess(j,k,r_num))
+          {
+            is_infected.at(k) = true;
+            infected.push(k);
+            ++num_infected;
+          }
+        } 
+      }
     }
     #pragma omp atomic update
     num_active += num_infected; 
     infected_by_sim_[i] = num_infected;
+    
     //std::cerr << "Simulated: " << num_infected << "\n";
     //min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));
     //max_activated_ = std::max(min_activated_, static_cast<int>(informed.size()));
@@ -145,6 +160,12 @@ bool
 HiddenCascade::IsSuccess(const int& u, const int& v, Random& rnd) const
 {
   return (p_map_.at(Key(u,v)) - rnd.get() > 0);
+}
+
+bool
+HiddenCascade::IsSuccess(const int& u, const int& v, const double& r_num) const
+{
+  return (p_map_.at(Key(u,v)) - r_num > 0);
 }
 
 
