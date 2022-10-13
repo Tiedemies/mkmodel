@@ -51,7 +51,8 @@ class IndustryCascade
     void ReactivateInside();
     const double& GetTreeRank(int node);
     const double& GetTreeDiff(int node, int comp);
-    const std::unordered_map<size_t,double>& GetNeighbourActivation();
+    const std::unordered_map<size_t,double>& GetNeighbourInActivation();
+    const std::unordered_map<size_t,double>& GetNeighbourOutActivation();
     const std::unordered_map<size_t,double>& GetRecursiveNeighbourActivation();
     bool IsCached(int node, int comp);
     const std::vector<double>& GetNodeCentrality();
@@ -108,7 +109,8 @@ class IndustryCascade
     std::vector<int> n_in_days_;
     std::vector<int> n_out_days_;
     std::vector<double> tree_rank_; 
-    std::unordered_map<size_t, double> neighbour_activation_; 
+    std::unordered_map<size_t, double> neighbour_out_activation_; 
+    std::unordered_map<size_t, double> neighbour_in_activation_; 
 
     struct DisableCacheEntry
     {

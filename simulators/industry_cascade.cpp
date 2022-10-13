@@ -873,7 +873,7 @@ IndustryCascade::GraphDiagnostics(std::ostream& out)
 }
 
 const std::unordered_map<size_t,double>& 
-IndustryCascade::GetNeighbourActivation()
+IndustryCascade::GetNeighbourOutActivation()
 {
   // Precondition
   BOOST_ASSERT(hc_.gather_statistic_ && !hc_.edge_activations_.empty());
@@ -890,7 +890,7 @@ IndustryCascade::GetNeighbourActivation()
         continue;
       }
       size_t key = hc_.Key(node,comp);
-      neighbour_activation_[key] = 0;
+      neighbour_out_activation_[key] = 0;
       for (const auto& other_node: insiders_.at(comp))
       {
         if(other_node == node)
@@ -898,12 +898,46 @@ IndustryCascade::GetNeighbourActivation()
           continue;
         }
         size_t key_2 = hc_.Key(node,other_node);
-        neighbour_activation_[key] += hc_.edge_activations_.at(key_2);
+        neighbour_out_activation_[key] += hc_.edge_activations_.at(key_2);
       }
     }
   }
-  return neighbour_activation_;
+  return neighbour_out_activation_;
 }
+
+const std::unordered_map<size_t,double>& 
+IndustryCascade::GetNeighbourInActivation()
+{
+  // Precondition
+  BOOST_ASSERT(hc_.gather_statistic_ && !hc_.edge_activations_.empty());
+  if (!hc_.gather_statistic_ || hc_.edge_activations_.empty())
+  {
+    throw std::logic_error("Hidden cascade not calculated properly, not possible to calculate Neighbour activation");
+  }
+  for (int node = 0; node < n_node_; ++node)
+  {
+    for (int comp = 0; comp < n_comp_; ++comp)
+    {
+      if (std::find(insiders_.at(comp).begin(),insiders_.at(comp).end(), node) == insiders_.at(comp).end())
+      {
+        continue;
+      }
+      size_t key = hc_.Key(node,comp);
+      neighbour_in_activation_[key] = 0;
+      for (const auto& other_node: hc_.adj_.at(node))
+      {
+        if(other_node == node ||  std::find(insiders_.at(comp).begin(),insiders_.at(comp).end(), node) != insiders_.at(comp).end())
+        {
+          continue;
+        }
+        size_t key_2 = hc_.Key(node,other_node);
+        neighbour_in_activation_[key] += hc_.edge_activations_.at(key_2);
+      }
+    }
+  }
+  return neighbour_in_activation_;
+}
+
 
 const std::vector<double>& 
 IndustryCascade::GetNodeCentrality()

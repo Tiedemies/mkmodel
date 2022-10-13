@@ -129,7 +129,8 @@ namespace algorithm
     /* First run the initial */
     ind_.hc_.gather_statistic_ = true;
     auto res_p_init = ind_.RunTotal();
-    const auto n_c_map = ind_.GetNeighbourActivation();
+    const auto& n_c_map = ind_.GetNeighbourOutActivation();
+    const auto& n_c_map2 = ind_.GetNeighbourInActivation();
     ind_.hc_.gather_statistic_ = false;
     
     for (int comp = 0; comp < ind_.n_comp_;++comp)
@@ -145,7 +146,7 @@ namespace algorithm
         out << comp << "," << node << "," << inf << "," << stdv << "," << c_cent.at(comp) << "," << n_cent.at(node) 
             << "," << ind_.comp_adj_.at(comp).size() << "," << ind_.hc_.adj_.at(node).size() << ","  
             << ind_.insiders_.at(comp).size() << ","<< ind_.foo_.GetGraph(ind_.date_)->GetInsiderOf(node).size() 
-            << "," << n_c_map.at(ind_.hc_.Key(node,comp)) << "\n";
+            << "," << n_c_map.at(ind_.hc_.Key(node,comp)) << "," << n_c_map2.at(ind_.hc_.Key(node,comp)) << "\n";
         ind_.ReactivateInside();
       }
     }
