@@ -88,7 +88,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
     }
   }
   #pragma omp parallel for shared(num_active, edge_activations_)
-  for (size_t i = 0; i < sim_n_; i=i+2)
+  for (size_t i = 0; i < sim_n_; i=i+1)
   {
     std::unordered_map<size_t, double> activation_coefficient_;
     if (gather_statistic_)
@@ -99,13 +99,13 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
       }
     }
     Random rnd;
-    std::queue<double> random_numbers;
+    // std::queue<double> random_numbers;
     int num_infected = 0;
-    for (int pass = 0; pass < 2; ++pass)
-    {
+    //for (int pass = 0; pass < 2; ++pass)
+    //{
       std::vector<bool> is_infected(nodes+1,false);
       std::stack<int> infected;
-      
+    
       // infected.reserve(nodes/2);
       for (const int j: inside)
       {
@@ -131,7 +131,8 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
           {
             continue;
           }
-          double r_num = (pass==0 || random_numbers.empty())?rnd.get():1-random_numbers.back();
+          double r_num =  rnd.get(); // (pass==0 || random_numbers.empty())?rnd.get():1-random_numbers.back();
+          /*
           if (pass && !random_numbers.empty())
           {
             random_numbers.pop();
@@ -140,6 +141,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
           {
             random_numbers.push(r_num);
           }
+          */
           if (IsSuccess(j,k,r_num))
           {
             is_infected.at(k) = true;
@@ -151,7 +153,7 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
             }
           }
         } 
-      }
+      //}
     }
     
     #pragma omp atomic update
