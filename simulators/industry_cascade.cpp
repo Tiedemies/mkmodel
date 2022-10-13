@@ -926,7 +926,7 @@ IndustryCascade::GetNeighbourInActivation()
       neighbour_in_activation_[key] = 0;
       for (const auto& other_node: hc_.adj_.at(node))
       {
-        if(other_node == node ||  std::find(insiders_.at(comp).begin(),insiders_.at(comp).end(), node) != insiders_.at(comp).end())
+        if(other_node == node ||  std::find(insiders_.at(comp).begin(),insiders_.at(comp).end(), other_node) != insiders_.at(comp).end())
         {
           continue;
         }
