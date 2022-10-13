@@ -49,7 +49,7 @@ namespace simulator
     InitializeWindows();
     InitializeTransactions();
     InitializeProbabilities();
-    //std::cerr << "Randomizer gives: " << rnd_.get() << "," << rnd_.get() << "," << rnd_.get() << "\n"; 
+    // std::cerr << "Randomizer gives: " << rnd_.get() << "," << rnd_.get() << "," << rnd_.get() << "\n"; 
   }
 
   // Copy constructor
@@ -382,6 +382,7 @@ namespace simulator
   void 
   IndustryCascade::InitializeTransactions()
   {
+    std::cerr << "initialize transactions\n";
     std::unordered_map<int,bool> trades; 
     int unique = 0; 
     for (auto tran: foo_.tr_table_)
@@ -490,6 +491,7 @@ namespace simulator
   void 
   IndustryCascade::InitializeProbabilities()
   {
+    std::cerr << "initializing probabilities\n";
     out_trading_prob_.resize(n_node_, std::vector<double>(n_comp_,0.0));
     in_trading_prob_.resize(n_node_, std::vector<double>(n_comp_,0.0));
 

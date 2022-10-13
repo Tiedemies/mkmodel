@@ -144,7 +144,7 @@ void MonoGraph::ReadBoardMembers(std::ifstream& in)
 }
 
 
-const std::set<int>& MonoGraph::GetInsider(int k) const
+const std::set<int> MonoGraph::GetInsider(int k) const
 {
   auto foo = insiderdict_.find(k);
   if (foo == insiderdict_.end())
@@ -155,18 +155,18 @@ const std::set<int>& MonoGraph::GetInsider(int k) const
   return insiderdict_.at(k);
 }
 
-const std::set<int>& MonoGraph::GetInsiderOf(int i) const
+const std::set<int> MonoGraph::GetInsiderOf(int i) const
 {
   // std::cerr << "insider dictionary size: " << insiderdict_.size() << "\n";
   return insider_of_.at(i); 
 }
 
-const std::set<int>& MonoGraph::GetBoard(int k)
+const std::set<int> MonoGraph::GetBoard(int k)
 {
   return boarddict_[k];
 }
 
-const std::set<int>& MonoGraph::GetBoardOf(int i) 
+const std::set<int> MonoGraph::GetBoardOf(int i) 
 {
   // std::cerr << "insider dictionary size: " << insiderdict_.size() << "\n";
   return board_of_[i]; 

@@ -24,10 +24,10 @@ public:
   const Alist2& GetNeighbours(int i) const;
   void ReadInsiders(std::ifstream& in);
   void ReadBoardMembers(std::ifstream& in);
-  const std::set<int>& GetInsider(int k) const; 
-  const std::set<int>& GetInsiderOf(int i) const;
-  const std::set<int>& GetBoard(int k); 
-  const std::set<int>& GetBoardOf(int i); 
+  const std::set<int> GetInsider(int k) const; 
+  const std::set<int> GetInsiderOf(int i) const;
+  const std::set<int> GetBoard(int k); 
+  const std::set<int> GetBoardOf(int i); 
   std::set<int> GetMaxComp(std::vector<int> input) const;
   // Calculate the distance of insiders to company. 
   const std::unordered_map<int,int>& GetDistances(int comp);
