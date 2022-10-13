@@ -122,27 +122,33 @@ namespace algorithm
     double min_influence = std::numeric_limits<double>::max();
     double max_influence = std::numeric_limits<double>::min();
     double min_var = 0.0;
-    /* Find the node */
-    out << "**** \n";
     int simcount = 0;
     const auto weights = ind_.GetSimulationWeights();
+    const auto& c_cent = ind_.GetCompCentrality();
+    const auto& n_cent = ind_.GetNodeCentrality();
+    /* First run the initial */
+    ind_.hc_.gather_statistic_ = true;
+    auto res_p_init = ind_.RunTotal();
+    ind_.hc_.gather_statistic_ = false;
+
+    const auto n_c_map = ind_.GetNeighbourActivation();
+    
     for (int comp = 0; comp < ind_.n_comp_;++comp)
     {
-      out << comp << ";";
+      
       for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
       {
-        if (node_it != ind_.insiders_.at(comp).begin())
-        {
-          out << " , ";
-        }
         int node = *node_it; 
         ind_.DeactivateFromInside(node,comp);
         auto res_pair = ind_.RunTotal(weights);
         const double& inf = res_pair.first;
-        out << node << ":(" << inf << "," << res_pair.second << ")";  
+        const double& stdv = res_pair.second;
+        out << comp << "," << node << "," << inf << "," << stdv << "," << c_cent.at(comp) << "," << n_cent.at(node) 
+            << "," << ind_.comp_adj_.at(comp).size() << "," << ind_.hc_.adj_.at(node).size() << ","  
+            << ind_.insiders_.at(comp).size() << ","<< ind_.foo_.GetGraph(ind_.date_)->GetInsiderOf(node).size() 
+            << "," << n_c_map.at(ind_.hc_.Key(node,comp)) << "\n";
         ind_.ReactivateInside();
       }
-      out << "\n";
     }
     // Postcondition
     BOOST_ASSERT(max_node > 0);

@@ -22,6 +22,7 @@ namespace simulator
 // The constructor uses uniform p, false positive and true positive probabilities
 HiddenCascade::HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp)
 {
+    gather_statistic_ = false; 
     // We copy the structure of the monograph and ascribe constant probabilities to all links
     int i = 0;
     uni_p_ = p; 
@@ -59,7 +60,7 @@ HiddenCascade::~HiddenCascade()
 
     // void;
 }
-inline 
+
 size_t
 HiddenCascade::Key(const int& u, const int& v) const
 {
@@ -79,9 +80,24 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   // std::fill(simulated_activations_.begin(),simulated_activations_.end(), 0.0);
   infected_by_sim_ = std::vector<int>(sim_n_, 0);
   double num_active = 0;
-  #pragma omp parallel for shared(num_active)
+  if (gather_statistic_)
+  {
+    for (auto x: p_map_)
+    {
+      edge_activations_[x.first] = 0; 
+    }
+  }
+  #pragma omp parallel for shared(num_active, edge_activations_)
   for (size_t i = 0; i < sim_n_; i=i+2)
   {
+    std::unordered_map<size_t, double> activation_coefficient_;
+    if (gather_statistic_)
+    {
+      for (auto x: p_map_)
+      {
+        activation_coefficient_[x.first] = 0; 
+      }
+    }
     Random rnd;
     std::queue<double> random_numbers;
     int num_infected = 0;
@@ -129,13 +145,29 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
             is_infected.at(k) = true;
             infected.push(k);
             ++num_infected;
+            if (gather_statistic_)
+            {
+              activation_coefficient_[Key(j,k)] += 1;
+            }
           }
         } 
       }
     }
+    
     #pragma omp atomic update
     num_active += num_infected; 
-    infected_by_sim_[i] = num_infected;
+    
+    #pragma omp atomic update
+    infected_by_sim_[i] += num_infected;
+
+    if (gather_statistic_)
+    {
+      for (auto x: p_map_)
+      {
+        #pragma omp atomic update
+        edge_activations_[x.first] += activation_coefficient_[x.first]/sim_n_;
+      }
+    }
     
     //std::cerr << "Simulated: " << num_infected << "\n";
     //min_activated_ = std::min(min_activated_, static_cast<int>(informed.size()));

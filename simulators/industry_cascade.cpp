@@ -842,6 +842,10 @@ IndustryCascade::InitializeCompAdj()
   }
 }
 
+
+
+
+
 void 
 IndustryCascade::GraphDiagnostics(std::ostream& out)
 {
@@ -864,6 +868,45 @@ IndustryCascade::GraphDiagnostics(std::ostream& out)
 
   
   return;
+}
+
+const std::unordered_map<size_t,double>& 
+IndustryCascade::GetNeighbourActivation()
+{
+  // Precondition
+  BOOST_ASSERT(hc_.gather_statistic_ && !hc_.edge_activations_.empty());
+  if (!hc_.gather_statistic_ || hc_.edge_activations_.empty())
+  {
+    throw std::logic_error("Hidden cascade not calculated properly, not possible to calculate Neighbour activation");
+  }
+  for (int node = 0; node < n_node_; ++node)
+  {
+    for (int comp = 0; comp < n_comp_; ++comp)
+    {
+      if (std::find(insiders_.at(comp).begin(),insiders_.at(comp).end(), node) == insiders_.at(comp).end())
+      {
+        continue;
+      }
+      size_t key = hc_.Key(node,comp);
+      neighbour_activation_[key] = 0;
+      for (const auto& other_node: insiders_.at(comp))
+      {
+        if(other_node == node)
+        {
+          continue;
+        }
+        size_t key_2 = hc_.Key(node,other_node);
+        neighbour_activation_[key] += hc_.edge_activations_.at(key_2);
+      }
+    }
+  }
+  return neighbour_activation_;
+}
+
+const std::vector<double>& 
+IndustryCascade::GetNodeCentrality()
+{
+  return hc_.GetNodeCentrality();
 }
 
 }

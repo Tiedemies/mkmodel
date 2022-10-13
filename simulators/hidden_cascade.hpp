@@ -70,7 +70,7 @@ class HiddenCascade
         friend class algorithm::InfluenceMinimizer;
   
     private:
-        inline size_t Key(const int& u, const int& v) const;
+        size_t Key(const int& u, const int& v) const;
         size_t sim_n_; 
         std::vector<double> false_positive_prob_;
         std::vector<double> true_positive_prob_;
@@ -90,6 +90,9 @@ class HiddenCascade
 
         std::vector<int> infected_by_sim_; 
         std::vector<double> node_centrality_;
+
+        bool gather_statistic_; 
+        std::unordered_map<size_t, double> edge_activations_;
     
 
 };
