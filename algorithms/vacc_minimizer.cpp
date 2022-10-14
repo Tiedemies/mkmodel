@@ -50,12 +50,15 @@ namespace algorithm
       for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
       {
         int node = *node_it; 
+        if (ind_.inside_of_.at(node).size() < 2)
+        {
+          continue;
+        }
         ind_.DeactivateFromInside(node,comp);
         auto res_pair = ind_.RunTotal(weights);
         const double& inf = res_pair.first;
         ind_.ReactivateInside();
-        #pragma omp critical
-        {
+       
         if (inf < min_influence)
         {
           min_influence = inf;
@@ -63,18 +66,14 @@ namespace algorithm
           min_comp = comp; 
           min_var = res_pair.second;
         }
-        }
 
-        #pragma omp critical
-        {
         if (inf > max_influence)
         {
           max_influence = inf;
           max_node = node;
           max_comp = comp; 
         }
-        }
-        #pragma omp atomic
+      
         ++simcount; 
 
         std::cerr << simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
@@ -139,6 +138,10 @@ namespace algorithm
       for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
       {
         int node = *node_it; 
+        if (ind_.inside_of_.at(node).size() < 2)
+        {
+          continue;
+        }
         ind_.DeactivateFromInside(node,comp);
         auto res_pair = ind_.RunTotal(weights);
         const double& inf = res_pair.first;

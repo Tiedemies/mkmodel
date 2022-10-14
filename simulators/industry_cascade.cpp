@@ -191,7 +191,7 @@ namespace simulator
     double div = 0.0;
     double var = 0.0; 
     double normalizer = std::accumulate(weights.cbegin(), weights.cend(),0.0);
-    std::cerr << "Starting insider cycle\n";
+    // std::cerr << "Starting insider cycle\n";
     for (int i = 0; i < static_cast<int>(insiders_.size()); ++i)
     {
       // Skip the insiders that empty
@@ -337,6 +337,7 @@ namespace simulator
     num_announcements_.resize(n_comp_,0);
     announcement_days_.resize(n_comp_);
     insiders_.resize(n_comp_);
+    inside_of_.resize(n_node_);
     const MonoGraph* graph = foo_.GetGraph(date_);
     //std::cerr << "grap ok " << graph << "\n";
     for (auto is_name: foo_.cnames_)
@@ -346,6 +347,10 @@ namespace simulator
       int cnum = is_name.second;
       const auto& inside = graph->GetInsider(cnum);
       insiders_.at(cnum).insert(insiders_.at(cnum).end(), inside.cbegin(), inside.cend());
+      for(const int insider: inside)
+      {
+        inside_of_.at(insider).push_back(cnum);
+      }
     }
   }
 

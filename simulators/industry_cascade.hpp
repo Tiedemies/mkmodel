@@ -98,6 +98,7 @@ class IndustryCascade
     HiddenCascade hc_;
     Random rnd_;
     std::vector<std::vector<int>> insiders_;
+    std::vector<std::vector<int>> inside_of_;
     std::vector<int> num_announcements_;
     std::vector<std::vector<int>> announcement_days_; 
     std::vector<std::vector<bool>> in_window_days_;
