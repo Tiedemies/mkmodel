@@ -337,7 +337,6 @@ namespace simulator
     num_announcements_.resize(n_comp_,0);
     announcement_days_.resize(n_comp_);
     insiders_.resize(n_comp_);
-    inside_of_.resize(n_node_);
     const MonoGraph* graph = foo_.GetGraph(date_);
     //std::cerr << "grap ok " << graph << "\n";
     for (auto is_name: foo_.cnames_)
@@ -347,9 +346,17 @@ namespace simulator
       int cnum = is_name.second;
       const auto& inside = graph->GetInsider(cnum);
       insiders_.at(cnum).insert(insiders_.at(cnum).end(), inside.cbegin(), inside.cend());
-      for(const int insider: inside)
+      for(int node: inside)
       {
-        inside_of_.at(insider).push_back(cnum);
+        n_node_ = std::max(n_node_,node+1);
+      }
+    }
+    inside_of_.resize(n_node_);
+    for (int c = 0; c < n_comp_; ++c)
+    {
+      for (int node: insiders_[c])
+      {
+        inside_of_.at(node).push_back(c);
       }
     }
   }
