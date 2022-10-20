@@ -1,6 +1,8 @@
 #ifndef VACCMIN
 #define VACCMIN
 #include "../simulators/hidden_cascade.hpp"
+#include "../simulators/industry_cascade.hpp"
+#include "../simulators/announcement_cascade.hpp"
 
 #include <chrono>
 #include <set>
@@ -16,6 +18,7 @@ namespace algorithm
     public:
       // Constructor
       InfluenceMinimizer(simulator::IndustryCascade& ind);
+      InfluenceMinimizer(simulator::AnnouncementCascade& anc);
       // Copy constructor
       InfluenceMinimizer(const InfluenceMinimizer& rhs);
       // Destructor 
@@ -27,8 +30,14 @@ namespace algorithm
       std::set<std::tuple<int,int>> MinizeDiffBetween(int n);
 
       void DiagnoseBetweenMinimal(std::ostream& = std::cerr);
+
+      void DiagnosePerformance(int n, std::ostream& = std::cerr);
+
+
+
     private:
-      simulator::IndustryCascade& ind_; 
+      simulator::IndustryCascade& ind_;
+      simulator::AnnouncementCascade anc_; 
   };
 }
 // End

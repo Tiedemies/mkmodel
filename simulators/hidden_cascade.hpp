@@ -19,8 +19,13 @@ namespace algorithm
   class InfluenceMinimizer;
 }
 
+
 namespace simulator
 {
+    // Forward declartion:
+    class AnnouncementCascade;
+
+    // namespaves
     using namespace graphmodel;
     using namespace util;
 class HiddenCascade
@@ -33,6 +38,10 @@ class HiddenCascade
         ~HiddenCascade();
     // Simulate. 
         double Simulate(const std::vector<int>& inside);
+
+    // Constant simulation
+    int SimulateConst(const std::vector<int>& inside, const std::unordered_map<size_t,double>& dice, bool invert) const;
+
     // Enhanced Simulate. 
         double SimulateEnc(const std::vector<int>& inside);
     // Change parameters: 
@@ -67,6 +76,7 @@ class HiddenCascade
         const std::vector<double>& GetNodeCentrality();
 
         friend class IndustryCascade; 
+        friend class AnnouncementCascade;
         friend class algorithm::InfluenceMinimizer;
   
     private:

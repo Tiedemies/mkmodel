@@ -15,7 +15,13 @@
 namespace algorithm
 {
   /* Constructor */
-  InfluenceMinimizer::InfluenceMinimizer(simulator::IndustryCascade& ind) : ind_(ind)
+  InfluenceMinimizer::InfluenceMinimizer(simulator::IndustryCascade& ind) : ind_(ind), anc_(simulator::AnnouncementCascade(ind))
+  {
+    BOOST_ASSERT(true); 
+    // void
+  }
+
+  InfluenceMinimizer::InfluenceMinimizer(simulator::AnnouncementCascade& anc) : ind_(anc.ic_), anc_(anc)
   {
     BOOST_ASSERT(true); 
     // void
@@ -158,6 +164,28 @@ namespace algorithm
     BOOST_ASSERT(min_node > 0);
     BOOST_ASSERT(max_comp > 0);
     BOOST_ASSERT(min_comp > 0);
+  }
+
+  void 
+  InfluenceMinimizer::DiagnosePerformance(int n, std::ostream& out)
+  {
+    std::vector<double> c_vec_no_anti(2*n,0.0);
+    std::vector<double> c_vec_anti(n,0.0);
+    #pragma omp parallel for
+    for (int i = 0; i < 2*n; ++i)
+    {
+      c_vec_no_anti[i] = anc_.RunSingleCascade(false);
+    }
+
+    #pragma omp parallel for
+    for (int i = 0; i < n; ++i)
+    {
+      c_vec_anti[i] = anc_.RunSingleCascade(true);
+    }
+
+    out << "Normal cost function average " << util::avg(c_vec_no_anti) << " with ste " << util::st_error(c_vec_no_anti) << "\n";
+    out << "Anti_t cost function average " << util::avg(c_vec_anti) << " with ste " << util::st_error(c_vec_anti) << "\n";
+
   }
 
 }

@@ -19,4 +19,5 @@ target_link_libraries(vacc_minimizer
     h_random
     industry_cascade
     hidden_cascade
+    announcement_cascade
 )

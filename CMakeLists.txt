@@ -63,4 +63,5 @@ target_link_libraries(vaccinator
     hidden_cascade
     industry_cascade
     vacc_minimizer
+    announcement_cascade
 )

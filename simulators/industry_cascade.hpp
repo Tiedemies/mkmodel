@@ -15,6 +15,9 @@
 #include<set>
 #include<list>
 
+// Forward declaration
+class AnnouncementCascade; 
+
 namespace algorithm
 {
   class InfluenceMinimizer;
@@ -57,6 +60,7 @@ class IndustryCascade
     bool IsCached(int node, int comp);
     const std::vector<double>& GetNodeCentrality();
     const std::vector<double>& GetCompCentrality(); 
+    double EstablishBaseVariance();
 
    
     struct Transaction
@@ -75,6 +79,7 @@ class IndustryCascade
     // Check if the prices is rising (true) or dropping (false). 
     bool IsBear(int comp, int day);
     friend class algorithm::InfluenceMinimizer; 
+    friend class AnnouncementCascade;
 
   private:
     void InitializeFoo();

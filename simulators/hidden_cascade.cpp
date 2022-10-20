@@ -189,6 +189,49 @@ HiddenCascade::Simulate(const std::vector<int>& inside)
   return num_active / sim_n_;
 }
 
+int
+HiddenCascade::SimulateConst(const std::vector<int>& inside, const std::unordered_map<size_t,double>& dice, bool invert) const
+{
+  int num_infected = 0;
+  std::vector<bool> is_infected(GetN(),false);
+  std::queue<int> infected;
+  for (const int j: inside)
+  {
+    if(!is_disabled_.at(j))
+    {
+      infected.push(j);
+    } 
+    is_infected.at(j) = true;
+  }
+  for (const int j: disabled_)
+  {
+    is_infected.at(j) = true; 
+  }
+  while(!infected.empty())
+  {
+    const int j = infected.front(); 
+    infected.pop(); 
+    for (auto l = adj_.at(j).cbegin(); l != adj_.at(j).cend(); ++l)
+    {
+      const int& k = *l; 
+      if (is_infected.at(k))
+      {
+        continue;
+      }
+      double r_num = invert?1-dice.at(Key(j,k)):dice.at(Key(j,k));
+      if (IsSuccess(j,k,r_num))
+      {
+        is_infected.at(k) = true;
+        infected.push(k);
+        ++num_infected;
+      }
+    } 
+  }     
+  return num_infected;
+}
+
+
+
 // Calculte a single success over a connection. 
 bool
 HiddenCascade::IsSuccess(const int& u, const int& v, Random& rnd) const

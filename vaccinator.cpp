@@ -59,15 +59,15 @@ int main()
 
   std::cerr << " Running initial diagnostics \n";
   foo.GraphDiagnostics(out);
+  algorithm::InfluenceMinimizer minim(foo);
+  minim.DiagnosePerformance(200);
 
   std::cerr << "Running singleton influence check";
-
   
   // Start timing.
   auto start = std::chrono::high_resolution_clock::now(); 
   foo.SetConstantProb(0.2);
-  algorithm::InfluenceMinimizer minim(foo);
-
+  foo.EstablishBaseVariance();
   minim.DiagnoseBetweenMinimal(out);
 
   auto stop = std::chrono::high_resolution_clock::now(); 

@@ -957,4 +957,38 @@ IndustryCascade::GetNodeCentrality()
   return hc_.GetNodeCentrality();
 }
 
+double
+IndustryCascade::EstablishBaseVariance()
+{
+  int n = (int) hc_.sim_n_;
+  auto test_pair = RunTotal();
+  double cur_std = test_pair.second;
+  double cur_exp = test_pair.first; 
+  std::cerr << "Based on " << n << " samples, the expected cost function is " << 
+  cur_exp << " with deviation " << cur_std << "in a single simulation \n";
+
+  std::vector<double> sd_vec(40);
+  std::vector<double> xp_vec(40);
+  for (int i = 0; i < 40; ++i)
+  {
+    auto temp_pair = RunTotal();
+    xp_vec[i] = temp_pair.first;
+    sd_vec[i] = temp_pair.second;
+  }
+  double avg = std::accumulate(xp_vec.begin(),xp_vec.end(),0)/40;
+  
+  double sdt = 0;
+  for (double cost: xp_vec)
+  {
+    sdt += std::pow(avg-cost,2);
+  }
+  sdt = sdt/39.0; 
+
+  std::cerr << "Sample of 40 gives simulation average " << avg << " with deviation " << sqrt(sdt) << "\n"; 
+
+
+  return sdt;
+
+}
+
 }
