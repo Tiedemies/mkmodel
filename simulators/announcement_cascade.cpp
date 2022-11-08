@@ -46,8 +46,14 @@ namespace simulator
   {
     double c_h = 0;
     double div = 0;
+    //std::cerr << "ic insiders count: " << ic_.insiders_.size() << ", n comp: " << ic_.n_comp_ 
+    // << " num announcment size: " << ic_.num_announcements_.size() <<  "\n"; 
     for(int i =0; i < ic_.n_comp_;++i)
     {
+      if (i >= ic_.insiders_.size() || i >= ic_.num_announcements_.size())
+      {
+        continue;
+      }
       const auto& i_vec = ic_.insiders_.at(i);
       const int n = ic_.num_announcements_.at(i);
       if (i_vec.empty() || n < 1)

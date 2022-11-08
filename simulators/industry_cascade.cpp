@@ -333,7 +333,7 @@ namespace simulator
     foo_.ReadTransactionTable();
 
     // We initialize the announcement numbers first
-    n_comp_ = foo_.cnames_.size() + 1;
+    n_comp_ = foo_.cnames_.size();
     num_announcements_.resize(n_comp_,0);
     announcement_days_.resize(n_comp_);
     insiders_.resize(n_comp_);
@@ -996,7 +996,7 @@ IndustryCascade::PrintCompanies(std::ostream& out)
 {
   for (auto np: foo_.cnames_)
   {
-    out << np.first << "\n";
+    out << np.second << ":" << np.first << "\n";
   }
 }
 
