@@ -67,7 +67,7 @@ int main()
   foo.GraphDiagnostics(out);
   algorithm::InfluenceMinimizer minim(foo);
   std::cerr << " Running performance diagnostics \n";
-  minim.DiagnosePerformance(200);
+  minim.DiagnosePerformance(64);
 
   std::cerr << "Running singleton influence check";
   

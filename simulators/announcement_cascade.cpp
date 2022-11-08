@@ -54,8 +54,10 @@ namespace simulator
       {
         continue;
       }
+       
       const auto& i_vec = ic_.insiders_.at(i);
       const int n = ic_.num_announcements_.at(i);
+      const double prop_div = ic_.n_node_ - i_vec.size();
       if (i_vec.empty() || n < 1)
       {
         continue;
@@ -67,11 +69,11 @@ namespace simulator
         const auto dice = GetDies();
         const int a = ic_.hc_.SimulateConst(i_vec,dice,false);
         const int a2 = anti?ic_.hc_.SimulateConst(i_vec,dice,true):0;
-        xbar_i += (double)(a + a2); 
+        xbar_i += (double)(a + a2)/prop_div; 
       }
       c_h += xbar_i;
     }
-
+    return c_h/div; 
   }
 
 
