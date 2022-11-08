@@ -64,6 +64,7 @@ IoR::IoR()
   graphdir_ = NWDIR;
   indexfile_ = INDEXFILE;
   reasonfile_ = REASONFILE;
+  cdictfile_ = CDFILE;
   std::cerr << "Creating metagraph\n";
   metag_ = new MetaGraph(graphdir_, -1);
   std::cerr << "metagraph created\n";
@@ -636,7 +637,7 @@ IoR::ReadAnnounceTable()
       ++count;
       an_table_[isin].push_back(days);
     }
-    else
+    else if (sched == "Scheduled by date")
     {
       ++sccount;
       an_table_sc_[isin].push_back(days);

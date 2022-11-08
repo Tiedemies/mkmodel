@@ -35,9 +35,10 @@ add_subdirectory(data_gen)
 add_executable(RunEmpirical RunEmpirical.cpp)
 add_executable(test_io test_io.cpp)
 add_executable(vaccinator vaccinator.cpp)
+add_executable(generate_announcements generate_announcements.cpp)
 
 # Install into build-type directory
-install(TARGETS RunEmpirical test_io vaccinator DESTINATION ${CMAKE_BUILD_TYPE})
+install(TARGETS RunEmpirical test_io vaccinator generate_announcements DESTINATION ${CMAKE_BUILD_TYPE})
 
 
 # Link libraries
@@ -64,4 +65,9 @@ target_link_libraries(vaccinator
     industry_cascade
     vacc_minimizer
     announcement_cascade
+)
+
+target_link_libraries(generate_announcements
+    ioroutines
+    graphmodel
 )

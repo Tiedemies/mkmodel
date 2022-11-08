@@ -70,7 +70,8 @@ public:
   CompanyNameDict cnames_;
   CompanyNameInvDict cids_;
   IsinCompanyMap isin_company_; 
-  AnnouncementTable an_table_; 
+  AnnouncementTable an_table_;
+  AnnouncementTable an_table_sc_; 
   std::unordered_map<int, int> relativemap_;
 private:
   std::string ReadNext(std::istream& in);
@@ -101,7 +102,6 @@ private:
 
   // Tables:
   
-  AnnouncementTable an_table_sc_;
   PriceTable pr_table_; 
   NodeTransactionTable tr_table_; 
   NodeTransactionTable hh_table_;

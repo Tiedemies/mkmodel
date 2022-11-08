@@ -76,6 +76,8 @@ class IndustryCascade
     // Generate transactions
     std::vector<Transaction> RunGeneration();
 
+    void PrintCompanies(std::ostream& out);
+
     // Check if the prices is rising (true) or dropping (false). 
     bool IsBear(int comp, int day);
     friend class algorithm::InfluenceMinimizer; 

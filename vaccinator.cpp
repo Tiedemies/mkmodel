@@ -15,6 +15,7 @@ using namespace simulator;
 
 #define RAWGRAPHFILE "plot_output_raw.csv"
 #define DIAGNOSTICSFILE "optimization_diagnostics.txt"
+#define COMPANYFILE "companies.txt"
 
 
 void GenerateRawGraphs(IndustryCascade& ind, const double& p0, const double& pn, const int& n)
@@ -57,9 +58,15 @@ int main()
   std::cerr << "Intialize IndustryCascade for " << VREFDATE << "\n";
   IndustryCascade foo(VREFDATE);
 
+  std::ofstream out2;
+  out2.open(COMPANYFILE);
+  foo.PrintCompanies(out2);
+  out2.close();
+
   std::cerr << " Running initial diagnostics \n";
   foo.GraphDiagnostics(out);
   algorithm::InfluenceMinimizer minim(foo);
+  std::cerr << " Running performance diagnostics \n";
   minim.DiagnosePerformance(200);
 
   std::cerr << "Running singleton influence check";

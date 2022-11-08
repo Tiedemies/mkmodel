@@ -991,4 +991,13 @@ IndustryCascade::EstablishBaseVariance()
 
 }
 
+void 
+IndustryCascade::PrintCompanies(std::ostream& out)
+{
+  for (auto np: foo_.cnames_)
+  {
+    out << np.first << "\n";
+  }
+}
+
 }
