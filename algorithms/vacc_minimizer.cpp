@@ -42,10 +42,7 @@ namespace algorithm
     BOOST_ASSERT(ind_.hc_.GetN() > 0);
     int min_node = -1;
     int min_comp = -1;
-    int max_node = -1;
-    int max_comp = -1;
     double min_influence = std::numeric_limits<double>::max();
-    double max_influence = std::numeric_limits<double>::min();
     double min_var = 0.0;
     /* Find the node */
     int simcount = 0;
@@ -114,20 +111,11 @@ namespace algorithm
     // Precondition
     BOOST_ASSERT(ind_.hc_.GetN() > 0);
     
-    int min_node = -1;
-    int min_comp = -1;
-    int max_node = -1;
-    int max_comp = -1;
-    double min_influence = std::numeric_limits<double>::max();
-    double max_influence = std::numeric_limits<double>::min();
-    double min_var = 0.0;
-    int simcount = 0;
     const auto weights = ind_.GetSimulationWeights();
     const auto& c_cent = ind_.GetCompCentrality();
     const auto& n_cent = ind_.GetNodeCentrality();
     /* First run the initial */
     ind_.hc_.gather_statistic_ = true;
-    auto res_p_init = ind_.RunTotal();
     const auto& n_c_map = ind_.GetNeighbourOutActivation();
     const auto& n_c_map2 = ind_.GetNeighbourInActivation();
     ind_.hc_.gather_statistic_ = false;
