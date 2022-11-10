@@ -36,11 +36,10 @@ namespace algorithm
 
   /* Find a minimal node */
   std::tuple<int,int,double,double>
-  InfluenceMinimizer::FindMinimalNodeComp()
+  InfluenceMinimizer::FindMinimalNodeComp(int n)
   {
     // Precondition
     BOOST_ASSERT(ind_.hc_.GetN() > 0);
-    
     int min_node = -1;
     int min_comp = -1;
     int max_node = -1;
@@ -50,7 +49,6 @@ namespace algorithm
     double min_var = 0.0;
     /* Find the node */
     int simcount = 0;
-    const auto weights = ind_.GetSimulationWeights();
     for (int comp = 0; comp < ind_.n_comp_;++comp)
     {
       for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
@@ -60,29 +58,25 @@ namespace algorithm
         {
           continue;
         }
+        std::vector<double> c_vec_anti(n,0.0);
         ind_.DeactivateFromInside(node,comp);
-        auto res_pair = ind_.RunTotal(weights);
-        const double& inf = res_pair.first;
+        #pragma omp parallel for
+        for (int i = 0; i < n; ++i)
+        {
+          c_vec_anti[i] = anc_.RunSingleCascade(true);
+        }
         ind_.ReactivateInside();
-       
+        double inf = util::avg(c_vec_anti);
         if (inf < min_influence)
         {
           min_influence = inf;
           min_node = node;
           min_comp = comp; 
-          min_var = res_pair.second;
-        }
-
-        if (inf > max_influence)
-        {
-          max_influence = inf;
-          max_node = node;
-          max_comp = comp; 
-        }
-      
+          min_var = util::st_error(c_vec_anti);
+        }     
         ++simcount; 
 
-        std::cerr << simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
+        //std::cerr << simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
       }
      
     }
@@ -92,7 +86,7 @@ namespace algorithm
     BOOST_ASSERT(min_node > 0);
     BOOST_ASSERT(max_comp > 0);
     BOOST_ASSERT(min_comp > 0);
-    std::cerr << "max influence: " << max_influence << " vs min " << min_influence <<"\n";
+    std::cerr << "min " << min_influence <<" \n";
     return std::make_tuple(min_node, min_comp, min_influence, min_var);
   }
 
@@ -187,6 +181,24 @@ namespace algorithm
     out << "Anti_t cost function average " << util::avg(c_vec_anti) << " with ste " << util::st_error(c_vec_anti) << "\n";
 
   }
+
+  std::pair<double,double> 
+  InfluenceMinimizer::DefaultInfluence(int n)
+  {
+    std::vector<double> c_vec_anti(n,0.0);
+    #pragma omp parallel for
+    for (int i = 0; i < n; ++i)
+    {
+      c_vec_anti[i] = anc_.RunSingleCascade(true);
+    }
+    return std::make_pair(util::avg(c_vec_anti), util::st_error(c_vec_anti));
+  }
+
+  void 
+  InfluenceMinimizer::SetConstantProb(double p)
+  {
+    ind_.SetConstantProb(p);
+  }  
 
 }
 // DoneInfluenceMinimizer

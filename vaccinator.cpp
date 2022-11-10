@@ -39,6 +39,23 @@ void GenerateRawGraphs(IndustryCascade& ind, const double& p0, const double& pn,
   out.close();
 }
 
+void GenerateGraphs(algorithm::InfluenceMinimizer& minim, const double& p0, const double& pn, const int& n)
+{
+  const std::string filename = RAWGRAPHFILE;
+  std::ofstream out;
+  out.open(filename);
+  std::cerr << "Starting the simulation cycles \n";
+  for (double p = p0; p <= pn; p += (pn -p0)/n)
+  {
+    minim.SetConstantProb(p);
+    auto ref_inf = minim.DefaultInfluence();
+    std::cerr << "Ref: " << ref_inf.first << " std: " << sqrt(ref_inf.second) << "\n";
+    auto res = minim.FindMinimalNodeComp();
+    out << p << "," << ref_inf.first << "," <<  sqrt(ref_inf.second) << "," << std::get<2>(res) << "," << std::get<3>(res) << "\n";
+    out.flush();
+  }
+}
+
 int main()
 {
   // Initialize a metagraph.      
@@ -58,25 +75,25 @@ int main()
   std::cerr << "Intialize IndustryCascade for " << VREFDATE << "\n";
   IndustryCascade foo(VREFDATE);
 
-  std::ofstream out2;
-  out2.open(COMPANYFILE);
-  foo.PrintCompanies(out2);
-  out2.close();
+  //std::ofstream out2;
+  //out2.open(COMPANYFILE);
+  //foo.PrintCompanies(out2);
+  //out2.close();
 
   std::cerr << " Running initial diagnostics \n";
   foo.GraphDiagnostics(out);
   algorithm::InfluenceMinimizer minim(foo);
+  /*
   std::cerr << " Running performance diagnostics \n";
   minim.DiagnosePerformance(64);
-
+  */
   std::cerr << "Running singleton influence check";
   
   // Start timing.
   auto start = std::chrono::high_resolution_clock::now(); 
-  foo.SetConstantProb(0.2);
-  foo.EstablishBaseVariance();
-  minim.DiagnoseBetweenMinimal(out);
-
+  //foo.SetConstantProb(0.2);
+  //foo.EstablishBaseVariance();
+  GenerateGraphs(minim,0.01,0.99,20);
   auto stop = std::chrono::high_resolution_clock::now(); 
   double count = std::chrono::duration<double>(stop-start).count();
   std::cerr << "Singleton influence check took " << count << "s \n";
