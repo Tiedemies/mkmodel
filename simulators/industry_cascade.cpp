@@ -59,7 +59,7 @@ namespace simulator
   days_(rhs.days_), days_begin_(rhs.days_begin_),
   days_end_(rhs.days_end_), n_node_(rhs.n_node_),
   n_comp_(rhs.n_comp_),  def_p_(rhs.def_p_), foo_(rhs.foo_), 
-  hc_(rhs.hc_), rnd_(rhs.rnd_), insiders_(rhs.insiders_),
+  hc_(rhs.hc_), rnd_(rhs.rnd_), insiders_(rhs.insiders_), inside_of_(rhs.inside_of_),
   num_announcements_(rhs.num_announcements_), announcement_days_(rhs.announcement_days_), 
   in_window_days_(rhs.in_window_days_), trading_days_(rhs.trading_days_), 
   prices_(rhs.prices_),  transacts_(rhs.transacts_),
