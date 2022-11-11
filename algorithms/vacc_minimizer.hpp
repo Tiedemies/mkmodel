@@ -37,7 +37,7 @@ namespace algorithm
       void SetConstantProb(double p);
 
     private:
-      simulator::IndustryCascade& ind_;
+      // simulator::IndustryCascade& ind_;
       simulator::AnnouncementCascade anc_; 
   };
 }

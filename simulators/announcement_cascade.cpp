@@ -72,7 +72,10 @@ namespace simulator
         const int a2 = anti?ic_.hc_.SimulateConst(i_vec,dice,true):0;
         xbar_i += (double)(a + a2)/prop_div; 
       }
-      c_h += xbar_i;
+      #pragma omp critical
+      {
+        c_h += xbar_i;
+      }
     }
     return c_h/div; 
   }

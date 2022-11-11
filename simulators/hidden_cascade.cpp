@@ -373,9 +373,10 @@ HiddenCascade::SetConstantProb(double p)
 {
   BOOST_ASSERT(p >= 0.0);
   BOOST_ASSERT(p <= 1.0);
+  uni_p_ = p;
   for (auto& entry: p_map_)
   {
-    entry.second = p;
+    p_map_[entry.first] = p;
   }
 }
 

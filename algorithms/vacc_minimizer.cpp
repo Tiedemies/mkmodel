@@ -15,13 +15,13 @@
 namespace algorithm
 {
   /* Constructor */
-  InfluenceMinimizer::InfluenceMinimizer(simulator::IndustryCascade& ind) : ind_(ind), anc_(simulator::AnnouncementCascade(ind))
+  InfluenceMinimizer::InfluenceMinimizer(simulator::IndustryCascade& ind) : anc_(simulator::AnnouncementCascade(ind))
   {
     BOOST_ASSERT(true); 
     // void
   }
 
-  InfluenceMinimizer::InfluenceMinimizer(simulator::AnnouncementCascade& anc) : ind_(anc.ic_), anc_(anc)
+  InfluenceMinimizer::InfluenceMinimizer(simulator::AnnouncementCascade& anc) : anc_(anc)
   {
     BOOST_ASSERT(true); 
     // void
@@ -39,30 +39,30 @@ namespace algorithm
   InfluenceMinimizer::FindMinimalNodeComp(int n)
   {
     // Precondition
-    BOOST_ASSERT(ind_.hc_.GetN() > 0);
+    BOOST_ASSERT(anc_.ic_.hc_.GetN() > 0);
     int min_node = -1;
     int min_comp = -1;
     double min_influence = std::numeric_limits<double>::max();
     double min_var = 0.0;
     /* Find the node */
     int simcount = 0;
-    for (int comp = 0; comp < ind_.n_comp_;++comp)
+    for (int comp = 0; comp < anc_.ic_.n_comp_;++comp)
     {
-      for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
+      for (auto node_it = anc_.ic_.insiders_.at(comp).begin(); node_it != anc_.ic_.insiders_.at(comp).end();++node_it)
       {
         int node = *node_it; 
-        if (ind_.inside_of_.at(node).size() < 2)
+        if (anc_.ic_.inside_of_.at(node).size() < 2)
         {
           continue;
         }
         std::vector<double> c_vec_anti(n,0.0);
-        ind_.DeactivateFromInside(node,comp);
+        anc_.ic_.DeactivateFromInside(node,comp);
         #pragma omp parallel for
         for (int i = 0; i < n; ++i)
         {
           c_vec_anti[i] = anc_.RunSingleCascade(true);
         }
-        ind_.ReactivateInside();
+        anc_.ic_.ReactivateInside();
         double inf = util::avg(c_vec_anti);
         if (inf < min_influence)
         {
@@ -92,8 +92,8 @@ namespace algorithm
   InfluenceMinimizer::MinizeDiffBetween(int n)
   {
     // Precondition
-    BOOST_ASSERT(ind_.hc_.GetN() > 0);
-    const auto weights = ind_.GetSimulationWeights();
+    BOOST_ASSERT(anc_.ic_.hc_.GetN() > 0);
+    const auto weights = anc_.ic_.GetSimulationWeights();
     std::set<std::tuple<int,int>> togo;
 
     // TODO ACTUAL IMPLEMENTATION 
@@ -109,36 +109,36 @@ namespace algorithm
   InfluenceMinimizer::DiagnoseBetweenMinimal(std::ostream& out)
   {
     // Precondition
-    BOOST_ASSERT(ind_.hc_.GetN() > 0);
+    BOOST_ASSERT(anc_.ic_.hc_.GetN() > 0);
     
-    const auto weights = ind_.GetSimulationWeights();
-    const auto& c_cent = ind_.GetCompCentrality();
-    const auto& n_cent = ind_.GetNodeCentrality();
+    const auto weights = anc_.ic_.GetSimulationWeights();
+    const auto& c_cent = anc_.ic_.GetCompCentrality();
+    const auto& n_cent = anc_.ic_.GetNodeCentrality();
     /* First run the initial */
-    ind_.hc_.gather_statistic_ = true;
-    const auto& n_c_map = ind_.GetNeighbourOutActivation();
-    const auto& n_c_map2 = ind_.GetNeighbourInActivation();
-    ind_.hc_.gather_statistic_ = false;
+    anc_.ic_.hc_.gather_statistic_ = true;
+    const auto& n_c_map = anc_.ic_.GetNeighbourOutActivation();
+    const auto& n_c_map2 = anc_.ic_.GetNeighbourInActivation();
+    anc_.ic_.hc_.gather_statistic_ = false;
     
-    for (int comp = 0; comp < ind_.n_comp_;++comp)
+    for (int comp = 0; comp < anc_.ic_.n_comp_;++comp)
     {
       
-      for (auto node_it = ind_.insiders_.at(comp).begin(); node_it != ind_.insiders_.at(comp).end();++node_it)
+      for (auto node_it = anc_.ic_.insiders_.at(comp).begin(); node_it != anc_.ic_.insiders_.at(comp).end();++node_it)
       {
         int node = *node_it; 
-        if (ind_.inside_of_.at(node).size() < 2)
+        if (anc_.ic_.inside_of_.at(node).size() < 2)
         {
           continue;
         }
-        ind_.DeactivateFromInside(node,comp);
-        auto res_pair = ind_.RunTotal(weights);
+        anc_.ic_.DeactivateFromInside(node,comp);
+        auto res_pair = anc_.ic_.RunTotal(weights);
         const double& inf = res_pair.first;
         const double& stdv = res_pair.second;
         out << comp << "," << node << "," << inf << "," << stdv << "," << c_cent.at(comp) << "," << n_cent.at(node) 
-            << "," << ind_.comp_adj_.at(comp).size() << "," << ind_.hc_.adj_.at(node).size() << ","  
-            << ind_.insiders_.at(comp).size() << ","<< ind_.foo_.GetGraph(ind_.date_)->GetInsiderOf(node).size() 
-            << "," << n_c_map.at(ind_.hc_.Key(node,comp)) << "," << n_c_map2.at(ind_.hc_.Key(node,comp)) << "\n";
-        ind_.ReactivateInside();
+            << "," << anc_.ic_.comp_adj_.at(comp).size() << "," << anc_.ic_.hc_.adj_.at(node).size() << ","  
+            << anc_.ic_.insiders_.at(comp).size() << ","<< anc_.ic_.foo_.GetGraph(anc_.ic_.date_)->GetInsiderOf(node).size() 
+            << "," << n_c_map.at(anc_.ic_.hc_.Key(node,comp)) << "," << n_c_map2.at(anc_.ic_.hc_.Key(node,comp)) << "\n";
+        anc_.ic_.ReactivateInside();
       }
     }
     // Postcondition
@@ -185,7 +185,7 @@ namespace algorithm
   void 
   InfluenceMinimizer::SetConstantProb(double p)
   {
-    ind_.SetConstantProb(p);
+    anc_.ic_.SetConstantProb(p);
   }  
 
 }
