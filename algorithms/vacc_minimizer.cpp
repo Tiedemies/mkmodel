@@ -62,7 +62,7 @@ namespace algorithm
         {
           c_vec_anti[i] = anc_.RunSingleCascade(true);
         }
-        anc_.ic_.ReactivateInside();
+        anc_.ic_.ReactivateInside(node, comp);
         double inf = util::avg(c_vec_anti);
         if (inf < min_influence)
         {
@@ -149,25 +149,23 @@ namespace algorithm
   }
 
   void 
-  InfluenceMinimizer::DiagnosePerformance(int n, std::ostream& out)
+  InfluenceMinimizer::DiagnosePerformance(int n, std::ostream& out, bool anti)
   {
-    std::vector<double> c_vec_no_anti(2*n,0.0);
-    std::vector<double> c_vec_anti(n,0.0);
-    #pragma omp parallel for
-    for (int i = 0; i < 2*n; ++i)
+    for (int nr = 1; nr < n; ++nr)
     {
-      c_vec_no_anti[i] = anc_.RunSingleCascade(false);
+      int nn = anti?nr:2*nr;
+      std::vector<double> c_vec(12,0.0);
+      #pragma omp parallel for
+      for (int i = 0; i < nn; ++i)
+      {
+        #pragma omp parallel for
+        for (int k = 0; k < 12; ++k)
+        {
+          c_vec[k] += anc_.RunSingleCascade(anti)/nn;
+        }
+      }
+      out << nn << "," << util::avg(c_vec) << "," << util::st_error(c_vec);
     }
-
-    #pragma omp parallel for
-    for (int i = 0; i < n; ++i)
-    {
-      c_vec_anti[i] = anc_.RunSingleCascade(true);
-    }
-
-    out << "Normal cost function average " << util::avg(c_vec_no_anti) << " with ste " << util::st_error(c_vec_no_anti) << "\n";
-    out << "Anti_t cost function average " << util::avg(c_vec_anti) << " with ste " << util::st_error(c_vec_anti) << "\n";
-
   }
 
   std::pair<double,double> 

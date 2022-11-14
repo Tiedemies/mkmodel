@@ -16,7 +16,18 @@ using namespace simulator;
 #define RAWGRAPHFILE "plot_output_raw.csv"
 #define DIAGNOSTICSFILE "optimization_diagnostics.txt"
 #define COMPANYFILE "companies.txt"
+#define N_VARIANCEFILE "variances.csv"
 
+
+void DiagnoseVariance(algorithm::InfluenceMinimizer& minc, int n, int k, std::ostream& out = std::cerr)
+{
+  for (double p = 0.01; p < 1; p = p + 0.99/k)
+  {
+    out << "NewData for p:" << p << "\n"; 
+    minc.SetConstantProb(p);
+    minc.DiagnosePerformance(n,out,true);
+  }
+}
 
 void GenerateRawGraphs(IndustryCascade& ind, const double& p0, const double& pn, const int& n)
 {
@@ -83,10 +94,11 @@ int main()
   std::cerr << " Running initial diagnostics \n";
   foo.GraphDiagnostics(out);
   algorithm::InfluenceMinimizer minim(foo);
-  /*
   std::cerr << " Running performance diagnostics \n";
-  minim.DiagnosePerformance(64);
-  */
+  std::ofstream outv;
+  outv.open(N_VARIANCEFILE);
+  DiagnoseVariance(minim, 64, 20, outv);
+  outv.close();
   std::cerr << "Running singleton influence check";
   
   // Start timing.

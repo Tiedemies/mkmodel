@@ -32,7 +32,8 @@ namespace algorithm
 
       void DiagnoseBetweenMinimal(std::ostream& = std::cerr);
 
-      void DiagnosePerformance(int n, std::ostream& = std::cerr);
+      // Run a variance diagnostic up to n iterations      
+      void DiagnosePerformance(int n, std::ostream& = std::cerr, bool anti = true);
 
       void SetConstantProb(double p);
 
