@@ -151,7 +151,7 @@ namespace algorithm
   void 
   InfluenceMinimizer::DiagnosePerformance(int n, std::ostream& out, bool anti)
   {
-    for (int nr = 1; nr < n; ++nr)
+    for (int nr = 1; nr < n; nr += n/20)
     {
       int nn = anti?nr:2*nr;
       std::vector<double> c_vec(12,0.0);
@@ -164,7 +164,7 @@ namespace algorithm
           c_vec[k] += anc_.RunSingleCascade(anti)/nn;
         }
       }
-      out << nn << "," << util::avg(c_vec) << "," << util::st_error(c_vec);
+      out << nn << "," << util::avg(c_vec) << "," << util::st_error(c_vec) << "\n";
     }
   }
 
