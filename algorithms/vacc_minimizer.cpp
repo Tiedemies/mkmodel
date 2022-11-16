@@ -151,17 +151,17 @@ namespace algorithm
   void 
   InfluenceMinimizer::DiagnosePerformance(int n, std::ostream& out, bool anti)
   {
-    for (int nr = 1; nr < n; nr += n/20)
+    for (int nr = 1; nr < n; nr += (nr == 1)?9:10)
     {
       int nn = anti?nr:2*nr;
-      std::vector<double> c_vec(12,0.0);
+      std::vector<double> c_vec(24,0.0);
       #pragma omp parallel for
       for (int i = 0; i < nn; ++i)
       {
         #pragma omp parallel for
         for (int k = 0; k < 12; ++k)
         {
-          c_vec[k] += anc_.RunSingleCascade(anti)/nn;
+          c_vec[k] += anc_.RunSingleCascade(anti)/(double)nn;
         }
       }
       out << nn << "," << util::avg(c_vec) << "," << util::st_error(c_vec) << "\n";

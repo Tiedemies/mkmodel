@@ -21,7 +21,7 @@ using namespace simulator;
 
 void DiagnoseVariance(algorithm::InfluenceMinimizer& minc, int n, int k, std::ostream& out = std::cerr)
 {
-  for (double p = 0.01; p < 1; p = p + 0.99/k)
+  for (double p = 0.01; p < 0.99; p = p + 0.98/k)
   {
     out << "NewData for p:" << p << "\n"; 
     minc.SetConstantProb(p);
@@ -97,7 +97,7 @@ int main()
   std::cerr << " Running performance diagnostics \n";
   std::ofstream outv;
   outv.open(N_VARIANCEFILE);
-  DiagnoseVariance(minim, 64, 20, outv);
+  DiagnoseVariance(minim, 120, 20, outv);
   outv.close();
   std::cerr << "Running singleton influence check";
   
