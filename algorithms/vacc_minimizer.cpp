@@ -159,7 +159,7 @@ namespace algorithm
       for (int i = 0; i < nn; ++i)
       {
         #pragma omp parallel for
-        for (int k = 0; k < 12; ++k)
+        for (int k = 0; k < 24; ++k)
         {
           c_vec[k] += anc_.RunSingleCascade(anti)/(double)nn;
         }

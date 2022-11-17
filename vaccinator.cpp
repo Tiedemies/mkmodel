@@ -26,6 +26,7 @@ void DiagnoseVariance(algorithm::InfluenceMinimizer& minc, int n, int k, std::os
     out << "NewData for p:" << p << "\n"; 
     minc.SetConstantProb(p);
     minc.DiagnosePerformance(n,out,true);
+    out.flush();
   }
 }
 
@@ -97,17 +98,19 @@ int main()
   std::cerr << " Running performance diagnostics \n";
   std::ofstream outv;
   outv.open(N_VARIANCEFILE);
+  auto start = std::chrono::high_resolution_clock::now(); 
   DiagnoseVariance(minim, 120, 20, outv);
   outv.close();
-  std::cerr << "Running singleton influence check";
-  
-  // Start timing.
-  auto start = std::chrono::high_resolution_clock::now(); 
-  //foo.SetConstantProb(0.2);
-  //foo.EstablishBaseVariance();
-  GenerateGraphs(minim,0.01,0.99,20);
   auto stop = std::chrono::high_resolution_clock::now(); 
   double count = std::chrono::duration<double>(stop-start).count();
-  std::cerr << "Singleton influence check took " << count << "s \n";
+  std::cerr << "Diagnostics took " << count << "s \n";
+
+  //std::cerr << "Running singleton influence check";
+  
+  // Start timing.
+  //foo.SetConstantProb(0.2);
+  //foo.EstablishBaseVariance();
+  //GenerateGraphs(minim,0.01,0.99,20);
+
   return 0;
 }
