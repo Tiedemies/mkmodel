@@ -156,13 +156,14 @@ namespace algorithm
       int nn = anti?nr:2*nr;
       std::vector<double> c_vec(24,0.0);
       #pragma omp parallel for
-      for (int i = 0; i < nn; ++i)
+      for (int ik = 0; ik < nn*24; ++ik)
       {
-        #pragma omp parallel for
-        for (int k = 0; k < 24; ++k)
+        int k = ik%24;
+        double temp = anc_.RunSingleCascade(anti)/(double)nn;
+        #pragma omp critical
         {
-          c_vec[k] += anc_.RunSingleCascade(anti)/(double)nn;
-        }
+          c_vec[k] += temp;
+        } 
       }
       out << nn << "," << util::avg(c_vec) << "," << util::st_error(c_vec) << "\n";
     }
