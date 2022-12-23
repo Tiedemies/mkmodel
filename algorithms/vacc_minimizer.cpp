@@ -83,7 +83,7 @@ namespace algorithm
     BOOST_ASSERT(min_node > 0);
     BOOST_ASSERT(max_comp > 0);
     BOOST_ASSERT(min_comp > 0);
-    std::cerr << "min " << min_influence <<" \n";
+    // std::cerr << "min " << min_influence <<" \n";
     return std::make_tuple(min_node, min_comp, min_influence, min_var);
   }
 

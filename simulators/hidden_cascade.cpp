@@ -61,6 +61,15 @@ HiddenCascade::~HiddenCascade()
     // void;
 }
 
+HiddenCascade::HiddenCascade(const HiddenCascade& rhs):
+  sim_n_(rhs.sim_n_),  false_positive_prob_(rhs.false_positive_prob_),
+  true_positive_prob_(rhs.true_positive_prob_), p_map_(rhs.p_map_),
+  adj_(rhs.adj_),uni_p_(rhs.uni_p_)
+{
+  // pass
+}
+
+
 size_t
 HiddenCascade::Key(const int& u, const int& v) const
 {

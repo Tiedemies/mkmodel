@@ -13,9 +13,10 @@ using namespace util;
 using namespace graphmodel;
 using namespace simulator;
 
-#define RAWGRAPHFILE "plot_output_raw.csv"
+#define DETGRAPHFILE "plot_output_det.csv"
+#define VACGRAPHFILE "plot_output_vac.csv"
 #define DIAGNOSTICSFILE "optimization_diagnostics.txt"
-#define COMPANYFILE "companies.txt"
+#define RAWGRAP "plot_output_raw.csv"
 #define N_VARIANCEFILE "variances.csv"
 
 
@@ -26,44 +27,6 @@ void DiagnoseVariance(algorithm::InfluenceMinimizer& minc, int n, int k, std::os
     out << "NewData for p:" << p << "\n"; 
     minc.SetConstantProb(p);
     minc.DiagnosePerformance(n,out,true);
-    out.flush();
-  }
-}
-
-void GenerateRawGraphs(IndustryCascade& ind, const double& p0, const double& pn, const int& n)
-{
-  algorithm::InfluenceMinimizer minim(ind);    
-  
-  const std::string filename = RAWGRAPHFILE;
-  std::ofstream out;
-  out.open(filename);
-  const std::vector<double> weights = ind.GetSimulationWeights();
-  std::cerr << "Starting the simulation cycles \n";
-  for (double p = p0; p <= pn; p += (pn -p0)/n)
-  {
-    ind.SetConstantProb(p);
-    auto ref_inf = ind.RunTotal(weights);
-    std::cerr << "Ref: " << ref_inf.first << " std: " << sqrt(ref_inf.second) << "\n";
-    auto res = minim.FindMinimalNodeComp();
-    out << p << "," << ref_inf.first << "," <<  sqrt(ref_inf.second) << "," << std::get<2>(res) << "," << std::get<3>(res) << "\n";
-    out.flush();
-  }
-  out.close();
-}
-
-void GenerateGraphs(algorithm::InfluenceMinimizer& minim, const double& p0, const double& pn, const int& n)
-{
-  const std::string filename = RAWGRAPHFILE;
-  std::ofstream out;
-  out.open(filename);
-  std::cerr << "Starting the simulation cycles \n";
-  for (double p = p0; p <= pn; p += (pn -p0)/n)
-  {
-    minim.SetConstantProb(p);
-    auto ref_inf = minim.DefaultInfluence();
-    std::cerr << "Ref: " << ref_inf.first << " std: " << sqrt(ref_inf.second) << "\n";
-    auto res = minim.FindMinimalNodeComp();
-    out << p << "," << ref_inf.first << "," <<  sqrt(ref_inf.second) << "," << std::get<2>(res) << "," << std::get<3>(res) << "\n";
     out.flush();
   }
 }
@@ -92,25 +55,45 @@ int main()
   //foo.PrintCompanies(out2);
   //out2.close();
 
+
   std::cerr << " Running initial diagnostics \n";
   foo.GraphDiagnostics(out);
   algorithm::InfluenceMinimizer minim(foo);
-  std::cerr << " Running performance diagnostics \n";
-  std::ofstream outv;
-  outv.open(N_VARIANCEFILE);
+  std::cerr << " Running variance diagnostics \n";
+  //std::ofstream outv;
+  //outv.open(N_VARIANCEFILE);
   auto start = std::chrono::high_resolution_clock::now(); 
-  DiagnoseVariance(minim, 120, 20, outv);
-  outv.close();
+  //DiagnoseVariance(minim, 120, 20, outv);
+  //outv.close();
   auto stop = std::chrono::high_resolution_clock::now(); 
   double count = std::chrono::duration<double>(stop-start).count();
   std::cerr << "Diagnostics took " << count << "s \n";
 
-  //std::cerr << "Running singleton influence check";
+  std::cerr << "Running singleton influence check";
   
-  // Start timing.
-  //foo.SetConstantProb(0.2);
-  //foo.EstablishBaseVariance();
-  //GenerateGraphs(minim,0.01,0.99,20);
+
+  // Calclulate the optimimus with greefy algorithm for n = 1 2 3 4 5 6 7 8 9 10
+  start = std::chrono::high_resolution_clock::now();
+  foo.SetConstantProb(0.15);
+  std::ofstream outd;
+  outd.open(DETGRAPHFILE);
+  algorithm::InfluenceMinimizer inf(foo);
+  auto refz = inf.DefaultInfluence(20);
+  outd << "0 " << refz.first << " " << refz.second <<  "\n";
+  IndustryCascade fooz = foo;
+  for (int n = 1; n < 11; ++n)
+  {
+    algorithm::InfluenceMinimizer inf(fooz);
+    auto minz = inf.FindMinimalNodeComp(20);
+    outd << n << " " << std::get<2>(minz) << " " << std::get<3>(minz) << "\n";
+    int node = std::get<0>(minz);
+    int comp = std::get<1>(minz);
+    fooz.DeactivateFromInside(node,comp);
+    fooz = fooz.Copy(fooz);  
+  }
+  stop = std::chrono::high_resolution_clock::now(); 
+  count = std::chrono::duration<double>(stop-start).count();
+  std::cerr << "10 optimization points took " << count << "s \n";
 
   return 0;
 }

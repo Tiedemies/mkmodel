@@ -44,6 +44,7 @@
 #define NDAYS 5
 // Reference day is 5 days before the first announcement
 #define REFDAY "2005-05-21 12:00:00"
+ 
 
 // Define significance levels:
 #define SIGNIFICANT 0.05
@@ -55,6 +56,8 @@
 
 //Vaccinator begin date:
 #define VREFDATE 20071231
+
+#define GREFDATE 20051231
 
 #include<map>
 #include<unordered_map>

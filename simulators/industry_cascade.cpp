@@ -69,6 +69,13 @@ namespace simulator
     // void
   }
 
+    // Copy operation
+  IndustryCascade
+  IndustryCascade::Copy(const IndustryCascade& rhs)
+  {
+    return IndustryCascade(rhs);
+  }
+
   IndustryCascade::~IndustryCascade()
   {
     // void
@@ -221,10 +228,26 @@ namespace simulator
     hc_.RandomizeWeights(mu);
   }
 
+  std::string
+  IndustryCascade::to_string(const IndustryCascade::Transaction& trans)
+  {
+    std::string togo;
+    togo += std::to_string(trans.node_);
+    togo += ";";
+    togo += foo_.cids_.at(trans.comp_);
+    togo += ";";
+    
+    togo += std::to_string(trans.date_);
+    togo += ";";
+    togo += std::to_string(trans.price_);
+    togo += ";";
+    togo += std::to_string(trans.vol_);
+    return togo;
+  }
   bool
   IndustryCascade::Transaction::operator<(const IndustryCascade::Transaction& rhs) const
   {
-    // First priority is company number
+    // first priority is company number
     if (comp_ < rhs.comp_)
     {
       return true;
@@ -964,8 +987,8 @@ IndustryCascade::EstablishBaseVariance()
   auto test_pair = RunTotal();
   double cur_std = test_pair.second;
   double cur_exp = test_pair.first; 
-  std::cerr << "Based on " << n << " samples, the expected cost function is " << 
-  cur_exp << " with deviation " << cur_std << "in a single simulation \n";
+  //std::cerr << "Based on " << n << " samples, the expected cost function is " << 
+  // cur_exp << " with deviation " << cur_std << "in a single simulation \n";
 
   std::vector<double> sd_vec(40);
   std::vector<double> xp_vec(40);
@@ -984,7 +1007,7 @@ IndustryCascade::EstablishBaseVariance()
   }
   sdt = sdt/39.0; 
 
-  std::cerr << "Sample of 40 gives simulation average " << avg << " with deviation " << sqrt(sdt) << "\n"; 
+  //std::cerr << "Sample of 40 gives simulation average " << avg << " with deviation " << sqrt(sdt) << "\n"; 
 
 
   return sdt;
@@ -999,5 +1022,29 @@ IndustryCascade::PrintCompanies(std::ostream& out)
     out << np.second << ":" << np.first << "\n";
   }
 }
+
+void 
+IndustryCascade::ReadExternalGraph(const std::string& filename)
+{
+  for(auto& ww: hc_.p_map_)
+  {
+    ww.second = 0.0;
+  }
+  std::ifstream in1;
+  in1.open(filename);
+  int u = -1;
+  int v = -1;
+  double weight = 0.0;
+  in1 >> u >> v >> weight; 
+  while (in1.good())
+  {
+    hc_.ActivateConnection(u,v,weight);
+    //std::cerr << "u:" << u << ", v:" << v << " weight:" << weight << "\n";
+    in1 >> u >> v >> weight; 
+  }
+  in1.close();
+}
+
+
 
 }

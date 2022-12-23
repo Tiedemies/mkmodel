@@ -39,6 +39,8 @@ class IndustryCascade
     // Copy constructor:
     IndustryCascade(const IndustryCascade& rhs);
     ~IndustryCascade();
+    // Explicit copy
+    IndustryCascade Copy(const IndustryCascade& rhs);
     std::pair<double,double> RunTotal();
     std::pair<double,double> RunTotal(const std::vector<double>& weights);
     std::vector<double> RunSingle(int i);
@@ -72,11 +74,13 @@ class IndustryCascade
       double vol_;
       bool inside_;
       bool operator<(const Transaction& rhs) const;
+      
     };
     // Generate transactions
     std::vector<Transaction> RunGeneration();
-
+    std::string to_string(const Transaction & trans);
     void PrintCompanies(std::ostream& out);
+    void ReadExternalGraph(const std::string& filename);
 
     // Check if the prices is rising (true) or dropping (false). 
     bool IsBear(int comp, int day);
@@ -131,6 +135,9 @@ class IndustryCascade
     std::list<DisableCacheEntry> disable_cache_; 
     std::vector<double> comp_centrality_; 
     std::vector<std::vector<int>> comp_adj_; 
+
+
+
 };
 
 // Helper functions

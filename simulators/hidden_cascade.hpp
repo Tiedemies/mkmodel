@@ -35,6 +35,8 @@ class HiddenCascade
     // Constructor and destructor
         HiddenCascade() = delete;
         HiddenCascade(const MonoGraph* mg, const double& p, const double& fp, const double& tp);
+        HiddenCascade(const std::string graphfilename, const std::string attributefile);
+        HiddenCascade(const HiddenCascade&);
         ~HiddenCascade();
     // Simulate. 
         double Simulate(const std::vector<int>& inside);
@@ -103,6 +105,8 @@ class HiddenCascade
 
         bool gather_statistic_; 
         std::unordered_map<size_t, double> edge_activations_;
+
+        std::unordered_map<int,int> numbering_; 
     
 
 };
