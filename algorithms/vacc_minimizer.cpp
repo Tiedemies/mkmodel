@@ -79,9 +79,8 @@ namespace algorithm
     }
 
     // Postcondition
-    BOOST_ASSERT(max_node > 0);
+ 
     BOOST_ASSERT(min_node > 0);
-    BOOST_ASSERT(max_comp > 0);
     BOOST_ASSERT(min_comp > 0);
     // std::cerr << "min " << min_influence <<" \n";
     return std::make_tuple(min_node, min_comp, min_influence, min_var);
@@ -142,10 +141,7 @@ namespace algorithm
       }
     }
     // Postcondition
-    BOOST_ASSERT(max_node > 0);
-    BOOST_ASSERT(min_node > 0);
-    BOOST_ASSERT(max_comp > 0);
-    BOOST_ASSERT(min_comp > 0);
+   
   }
 
   void 
@@ -173,7 +169,7 @@ namespace algorithm
   InfluenceMinimizer::DefaultInfluence(int n)
   {
     std::vector<double> c_vec_anti(n,0.0);
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < n; ++i)
     {
       c_vec_anti[i] = anc_.RunSingleCascade(true);

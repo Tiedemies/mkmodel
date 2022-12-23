@@ -206,7 +206,7 @@ HiddenCascade::SimulateConst(const std::vector<int>& inside, const std::unordere
   std::queue<int> infected;
   for (const int j: inside)
   {
-    if(!is_disabled_.at(j))
+    if(disabled_.size() > 0 && !is_disabled_.at(j))
     {
       infected.push(j);
     } 

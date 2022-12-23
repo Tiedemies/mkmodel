@@ -80,16 +80,17 @@ int main()
   algorithm::InfluenceMinimizer inf(foo);
   auto refz = inf.DefaultInfluence(20);
   outd << "0 " << refz.first << " " << refz.second <<  "\n";
-  IndustryCascade fooz = foo;
+  outd.flush();
+  IndustryCascade fooz(foo);
   for (int n = 1; n < 11; ++n)
   {
     algorithm::InfluenceMinimizer inf(fooz);
     auto minz = inf.FindMinimalNodeComp(20);
     outd << n << " " << std::get<2>(minz) << " " << std::get<3>(minz) << "\n";
+    outd.flush();
     int node = std::get<0>(minz);
     int comp = std::get<1>(minz);
     fooz.DeactivateFromInside(node,comp);
-    fooz = fooz.Copy(fooz);  
   }
   stop = std::chrono::high_resolution_clock::now(); 
   count = std::chrono::duration<double>(stop-start).count();
