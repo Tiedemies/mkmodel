@@ -82,7 +82,7 @@ int main()
   outd << "0 " << refz.first << " " << refz.second <<  "\n";
   outd.flush();
   IndustryCascade fooz(foo);
-  for (int n = 1; n < 11; ++n)
+  for (int n = 1; n < 21; ++n)
   {
     algorithm::InfluenceMinimizer inf(fooz);
     auto minz = inf.FindMinimalNodeComp(20);
@@ -94,7 +94,7 @@ int main()
   }
   stop = std::chrono::high_resolution_clock::now(); 
   count = std::chrono::duration<double>(stop-start).count();
-  std::cerr << "10 optimization points took " << count << "s \n";
+  std::cerr << "20 optimization points took " << count << "s \n";
 
   return 0;
 }
