@@ -64,7 +64,7 @@ HiddenCascade::~HiddenCascade()
 HiddenCascade::HiddenCascade(const HiddenCascade& rhs):
   sim_n_(rhs.sim_n_),  false_positive_prob_(rhs.false_positive_prob_),
   true_positive_prob_(rhs.true_positive_prob_), p_map_(rhs.p_map_),
-  adj_(rhs.adj_),uni_p_(rhs.uni_p_)
+  adj_(rhs.adj_),uni_p_(rhs.uni_p_),is_disabled_(rhs.is_disabled_), disabled_(rhs.disabled_) 
 {
   // pass
 }
