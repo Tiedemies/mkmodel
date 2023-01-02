@@ -183,5 +183,47 @@ namespace algorithm
     anc_.ic_.SetConstantProb(p);
   }  
 
+  std::tuple<int,double,double>
+  InfluenceMinimizer::FindMinimalNode(int n)
+  {
+    // Precondition
+    BOOST_ASSERT(anc_.ic_.hc_.GetN() > 0);
+    int min_node = -1;
+    double min_influence = std::numeric_limits<double>::max();
+    double min_var = 0.0;
+    /* Find the node */
+    int simcount = 0;
+
+    for (int node = 0; node < anc_.ic_.inside_of_.size(); ++node)
+    {  
+      // Skip vaccinating those that are not inside in more than 1. 
+      if (anc_.ic_.inside_of_.at(node).size() < 2 || anc_.ic_.hc_.is_disabled_.at(node))
+      {
+        continue;
+      }
+      anc_.ic_.DeactivateNode(node);
+      std::vector<double> c_vec_anti(n,0.0);
+      #pragma omp parallel for
+      for (int i = 0; i < n; ++i)
+      {
+        c_vec_anti[i] = anc_.RunSingleCascade(true);
+      }
+      anc_.ic_.ReactivateInside(node);
+      double inf = util::avg(c_vec_anti);
+      if (inf < min_influence)
+      {
+        min_influence = inf;
+        min_node = node;
+        min_var = util::st_error(c_vec_anti);
+      }     
+      ++simcount; 
+        //std::cerr << simcount << " pairs tried \n" << "Current min: " << min_influence << "\n";
+    }
+    // Postcondition
+    BOOST_ASSERT(min_node > 0);
+    // std::cerr << "min " << min_influence <<" \n";
+    return std::make_tuple(min_node, min_influence, min_var);
+  }
+
 }
 // DoneInfluenceMinimizer

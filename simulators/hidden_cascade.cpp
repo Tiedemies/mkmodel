@@ -369,12 +369,14 @@ void
 HiddenCascade::DeactivateNode(int n)
 {
   disabled_.insert(n);
+  is_disabled_.at(n) = true;
 }
 
 void 
 HiddenCascade::ReactivateNode(int n)
 {
   disabled_.erase(n);
+  is_disabled_.at(n) = false;
 }
 
 void 

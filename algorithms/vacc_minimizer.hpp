@@ -27,6 +27,7 @@ namespace algorithm
       std::set<int> GreedyMinimalSet(int n);
       // Find single minimal node. 
       std::tuple<int,int,double,double> FindMinimalNodeComp(int n = 4);
+      std::tuple<int,double,double> FindMinimalNode(int n = 4);
       std::pair<double,double> DefaultInfluence(int n = 4);
       std::set<std::tuple<int,int>> MinizeDiffBetween(int n);
 

@@ -50,6 +50,7 @@ class IndustryCascade
     void SetConstantProb(double p);
     void RunDiagnostics(); 
     void GraphDiagnostics(std::ostream& = std::cerr);
+    void DeactivateNode(int node);
     void DeactivateFromInside(int node, int comp);
     void ReactivateInside(int node, int comp);
     void ReactivateInside(int node);

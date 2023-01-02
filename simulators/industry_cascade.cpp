@@ -768,12 +768,14 @@ namespace simulator
         auto temp = cache_it;
         ++cache_it;
         disable_cache_.erase(temp);
+        ReactivateInside(node,comp);
       } 
       else
       {
         ++cache_it; 
       }
     }
+    hc_.ReactivateNode(node);
   }
   void 
   IndustryCascade::ReactivateInside()
@@ -1044,6 +1046,23 @@ IndustryCascade::ReadExternalGraph(const std::string& filename)
   }
   in1.close();
 }
+
+  void 
+  IndustryCascade::DeactivateNode(int node)
+  {
+    // Preconditions: Legit node, legit comp, node is insider of comp
+    BOOST_ASSERT(0 <= node && node < n_node_);
+    if (inside_of_.at(node).empty())
+    {
+      return;
+    }
+    
+    for (int comp: inside_of_.at(node))
+    {
+      DeactivateFromInside(node,comp);
+    }
+    hc_.DeactivateNode(node);
+  }
 
 
 

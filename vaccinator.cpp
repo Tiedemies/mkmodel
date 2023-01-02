@@ -73,6 +73,7 @@ int main()
   
 
   // Calclulate the optimimus with greefy algorithm for n = 1 2 3 4 5 6 7 8 9 10
+  /*
   start = std::chrono::high_resolution_clock::now();
   foo.SetConstantProb(0.15);
   std::ofstream outd;
@@ -91,6 +92,29 @@ int main()
     int node = std::get<0>(minz);
     int comp = std::get<1>(minz);
     fooz.DeactivateFromInside(node,comp);
+  }
+  stop = std::chrono::high_resolution_clock::now(); 
+  count = std::chrono::duration<double>(stop-start).count();
+  std::cerr << "20 optimization points took " << count << "s \n";
+  */
+  std::cerr << "Starting full vaccination optimization protocol\n";
+  start = std::chrono::high_resolution_clock::now();
+  foo.SetConstantProb(0.15);
+  std::ofstream outv;
+  outv.open(VACGRAPHFILE);
+  algorithm::InfluenceMinimizer inf(foo);
+  auto refz = inf.DefaultInfluence(20);
+  outv << "0 " << refz.first << " " << refz.second <<  "\n";
+  outv.flush();
+  IndustryCascade fooz(foo);
+  for (int n = 1; n < 21; ++n)
+  {
+    algorithm::InfluenceMinimizer inf(fooz);
+    auto minz = inf.FindMinimalNode(20);
+    outv << n << " " << std::get<1>(minz) << " " << std::get<2>(minz) << "\n";
+    outv.flush();
+    int node = std::get<0>(minz);
+    fooz.DeactivateNode(node);
   }
   stop = std::chrono::high_resolution_clock::now(); 
   count = std::chrono::duration<double>(stop-start).count();
